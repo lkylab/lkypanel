@@ -13,23 +13,28 @@ if [[ -f "$FLAG_FILE" ]]; then
 fi
 
 if command -v apt-get &>/dev/null; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postfix dovecot-imapd dovecot-pop3d dovecot-lmtpd mailutils
+    echo "postfix postfix/main_mailer_type string 'Internet Site'" | sudo debconf-set-selections
+    echo "postfix postfix/mailname string $(hostname)" | sudo debconf-set-selections
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postfix mailutils dovecot-imapd dovecot-pop3d dovecot-lmtpd 2>> "$LOG_FILE"
 else
-    sudo yum install -y postfix dovecot
+    sudo yum install -y postfix dovecot 2>> "$LOG_FILE"
 fi
 
 sudo systemctl enable --now postfix
+sudo systemctl enable --now dovecot 2>> "$LOG_FILE" || warn "Dovecot service failed to start (check if it is configured correctly)"
 
 if command -v ufw &>/dev/null; then
-    sudo ufw allow 25/tcp
-    sudo ufw allow 587/tcp
-    sudo ufw allow 143/tcp
-    sudo ufw allow 993/tcp
-    sudo ufw allow 110/tcp
-    sudo ufw allow 995/tcp
+    sudo ufw allow 25/tcp    || true
+    sudo ufw allow 587/tcp   || true
+    sudo ufw allow 143/tcp   || true
+    sudo ufw allow 993/tcp   || true
+    sudo ufw allow 110/tcp   || true
+    sudo ufw allow 995/tcp   || true
 elif command -v firewall-cmd &>/dev/null; then
-    sudo firewall-cmd --permanent --add-port={25,587,143,993,110,995}/tcp
-    sudo firewall-cmd --reload
+    for port in 25 587 143 993 110 995; do
+        sudo firewall-cmd --permanent --add-port=$port/tcp 2>/dev/null || true
+    done
+    sudo firewall-cmd --reload 2>/dev/null || true
 fi
 
 mkdir -p "$FLAG_DIR"
