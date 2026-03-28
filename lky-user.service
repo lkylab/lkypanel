@@ -6,7 +6,7 @@ After=network.target
 Type=simple
 User=lkypanel
 Group=lkypanel
-WorkingDirectory=/usr/local/lkypanel/lkypanel
+WorkingDirectory=/usr/local/lkypanel
 EnvironmentFile=/usr/local/lkypanel/.env
 ExecStart=/usr/local/lkypanel/venv/bin/gunicorn \
     --workers 2 \

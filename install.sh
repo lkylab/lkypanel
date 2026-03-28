@@ -18,8 +18,8 @@ die()     { error "$*"; exit 1; }
 # ── Config ────────────────────────────────────────────────────────────────────
 REPO_URL="${LKYPANEL_REPO:-https://github.com/lkylab/lkypanel.git}"
 INSTALL_DIR="/usr/local/lkypanel"
-# The repository has a nested structure where the app is in the 'lkypanel' directory
-APP_ROOT="$INSTALL_DIR/lkypanel"
+# The repository has a nested structure where the app is in the root directory (manage.py, requirements.txt)
+APP_ROOT="$INSTALL_DIR"
 VENV_DIR="$INSTALL_DIR/venv"
 LOG_DIR="/var/log/lkypanel"
 DB_DIR="$INSTALL_DIR/db"
