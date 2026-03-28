@@ -276,10 +276,10 @@ success "Django setup complete"
 # ── Plugin installation ───────────────────────────────────────────────────────
 info "Installing all available plugins..."
 
-local plugins_dir="$APP_ROOT/lkypanel/plugins"
+plugins_dir="$APP_ROOT/lkypanel/plugins"
 for dir in "$plugins_dir"/*/; do
     [[ -d "$dir" ]] || continue
-    local id; id=$(basename "$dir")
+    id=$(basename "$dir")
     info "Installing plugin: $id"
     # Run the install script for each plugin
     bash "$dir/install.sh" || warn "Plugin $id install failed — continuing"
