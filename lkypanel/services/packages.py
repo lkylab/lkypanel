@@ -88,8 +88,9 @@ def read_plugin_status() -> dict:
 
     if "[200]" in last:
         return {"state": "success", "message": last}
-    if "[404]" in last or "error:" in last.lower() or "unbound variable" in last.lower():
-        return {"state": "error", "message": last}
+    if "[404]" in last or "error:" in text.lower() or "unbound variable" in text.lower():
+        # Return the whole log (or last 20 lines) to show trace
+        return {"state": "error", "message": text}
 
     # Timeout check (10 minutes)
     try:
