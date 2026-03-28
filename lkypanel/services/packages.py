@@ -46,6 +46,10 @@ def get_all_plugins() -> list[dict]:
     return plugins
 
 
+import time
+
+PLUGIN_OP_START_FILE = "/usr/local/lkypanel/plugin_op_start"
+
 def launch_plugin_op(plugin_id: str, operation: str) -> None:
     """
     Launch plugins/{plugin_id}/{operation}.sh as a non-blocking background subprocess.
@@ -53,11 +57,14 @@ def launch_plugin_op(plugin_id: str, operation: str) -> None:
     operation: 'install' | 'remove'
     """
     script_path = PLUGINS_SOURCE_DIR / plugin_id / f"{operation}.sh"
-    # Truncate log
+    # Truncate log and record start time
     try:
         open(PLUGIN_STATUS_LOG, "w").close()
+        with open(PLUGIN_OP_START_FILE, "w") as f:
+            f.write(str(int(time.time())))
     except OSError:
         pass
+
     with open(PLUGIN_STATUS_LOG, "a") as log_fh:
         subprocess.Popen(
             ["bash", str(script_path)],
@@ -81,6 +88,15 @@ def read_plugin_status() -> dict:
 
     if "[200]" in last:
         return {"state": "success", "message": last}
-    if "[404]" in last:
+    if "[404]" in last or "error:" in last.lower() or "unbound variable" in last.lower():
         return {"state": "error", "message": last}
+
+    # Timeout check (10 minutes)
+    try:
+        start_time = int(Path(PLUGIN_OP_START_FILE).read_text())
+        if time.time() - start_time > 600:
+            return {"state": "error", "message": "Operation timed out after 10 minutes."}
+    except (OSError, ValueError):
+        pass
+
     return {"state": "running", "message": last}
