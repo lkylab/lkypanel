@@ -243,8 +243,8 @@ export DJANGO_SETTINGS_MODULE=lkypanel.settings
 # Create initial admin user
 # Password must be min 12 chars, upper, lower, digit, and special (!@#$%^&*()_+-=[]{}|;:,.<>?)
 ADMIN_PASS=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9!@#$%^&*()_+-=' | head -c 20)
-# Ensure at least one special char is present if random luck failed (unlikely but safe)
-[[ "$ADMIN_PASS" =~ [!@#$%^&*()_+-=] ]] || ADMIN_PASS="${ADMIN_PASS}!"
+# Always append a special character (!) to ensure compliance
+ADMIN_PASS="${ADMIN_PASS}!"
 "$VENV_DIR/bin/python" - <<PYEOF
 import os, django
 os.environ['DJANGO_SETTINGS_MODULE'] = 'lkypanel.settings'
