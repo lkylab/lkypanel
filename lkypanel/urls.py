@@ -1,7 +1,7 @@
 """URL configuration for Lite Hosting Panel."""
 from django.urls import path
 from lkypanel.views.auth import login_index, admin_login, user_login, logout_view
-from lkypanel.admin_views import users as au, websites as aw, backup as ab, packages as ap, firewall as af, security as as_
+from lkypanel.admin_views import users as au, websites as aw, backup as ab, packages as ap, firewall as af, security as as_, databases as adb
 from lkypanel.admin_views import settings as aset, email as ae
 from lkypanel.admin_views import logs as al
 from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw
@@ -35,6 +35,7 @@ urlpatterns = [
     path('admin/email/',                    ae.email_dashboard,   name='admin_email'),
     path('admin/email/domain/add/',         ae.add_mail_domain,    name='admin_add_mail_domain'),
     path('admin/email/account/add/',        ae.add_mail_account,   name='admin_add_mail_account'),
+    path('admin/databases/',                adb.database_dashboard, name='admin_databases'),
     path('admin/users/create/',             au.create_user,     name='admin_create_user'),
     path('admin/users/<int:user_id>/delete/', au.delete_user,   name='admin_delete_user'),
     path('admin/users/<int:user_id>/reset-password/', au.reset_password, name='admin_reset_password'),

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Databases - LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>Database Management</h1>
+    <p>Manage MariaDB databases and users.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div class="card" style="border-color: var(--accent-primary);">
+        <h3 style="margin-bottom: 1rem;"><i class="ph ph-database"></i> MariaDB Status</h3>
+        <p style="color: var(--text-dim); line-height: 1.6;">
+            MariaDB is installed and running. Full management interface (database creation, user permissions) is being integrated.
+        </p>
+        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button class="btn btn-sm" onclick="alert('Database creation feature coming soon!')">
+                <i class="ph ph-plus"></i> Create Database
+            </button>
+            <a href="/admin/packages/" class="btn btn-sm btn-ghost">Manage Plugin</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

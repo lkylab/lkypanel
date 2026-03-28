@@ -429,6 +429,12 @@
                 <span>Email Server</span>
             </a>
             {% endif %}
+            {% if mariadb_installed %}
+            <a href="/admin/databases/" class="nav-link {% if active_page == 'databases' %}active{% endif %}">
+                <i class="ph ph-database"></i>
+                <span>Databases</span>
+            </a>
+            {% endif %}
             <a href="/admin/packages/" class="nav-link {% if active_page == 'packages' %}active{% endif %}">
                 <i class="ph ph-package"></i>
                 <span>Packages</span>
@@ -447,7 +453,7 @@
                 <span>My Dashboard</span>
             </a>
             {% if mariadb_installed %}
-            <a href="/user/dashboard/" class="nav-link">
+            <a href="/user/databases/" class="nav-link {% if active_page == 'databases' %}active{% endif %}">
                 <i class="ph ph-database"></i>
                 <span>My Databases</span>
             </a>
