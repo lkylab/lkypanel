@@ -40,6 +40,14 @@ elif command -v firewall-cmd &>/dev/null; then
     sudo firewall-cmd --reload 2>/dev/null || true
 fi
 
+# Run database migrations for the Email system
+PANEL_DIR="/usr/local/lkypanel"
+if [[ -f "$PANEL_DIR/manage.py" ]]; then
+    cd "$PANEL_DIR"
+    # Run as current user (lkypanel) since it owns the db
+    ./venv/bin/python3 manage.py migrate >> "$LOG_FILE" 2>&1 || true
+fi
+
 mkdir -p "$FLAG_DIR"
 touch "$FLAG_FILE"
 echo "Plugin installed.[200]" >> "$LOG_FILE"
