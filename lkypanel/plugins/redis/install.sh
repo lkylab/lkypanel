@@ -5,7 +5,10 @@ FLAG_DIR="${FLAG_DIR:-/usr/local/lkypanel/plugins}"
 FLAG_FILE="${FLAG_FILE:-$FLAG_DIR/redis}"
 LOG_FILE="${LOG_FILE:-/usr/local/lkypanel/plugin_install.log}"
 
-trap 'echo "Plugin operation failed.[404]" >> "$LOG_FILE"' ERR
+exec 2>> "$LOG_FILE"
+set -x
+
+trap 'echo "Plugin operation failed.[404]"' ERR
 
 if [[ -f "$FLAG_FILE" ]]; then
     echo "Plugin already installed.[200]" >> "$LOG_FILE"
