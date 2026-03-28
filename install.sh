@@ -135,7 +135,7 @@ export PATH="$PATH:/usr/local/lsws/bin"
 info "Skipping MariaDB setup (optional package)..."
 
 # ── Create system user and directories ────────────────────────────────────────
-info "Creating directories and system user..."
+info "Creating system user and core directories..."
 
 if ! getent group "$PANEL_USER" >/dev/null; then
     groupadd --system "$PANEL_USER"
@@ -151,24 +151,22 @@ if ! getent passwd "$PANEL_USER" >/dev/null; then
         "$PANEL_USER"
 fi
 
-mkdir -p "/home/$PANEL_USER"
-chown "$PANEL_USER":"$PANEL_USER" "/home/$PANEL_USER"
-chmod 700 "/home/$PANEL_USER"
-
-mkdir -p "$INSTALL_DIR" "$LOG_DIR" "$DB_DIR" "$SSL_DIR"
+# Core directories
+mkdir -p "/home/$PANEL_USER" "$LOG_DIR"
 mkdir -p /usr/local/lsws/conf/vhosts
 
-chown -R "$PANEL_USER":"$PANEL_USER" "$INSTALL_DIR" "$LOG_DIR"
-chmod 750 "$INSTALL_DIR" "$LOG_DIR"
-chmod 700 "$DB_DIR" "$SSL_DIR"
+chown "$PANEL_USER":"$PANEL_USER" "/home/$PANEL_USER"
+chown "$PANEL_USER":"$PANEL_USER" "$LOG_DIR"
+chmod 700 "/home/$PANEL_USER"
+chmod 750 "$LOG_DIR"
 
-success "Directories created"
+success "Core environment prepared"
 
 # ── Clone repository ──────────────────────────────────────────────────────────
 info "Cloning LkyPanel from ${REPO_URL}..."
 
-if [[ -d "$INSTALL_DIR" ]] && [[ ! -d "$INSTALL_DIR/.git" ]]; then
-    warn "Installation directory $INSTALL_DIR exists but is not a git repo. Cleaning up..."
+if [[ -d "$INSTALL_DIR" ]] && [[ ! -d "$INSTALL_DIR/.git" ]] && [[ "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]]; then
+    warn "Installation directory $INSTALL_DIR exists, is not empty and is not a git repo. Cleaning up..."
     rm -rf "$INSTALL_DIR"
 fi
 
@@ -179,6 +177,12 @@ if [[ -d "$INSTALL_DIR/.git" ]]; then
 else
     git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
 fi
+
+# Create internal subdirectories and set permissions
+mkdir -p "$DB_DIR" "$SSL_DIR"
+chown -R "$PANEL_USER":"$PANEL_USER" "$INSTALL_DIR"
+chmod 750 "$INSTALL_DIR"
+chmod 700 "$DB_DIR" "$SSL_DIR"
 
 success "Repository cloned to $INSTALL_DIR"
 

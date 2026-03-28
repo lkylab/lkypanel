@@ -531,7 +531,7 @@
             </a>
             {% endif %}
 
-            <details class="nav-dropdown">
+            <details class="nav-dropdown" {% if active_page == 'logs' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
                     <i class="ph ph-scroll"></i>
                     <span>Logs</span>
@@ -539,7 +539,7 @@
                 </summary>
                 <div class="dropdown-content">
                     <!-- Server -->
-                    <details class="nav-sub-dropdown">
+                    <details class="nav-sub-dropdown" {% if request.GET.id == 'ols_error' or request.GET.id == 'ols_access' %}open{% endif %}>
                         <summary>Server <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
                         <div class="sub-content">
                             <a href="/admin/logs/?id=ols_error" class="sub-link {% if request.GET.id == 'ols_error' %}active{% endif %}">OLS Error Log</a>
@@ -548,7 +548,7 @@
                     </details>
                     
                     <!-- Panel -->
-                    <details class="nav-sub-dropdown">
+                    <details class="nav-sub-dropdown" {% if request.GET.id == 'panel' %}open{% endif %}>
                         <summary>Panel <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
                         <div class="sub-content">
                             <a href="/admin/logs/?id=panel" class="sub-link {% if request.GET.id == 'panel' %}active{% endif %}">Panel Log</a>
@@ -556,7 +556,7 @@
                     </details>
 
                     <!-- Security -->
-                    <details class="nav-sub-dropdown">
+                    <details class="nav-sub-dropdown" {% if request.GET.id == 'fail2ban' or request.GET.id == 'auth' %}open{% endif %}>
                         <summary>Security <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
                         <div class="sub-content">
                             <a href="/admin/logs/?id=fail2ban" class="sub-link {% if request.GET.id == 'fail2ban' %}active{% endif %}">Fail2Ban</a>
@@ -565,7 +565,7 @@
                     </details>
 
                     <!-- System -->
-                    <details class="nav-sub-dropdown">
+                    <details class="nav-sub-dropdown" {% if request.GET.id == 'syslog' %}open{% endif %}>
                         <summary>System <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
                         <div class="sub-content">
                             <a href="/admin/logs/?id=syslog" class="sub-link {% if request.GET.id == 'syslog' %}active{% endif %}">Syslog</a>
@@ -573,7 +573,7 @@
                     </details>
 
                     <!-- Website Logs -->
-                    <details class="nav-sub-dropdown">
+                    <details class="nav-sub-dropdown" {% if request.GET.id == 'site_access' or request.GET.id == 'site_error' %}open{% endif %}>
                         <summary>Website Logs <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
                         <div class="sub-content">
                             <a href="/admin/logs/?id=site_access" class="sub-link {% if request.GET.id == 'site_access' %}active{% endif %}">Site Access Log</a>
