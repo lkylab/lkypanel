@@ -1,0 +1,3 @@
+# Postfix SQLite query for virtual domains
+dbpath = /usr/local/lkypanel/db/panel.db
+query = SELECT domain FROM lkypanel_maildomain WHERE domain='%s' AND is_active=1

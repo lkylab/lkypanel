@@ -1,0 +1,6 @@
+# Dovecot SQLite config
+driver = sqlite
+connect = /usr/local/lkypanel/db/panel.db
+
+password_query = SELECT email_user as user, password_hash as password FROM lkypanel_mailaccount WHERE email_user = '%u' AND is_active = 1
+user_query = SELECT '/var/vmail/%d/%n' as home, 5000 as uid, 5000 as gid FROM lkypanel_mailaccount WHERE email_user = '%u'

@@ -1,0 +1,35 @@
+# Dovecot config - CyberPanel-style for LkyPanel
+listen = *, [::]
+protocols = imap pop3 lmtp
+auth_mechanisms = plain login
+mail_location = maildir:/var/vmail/%d/%n
+
+passdb {
+  driver = sql
+  args = /etc/dovecot/dovecot-sqlite.conf.ext
+}
+
+userdb {
+  driver = sql
+  args = /etc/dovecot/dovecot-sqlite.conf.ext
+}
+
+service auth {
+  unix_listener /var/spool/postfix/private/auth {
+    mode = 0660
+    user = postfix
+    group = postfix
+  }
+}
+
+service lmtp {
+  unix_listener /var/spool/postfix/private/dovecot-lmtp {
+    mode = 0600
+    user = postfix
+    group = postfix
+  }
+}
+
+ssl = yes
+ssl_cert = </usr/local/lkypanel/ssl/panel.crt
+ssl_key = </usr/local/lkypanel/ssl/panel.key

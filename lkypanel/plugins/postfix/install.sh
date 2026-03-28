@@ -13,9 +13,9 @@ if [[ -f "$FLAG_FILE" ]]; then
 fi
 
 if command -v apt-get &>/dev/null; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postfix mailutils
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postfix dovecot-imapd dovecot-pop3d dovecot-lmtpd mailutils
 else
-    sudo yum install -y postfix
+    sudo yum install -y postfix dovecot
 fi
 
 sudo systemctl enable --now postfix
@@ -23,9 +23,12 @@ sudo systemctl enable --now postfix
 if command -v ufw &>/dev/null; then
     sudo ufw allow 25/tcp
     sudo ufw allow 587/tcp
+    sudo ufw allow 143/tcp
+    sudo ufw allow 993/tcp
+    sudo ufw allow 110/tcp
+    sudo ufw allow 995/tcp
 elif command -v firewall-cmd &>/dev/null; then
-    sudo firewall-cmd --permanent --add-port=25/tcp
-    sudo firewall-cmd --permanent --add-port=587/tcp
+    sudo firewall-cmd --permanent --add-port={25,587,143,993,110,995}/tcp
     sudo firewall-cmd --reload
 fi
 
