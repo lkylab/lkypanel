@@ -18,10 +18,10 @@ fi
 if command -v apt-get &>/dev/null; then PKG_MGR="apt"; else PKG_MGR="yum"; fi
 
 if [[ "$PKG_MGR" == "apt" ]]; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y redis-server 2>> "$LOG_FILE"
+    sudo apt-get install -y -q redis-server 2>> "$LOG_FILE"
     SERVICE_NAME="redis-server"
 else
-    sudo yum install -y redis 2>> "$LOG_FILE"
+    sudo yum install -y -q redis 2>> "$LOG_FILE"
     SERVICE_NAME="redis"
 fi
 

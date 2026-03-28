@@ -18,9 +18,9 @@ fi
 if command -v apt-get &>/dev/null; then
     echo "postfix postfix/main_mailer_type string 'Internet Site'" | sudo debconf-set-selections
     echo "postfix postfix/mailname string $(hostname)" | sudo debconf-set-selections
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postfix mailutils dovecot-imapd dovecot-pop3d dovecot-lmtpd 2>> "$LOG_FILE"
+    sudo apt-get install -y -q postfix mailutils dovecot-imapd dovecot-pop3d dovecot-lmtpd 2>> "$LOG_FILE"
 else
-    sudo yum install -y postfix dovecot 2>> "$LOG_FILE"
+    sudo yum install -y -q postfix dovecot 2>> "$LOG_FILE"
 fi
 
 sudo systemctl enable --now postfix

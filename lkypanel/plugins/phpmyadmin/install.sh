@@ -13,9 +13,9 @@ if [[ -f "$FLAG_FILE" ]]; then
 fi
 
 if command -v apt-get &>/dev/null; then
-    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y phpmyadmin
+    sudo apt-get install -y -q phpmyadmin
 else
-    sudo yum install -y phpmyadmin
+    sudo yum install -y -q phpmyadmin
 fi
 
 mkdir -p "$FLAG_DIR"
