@@ -7,28 +7,37 @@ from lkypanel.models import Website
 
 @admin_required
 def logs_page(request):
-    """Show the logs dashboard."""
-    websites = Website.objects.all()
+    """Show the logs dashboard with the selected log."""
+    log_id = request.GET.get('id', 'panel')
     selected_domain = request.GET.get('domain')
     
-    logs_data = {
-        'ols_error': get_log_content('ols_error', 50),
-        'ols_access': get_log_content('ols_access', 50),
-        'panel': get_log_content('panel', 50),
-        'fail2ban': get_log_content('fail2ban', 50),
-        'auth': get_log_content('auth', 50),
-        'syslog': get_log_content('syslog', 50),
+    # If it's a website log but no domain is selected, try to get the first website
+    if log_id.startswith('site_') and not selected_domain:
+        first_site = Website.objects.first()
+        if first_site:
+            selected_domain = first_site.domain
+
+    log_content = get_log_content(log_id, 100, domain=selected_domain)
+    
+    # Map ID to human name
+    names = {
+        'ols_error': 'OLS Error Log',
+        'ols_access': 'OLS Access Log',
+        'panel': 'Panel Log',
+        'fail2ban': 'Fail2Ban Log',
+        'auth': 'Auth Log',
+        'syslog': 'System Syslog',
+        'site_access': f'Site Access Log ({selected_domain})',
+        'site_error': f'Site Error Log ({selected_domain})',
     }
     
-    if selected_domain:
-        logs_data['site_access'] = get_log_content('site_access', 50, domain=selected_domain)
-        logs_data['site_error'] = get_log_content('site_error', 50, domain=selected_domain)
-
     return render(request, 'admin/logs.html', {
         'active_page': 'logs',
         'panel_user': request.panel_user,
-        'logs': logs_data,
-        'websites': websites,
+        'log_id': log_id,
+        'log_name': names.get(log_id, 'Log Viewer'),
+        'log_content': log_content,
+        'websites': Website.objects.all(),
         'selected_domain': selected_domain,
     })
 

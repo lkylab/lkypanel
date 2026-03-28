@@ -295,6 +295,49 @@
             background: rgba(99, 102, 241, 0.1);
         }
 
+        /* Sub-dropdowns */
+        .nav-sub-dropdown {
+            margin-left: 0.5rem;
+        }
+        .nav-sub-dropdown summary {
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 8px;
+        }
+        .nav-sub-dropdown summary:hover {
+            color: white;
+            background: rgba(255,255,255,0.03);
+        }
+        .nav-sub-dropdown .sub-content {
+            margin-left: 1rem;
+            border-left: 1px dashed var(--border);
+            padding-left: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+            margin-top: 0.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .sub-link {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            padding: 0.4rem 0.8rem;
+            border-radius: 6px;
+        }
+        .sub-link:hover {
+            color: var(--accent);
+            background: rgba(255,255,255,0.05);
+        }
+        .sub-link.active {
+            color: white;
+            background: var(--accent-primary);
+        }
+
         .btn-primary {
             background: var(--accent-primary);
             color: white;
@@ -488,28 +531,55 @@
             </a>
             {% endif %}
 
-            <details class="nav-dropdown" {% if active_page == 'logs' %}open{% endif %}>
+            <details class="nav-dropdown">
                 <summary class="nav-link" style="cursor: pointer;">
                     <i class="ph ph-scroll"></i>
                     <span>Logs</span>
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
-                    <a href="/admin/logs/?group=server" class="dropdown-item {% if request.GET.group == 'server' %}active{% endif %}">
-                        <i class="ph ph-hard-drive"></i> Server
-                    </a>
-                    <a href="/admin/logs/?group=panel" class="dropdown-item {% if request.GET.group == 'panel' %}active{% endif %}">
-                        <i class="ph ph-cpu"></i> Panel
-                    </a>
-                    <a href="/admin/logs/?group=security" class="dropdown-item {% if request.GET.group == 'security' %}active{% endif %}">
-                        <i class="ph ph-shield-check"></i> Security
-                    </a>
-                    <a href="/admin/logs/?group=system" class="dropdown-item {% if request.GET.group == 'system' %}active{% endif %}">
-                        <i class="ph ph-terminal-window"></i> System
-                    </a>
-                    <a href="/admin/logs/?group=website" class="dropdown-item {% if request.GET.group == 'website' %}active{% endif %}">
-                        <i class="ph ph-browser"></i> Website Logs
-                    </a>
+                    <!-- Server -->
+                    <details class="nav-sub-dropdown">
+                        <summary>Server <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
+                        <div class="sub-content">
+                            <a href="/admin/logs/?id=ols_error" class="sub-link {% if request.GET.id == 'ols_error' %}active{% endif %}">OLS Error Log</a>
+                            <a href="/admin/logs/?id=ols_access" class="sub-link {% if request.GET.id == 'ols_access' %}active{% endif %}">OLS Access Log</a>
+                        </div>
+                    </details>
+                    
+                    <!-- Panel -->
+                    <details class="nav-sub-dropdown">
+                        <summary>Panel <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
+                        <div class="sub-content">
+                            <a href="/admin/logs/?id=panel" class="sub-link {% if request.GET.id == 'panel' %}active{% endif %}">Panel Log</a>
+                        </div>
+                    </details>
+
+                    <!-- Security -->
+                    <details class="nav-sub-dropdown">
+                        <summary>Security <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
+                        <div class="sub-content">
+                            <a href="/admin/logs/?id=fail2ban" class="sub-link {% if request.GET.id == 'fail2ban' %}active{% endif %}">Fail2Ban</a>
+                            <a href="/admin/logs/?id=auth" class="sub-link {% if request.GET.id == 'auth' %}active{% endif %}">Auth Log</a>
+                        </div>
+                    </details>
+
+                    <!-- System -->
+                    <details class="nav-sub-dropdown">
+                        <summary>System <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
+                        <div class="sub-content">
+                            <a href="/admin/logs/?id=syslog" class="sub-link {% if request.GET.id == 'syslog' %}active{% endif %}">Syslog</a>
+                        </div>
+                    </details>
+
+                    <!-- Website Logs -->
+                    <details class="nav-sub-dropdown">
+                        <summary>Website Logs <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
+                        <div class="sub-content">
+                            <a href="/admin/logs/?id=site_access" class="sub-link {% if request.GET.id == 'site_access' %}active{% endif %}">Site Access Log</a>
+                            <a href="/admin/logs/?id=site_error" class="sub-link {% if request.GET.id == 'site_error' %}active{% endif %}">Site Error Log</a>
+                        </div>
+                    </details>
                 </div>
             </details>
 
