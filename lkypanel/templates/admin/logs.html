@@ -1,208 +1,194 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}Logs — LKYPanel{% endblock %}
-
-{% block head %}
-<style>
-    .log-layout { display: grid; grid-template-columns: 260px 1fr; gap: 1.5rem; height: calc(100vh - 180px); }
-    .log-sidebar { display: flex; flex-direction: column; gap: 0.25rem; overflow-y: auto; }
-    .log-group-title {
-        font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
-        color: var(--text-dim); padding: 0.75rem 0.75rem 0.25rem; font-weight: 600;
-    }
-    .log-btn {
-        display: flex; align-items: center; gap: 0.75rem;
-        padding: 0.6rem 0.75rem; border-radius: 10px; border: none;
-        background: none; color: var(--text-dim); cursor: pointer;
-        font-size: 0.875rem; width: 100%; text-align: left; transition: all 0.15s;
-    }
-    .log-btn:hover { background: var(--glass); color: var(--text-main); }
-    .log-btn.active { background: rgba(56,189,248,0.12); color: var(--accent-primary); }
-    .log-btn i { font-size: 1rem; flex-shrink: 0; }
-    .log-viewer {
-        background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-        display: flex; flex-direction: column; overflow: hidden;
-    }
-    .log-toolbar {
-        display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem;
-        border-bottom: 1px solid var(--border); flex-shrink: 0;
-    }
-    .log-title { font-weight: 600; font-size: 0.95rem; flex: 1; }
-    .log-content {
-        flex: 1; overflow-y: auto; padding: 1rem 1.25rem;
-        font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 0.78rem;
-        line-height: 1.7; white-space: pre-wrap; word-break: break-all;
-        background: rgba(0,0,0,0.2); color: #94a3b8;
-    }
-    .log-content .err  { color: #ef4444; }
-    .log-content .warn { color: #f59e0b; }
-    .log-content .ok   { color: #22c55e; }
-    .log-content .info { color: #38bdf8; }
-    .lines-select {
-        background: var(--glass); border: 1px solid var(--border); border-radius: 8px;
-        color: var(--text-main); padding: 0.3rem 0.6rem; font-size: 0.8rem; outline: none;
-    }
-    .site-select {
-        background: var(--glass); border: 1px solid var(--border); border-radius: 8px;
-        color: var(--text-main); padding: 0.3rem 0.6rem; font-size: 0.8rem; outline: none;
-        display: none;
-    }
-    .refresh-btn {
-        background: none; border: 1px solid var(--border); border-radius: 8px;
-        color: var(--text-dim); padding: 0.3rem 0.75rem; cursor: pointer; font-size: 0.8rem;
-        display: flex; align-items: center; gap: 0.4rem; transition: all 0.15s;
-    }
-    .refresh-btn:hover { color: var(--text-main); border-color: var(--accent-primary); }
-    .log-empty { color: var(--text-dim); font-size: 0.9rem; padding: 2rem; text-align: center; }
-</style>
-{% endblock %}
+{% block title %}System Logs - LKYPanel{% endblock %}
 
 {% block header %}
-    <h1>Logs</h1>
-    <p>View system, server and site logs in real time.</p>
+    <h1>System & Web Logs</h1>
+    <p>Monitor your server, panel, and website activities in real-time.</p>
 {% endblock %}
 
 {% block content %}
-<div class="log-layout animate-fade">
-
-    <!-- Sidebar -->
-    <div class="log-sidebar glass-card" style="padding: 0.75rem;">
-
-        <div class="log-group-title">Server</div>
-        <button class="log-btn" onclick="loadLog('lsws_error', this)">
-            <i class="ph ph-warning-circle"></i> OLS Error Log
-        </button>
-        <button class="log-btn" onclick="loadLog('lsws_access', this)">
-            <i class="ph ph-list-magnifying-glass"></i> OLS Access Log
-        </button>
-
-        <div class="log-group-title">Panel</div>
-        <button class="log-btn" onclick="loadLog('panel', this)">
-            <i class="ph ph-terminal"></i> Panel Log
-        </button>
-
-        <div class="log-group-title">Security</div>
-        <button class="log-btn" onclick="loadLog('fail2ban', this)">
-            <i class="ph ph-shield-warning"></i> Fail2Ban
-        </button>
-        <button class="log-btn" onclick="loadLog('auth', this)">
-            <i class="ph ph-lock-key"></i> Auth Log
-        </button>
-
-        <div class="log-group-title">System</div>
-        <button class="log-btn" onclick="loadLog('syslog', this)">
-            <i class="ph ph-hard-drives"></i> Syslog
-        </button>
-
-        <div class="log-group-title">Website Logs</div>
-        <button class="log-btn" onclick="loadLog('site_access', this)">
-            <i class="ph ph-globe"></i> Site Access Log
-        </button>
-        <button class="log-btn" onclick="loadLog('site_error', this)">
-            <i class="ph ph-bug"></i> Site Error Log
-        </button>
-
-    </div>
-
-    <!-- Viewer -->
-    <div class="log-viewer">
-        <div class="log-toolbar">
-            <span class="log-title" id="logTitle">Select a log from the left</span>
-            <select id="siteSelect" class="site-select" onchange="reloadLog()">
-                {% for site in sites %}
-                <option value="{{ site.domain }}">{{ site.domain }}</option>
-                {% endfor %}
-            </select>
-            <select id="linesSelect" class="lines-select" onchange="reloadLog()">
-                <option value="100">100 lines</option>
-                <option value="200" selected>200 lines</option>
-                <option value="500">500 lines</option>
-                <option value="1000">1000 lines</option>
-            </select>
-            <button class="refresh-btn" onclick="reloadLog()">
-                <i class="ph ph-arrows-clockwise"></i> Refresh
+<div class="animate-fade">
+    <div class="logs-container">
+        <!-- Server Logs -->
+        <div class="log-group">
+            <button class="log-group-header" onclick="toggleGroup('serverLogs')">
+                <span><i class="ph-bold ph-hard-drive"></i> Server</span>
+                <i class="ph ph-caret-down group-caret"></i>
             </button>
+            <div id="serverLogs" class="log-group-content" style="display: none;">
+                <div class="log-item">
+                    <div class="log-item-title">OLS Error Log</div>
+                    <pre class="log-viewer">{{ logs.ols_error }}</pre>
+                </div>
+                <div class="log-item">
+                    <div class="log-item-title">OLS Access Log</div>
+                    <pre class="log-viewer">{{ logs.ols_access }}</pre>
+                </div>
+            </div>
         </div>
-        <div class="log-content" id="logContent">
-            <div class="log-empty">
-                <i class="ph ph-scroll" style="font-size:2rem; display:block; margin-bottom:0.5rem; opacity:0.4;"></i>
-                Select a log source to view its contents.
+
+        <!-- Panel Logs -->
+        <div class="log-group">
+            <button class="log-group-header" onclick="toggleGroup('panelLogs')">
+                <span><i class="ph-bold ph-cpu"></i> Panel</span>
+                <i class="ph ph-caret-down group-caret"></i>
+            </button>
+            <div id="panelLogs" class="log-group-content" style="display: none;">
+                <div class="log-item">
+                    <div class="log-item-title">Panel Log (/var/log/lkypanel/panel.log)</div>
+                    <pre class="log-viewer">{{ logs.panel }}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Security Logs -->
+        <div class="log-group">
+            <button class="log-group-header" onclick="toggleGroup('securityLogs')">
+                <span><i class="ph-bold ph-shield-check"></i> Security</span>
+                <i class="ph ph-caret-down group-caret"></i>
+            </button>
+            <div id="securityLogs" class="log-group-content" style="display: none;">
+                <div class="log-item">
+                    <div class="log-item-title">Fail2Ban</div>
+                    <pre class="log-viewer">{{ logs.fail2ban }}</pre>
+                </div>
+                <div class="log-item">
+                    <div class="log-item-title">Auth Log</div>
+                    <pre class="log-viewer">{{ logs.auth }}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Logs -->
+        <div class="log-group">
+            <button class="log-group-header" onclick="toggleGroup('systemLogs')">
+                <span><i class="ph-bold ph-terminal-window"></i> System</span>
+                <i class="ph ph-caret-down group-caret"></i>
+            </button>
+            <div id="systemLogs" class="log-group-content" style="display: none;">
+                <div class="log-item">
+                    <div class="log-item-title">Syslog</div>
+                    <pre class="log-viewer">{{ logs.syslog }}</pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Website Logs -->
+        <div class="log-group">
+            <button class="log-group-header" onclick="toggleGroup('websiteLogs')">
+                <span><i class="ph-bold ph-browser"></i> Website Logs</span>
+                <i class="ph ph-caret-down group-caret"></i>
+            </button>
+            <div id="websiteLogs" class="log-group-content" style="display: none; padding: 1.5rem;">
+                <form method="GET" style="margin-bottom: 1.5rem; display: flex; gap: 1rem; align-items: flex-end;">
+                    <div style="flex: 1;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-dim);">Select Website</label>
+                        <select name="domain" onchange="this.form.submit()" style="width: 100%; padding: 0.75rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white;">
+                            <option value="">-- Choose a website --</option>
+                            {% for site in websites %}
+                            <option value="{{ site.domain }}" {% if selected_domain == site.domain %}selected{% endif %}>{{ site.domain }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </form>
+
+                {% if selected_domain %}
+                <div class="log-item">
+                    <div class="log-item-title">Site Access Log ({{ selected_domain }})</div>
+                    <pre class="log-viewer">{{ logs.site_access }}</pre>
+                </div>
+                <div class="log-item">
+                    <div class="log-item-title">Site Error Log ({{ selected_domain }})</div>
+                    <pre class="log-viewer">{{ logs.site_error }}</pre>
+                </div>
+                {% else %}
+                <p style="text-align: center; color: var(--text-dim); padding: 2rem;">Please select a website to view its logs.</p>
+                {% endif %}
             </div>
         </div>
     </div>
-
 </div>
-{% endblock %}
 
-{% block scripts %}
-<script>
-let currentType = '';
-
-function loadLog(type, btn) {
-    currentType = type;
-    document.querySelectorAll('.log-btn').forEach(b => b.classList.remove('active'));
-    if (btn) btn.classList.add('active');
-
-    const isSite = type === 'site_access' || type === 'site_error';
-    document.getElementById('siteSelect').style.display = isSite ? 'block' : 'none';
-
-    const titles = {
-        lsws_error:  'OLS Error Log',
-        lsws_access: 'OLS Access Log',
-        panel:       'Panel Log',
-        fail2ban:    'Fail2Ban Log',
-        auth:        'Auth Log',
-        syslog:      'Syslog',
-        site_access: 'Site Access Log',
-        site_error:  'Site Error Log',
-    };
-    document.getElementById('logTitle').textContent = titles[type] || type;
-    fetchLog(type);
-}
-
-function reloadLog() {
-    if (currentType) fetchLog(currentType);
-}
-
-async function fetchLog(type) {
-    const lines  = document.getElementById('linesSelect').value;
-    const domain = document.getElementById('siteSelect').value;
-    const el     = document.getElementById('logContent');
-
-    el.innerHTML = '<div class="log-empty"><i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite; font-size:1.5rem;"></i></div>';
-
-    let url = `/admin/logs/get/?type=${type}&lines=${lines}`;
-    if ((type === 'site_access' || type === 'site_error') && domain) {
-        url += `&domain=${encodeURIComponent(domain)}`;
-    }
-
-    try {
-        const resp = await fetch(url, { headers: { 'X-CSRFToken': '{{ csrf_token }}' } });
-        const data = await resp.json();
-
-        if (data.error) {
-            el.innerHTML = `<div class="log-empty" style="color:#ef4444;">${data.error}</div>`;
-            return;
-        }
-
-        el.innerHTML = colorize(data.content || '[Empty log]');
-        el.scrollTop = el.scrollHeight;
-    } catch(e) {
-        el.innerHTML = `<div class="log-empty" style="color:#ef4444;">Failed to load log.</div>`;
-    }
-}
-
-function colorize(text) {
-    return text
-        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-        .replace(/(ERROR|CRITICAL|error|FAIL|fail)/g, '<span class="err">$1</span>')
-        .replace(/(WARNING|WARN|warn)/g, '<span class="warn">$1</span>')
-        .replace(/(INFO|info|OK|success|started)/gi, '<span class="info">$1</span>')
-        .replace(/(Ban\s[\d\.]+)/g, '<span class="err">$1</span>')
-        .replace(/(Unban\s[\d\.]+)/g, '<span class="ok">$1</span>');
-}
-</script>
 <style>
-@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .log-group {
+        margin-bottom: 1rem;
+        border: 1px solid var(--border);
+        border-radius: 15px;
+        overflow: hidden;
+        background: var(--bg-card);
+    }
+    .log-group-header {
+        width: 100%;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: none;
+        border: none;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-size: 1rem;
+    }
+    .log-group-header:hover {
+        background: rgba(255,255,255,0.05);
+    }
+    .log-group-header span {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .group-caret {
+        transition: transform 0.3s;
+    }
+    .log-group-content.active + .log-group-header .group-caret {
+        transform: rotate(180deg);
+    }
+    .log-item {
+        padding: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+    .log-item-title {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+        margin-bottom: 0.75rem;
+        font-family: monospace;
+    }
+    .log-viewer {
+        background: #0d1117;
+        color: #e6edf3;
+        padding: 1rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        line-height: 1.4;
+        max-height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-break: break-all;
+        border: 1px solid #30363d;
+    }
 </style>
+
+<script>
+    function toggleGroup(id) {
+        const content = document.getElementById(id);
+        const header = content.previousElementSibling;
+        const isVisible = content.style.display !== 'none';
+        
+        content.style.display = isVisible ? 'none' : 'block';
+        
+        const caret = header.querySelector('.group-caret');
+        caret.style.transform = isVisible ? 'rotate(0)' : 'rotate(180deg)';
+    }
+    
+    // Auto-open Website Logs if domain is selected
+    window.addEventListener('load', () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('domain')) {
+            toggleGroup('websiteLogs');
+        }
+    });
+</script>
 {% endblock %}
