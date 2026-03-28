@@ -1,18 +1,15 @@
 """Logs management — admin views."""
 from django.shortcuts import render
 from lkypanel.admin_views.decorators import admin_required
+from django.http import JsonResponse
 from lkypanel.services.logs import get_log_content
 from lkypanel.models import Website
 
 @admin_required
-def logs_dashboard(request):
+def logs_page(request):
     """Show the logs dashboard."""
     websites = Website.objects.all()
     selected_domain = request.GET.get('domain')
-    
-    # We load them on demand via AJAX or just pass some initial data?
-    # The user asked for "collapse by default", so maybe I just load names first
-    # or load the last 50 lines for each.
     
     logs_data = {
         'ols_error': get_log_content('ols_error', 50),
@@ -34,3 +31,12 @@ def logs_dashboard(request):
         'websites': websites,
         'selected_domain': selected_domain,
     })
+
+@admin_required
+def get_log(request):
+    """API endpoint to get log content."""
+    log_id = request.GET.get('id')
+    domain = request.GET.get('domain')
+    lines = int(request.GET.get('lines', 100))
+    content = get_log_content(log_id, lines, domain)
+    return JsonResponse({'content': content})
