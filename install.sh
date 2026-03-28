@@ -137,14 +137,9 @@ info "Step 3/9 — Skipping MariaDB setup (optional package)..."
 # ── Step 4: Create system user and directories ────────────────────────────────
 info "Step 4/9 — Creating directories and system user..."
 
-# System user (no login shell)
-if ! id "$PANEL_USER" &>/dev/null; then
-    info "Creating system user $PANEL_USER..."
-    useradd --system --no-create-home --shell /usr/sbin/nologin "$PANEL_USER"
-    success "User $PANEL_USER created"
-else
-    success "User $PANEL_USER already exists — skipping"
-fi
+mkdir -p "/home/$PANEL_USER"
+chown "$PANEL_USER":"$PANEL_USER" "/home/$PANEL_USER"
+chmod 700 "/home/$PANEL_USER"
 
 mkdir -p "$INSTALL_DIR" "$LOG_DIR" "$DB_DIR" "$SSL_DIR"
 mkdir -p /usr/local/lsws/conf/vhosts
@@ -264,52 +259,17 @@ PYEOF
 
 success "Django setup complete"
 
-# ── Plugin selection ──────────────────────────────────────────────────────────
+# ── Plugin installation ───────────────────────────────────────────────────────
+info "Installing all available plugins..."
 
-show_plugin_checklist() {
-    local plugins_dir="$APP_ROOT/lkypanel/plugins"
-    declare -A selected
-    declare -a plugin_ids
-
-    for dir in "$plugins_dir"/*/; do
-        [[ -d "$dir" ]] || continue
-        local id; id=$(basename "$dir")
-        plugin_ids+=("$id")
-        selected["$id"]=0
-    done
-
-    while true; do
-        echo ""
-        echo "  Select plugins to install (enter number to toggle, Enter to confirm):"
-        for i in "${!plugin_ids[@]}"; do
-            local id="${plugin_ids[$i]}"
-            local desc; desc=$(python3 -c "import json; d=json.load(open('$plugins_dir/$id/meta.json')); print(d['description'])" 2>/dev/null || echo "$id")
-            local mark="[ ]"; [[ "${selected[$id]}" == "1" ]] && mark="[x]"
-            echo "  $((i+1))) $mark $id — $desc"
-        done
-        echo ""
-        read -rp "  Toggle number (or press Enter to confirm): " choice
-        [[ -z "$choice" ]] && break
-        if [[ "$choice" =~ ^[0-9]+$ ]]; then
-            local idx=$((choice - 1))
-            local id="${plugin_ids[$idx]:-}"
-            [[ -n "$id" ]] && selected["$id"]=$(( 1 - ${selected[$id]} ))
-        fi
-    done
-
-    for id in "${plugin_ids[@]}"; do
-        if [[ "${selected[$id]}" == "1" ]]; then
-            info "Installing plugin: $id"
-            bash "$plugins_dir/$id/install.sh" || warn "Plugin $id install failed — continuing"
-        fi
-    done
-}
-
-if [[ "${LKYPANEL_NONINTERACTIVE:-0}" == "1" ]]; then
-    info "Non-interactive mode — skipping plugin selection"
-else
-    show_plugin_checklist
-fi
+local plugins_dir="$APP_ROOT/lkypanel/plugins"
+for dir in "$plugins_dir"/*/; do
+    [[ -d "$dir" ]] || continue
+    local id; id=$(basename "$dir")
+    info "Installing plugin: $id"
+    # Run the install script for each plugin
+    bash "$dir/install.sh" || warn "Plugin $id install failed — continuing"
+done
 
 # ── Systemd services ──────────────────────────────────────────────────────────
 info "Installing systemd services..."
