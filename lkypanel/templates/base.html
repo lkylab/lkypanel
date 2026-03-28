@@ -243,6 +243,58 @@
             color: var(--text-main);
         }
 
+        .nav-link:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent);
+        }
+
+        /* Sidebar Dropdown Styles */
+        .nav-dropdown {
+            margin-bottom: 0.5rem;
+        }
+        .nav-dropdown summary {
+            list-style: none;
+            outline: none;
+        }
+        .nav-dropdown summary::-webkit-details-marker {
+            display: none;
+        }
+        .nav-dropdown .dropdown-caret {
+            margin-left: auto;
+            font-size: 0.8rem;
+            transition: transform 0.3s;
+        }
+        .nav-dropdown[open] .dropdown-caret {
+            transform: rotate(180deg);
+        }
+        .dropdown-content {
+            margin-left: 1.5rem;
+            border-left: 1px solid var(--border);
+            padding-left: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
+        }
+        .dropdown-item {
+            padding: 0.6rem 1rem;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+        }
+        .dropdown-item.active {
+            color: var(--accent);
+            background: rgba(99, 102, 241, 0.1);
+        }
+
         .btn-primary {
             background: var(--accent-primary);
             color: white;
@@ -435,18 +487,33 @@
                 <span>Databases</span>
             </a>
             {% endif %}
-            <a href="/admin/logs/" class="nav-link {% if active_page == 'logs' %}active{% endif %}">
-                <i class="ph ph-terminal-window"></i>
-                <span>Logs</span>
-            </a>
+
+            <details class="nav-dropdown" {% if active_page == 'logs' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-scroll"></i>
+                    <span>Logs</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/logs/?group=server" class="dropdown-item {% if request.GET.group == 'server' %}active{% endif %}">
+                        <i class="ph ph-hard-drive"></i> Server
+                    </a>
+                    <a href="/admin/logs/?group=panel" class="dropdown-item {% if request.GET.group == 'panel' %}active{% endif %}">
+                        <i class="ph ph-cpu"></i> Panel
+                    </a>
+                    <a href="/admin/logs/?group=security" class="dropdown-item {% if request.GET.group == 'security' %}active{% endif %}">
+                        <i class="ph ph-shield-check"></i> Security
+                    </a>
+                    <a href="/admin/logs/?group=system" class="dropdown-item {% if request.GET.group == 'system' %}active{% endif %}">
+                        <i class="ph ph-terminal-window"></i> System
+                    </a>
+                    <a href="/admin/logs/?group=website" class="dropdown-item {% if request.GET.group == 'website' %}active{% endif %}">
+                        <i class="ph ph-browser"></i> Website Logs
+                    </a>
+                </div>
+            </details>
+
             <a href="/admin/packages/" class="nav-link {% if active_page == 'packages' %}active{% endif %}">
-                <i class="ph ph-package"></i>
-                <span>Packages</span>
-            </a>
-            <a href="/admin/logs/" class="nav-link {% if active_page == 'logs' %}active{% endif %}">
-                <i class="ph ph-scroll"></i>
-                <span>Logs</span>
-            </a>
             <a href="/admin/settings/" class="nav-link {% if active_page == 'settings' %}active{% endif %}">
                 <i class="ph ph-gear"></i>
                 <span>Settings</span>

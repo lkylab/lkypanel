@@ -183,11 +183,31 @@
         caret.style.transform = isVisible ? 'rotate(0)' : 'rotate(180deg)';
     }
     
-    // Auto-open Website Logs if domain is selected
+    // Auto-open group based on URL parameter
     window.addEventListener('load', () => {
         const urlParams = new URLSearchParams(window.location.search);
+        const group = urlParams.get('group');
+        if (group) {
+            const map = {
+                'server': 'serverLogs',
+                'panel': 'panelLogs',
+                'security': 'securityLogs',
+                'system': 'systemLogs',
+                'website': 'websiteLogs'
+            };
+            if (map[group]) {
+                toggleGroup(map[group]);
+                // Scroll to it
+                document.getElementById(map[group]).parentElement.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+        
         if (urlParams.has('domain')) {
-            toggleGroup('websiteLogs');
+            // Already handled by existing logic but ensure it's open
+            const content = document.getElementById('websiteLogs');
+            if (content && content.style.display === 'none') {
+                 toggleGroup('websiteLogs');
+            }
         }
     });
 </script>
