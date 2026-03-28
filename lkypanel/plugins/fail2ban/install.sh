@@ -13,12 +13,12 @@ if [[ -f "$FLAG_FILE" ]]; then
 fi
 
 if command -v apt-get &>/dev/null; then
-    apt-get install -y fail2ban
+    sudo apt-get install -y fail2ban
 else
-    yum install -y fail2ban
+    sudo yum install -y fail2ban
 fi
 
-systemctl enable --now fail2ban
+sudo systemctl enable --now fail2ban
 
 mkdir -p "$FLAG_DIR"
 touch "$FLAG_FILE"

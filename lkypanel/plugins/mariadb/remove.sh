@@ -11,12 +11,12 @@ if [[ ! -f "$FLAG_FILE" ]]; then
     exit 0
 fi
 
-systemctl disable --now mariadb || true
+sudo systemctl disable --now mariadb || true
 
 if command -v apt-get &>/dev/null; then
-    apt-get remove -y mariadb-server mariadb-client
+    sudo apt-get remove -y mariadb-server mariadb-client
 else
-    yum remove -y mariadb-server mariadb
+    sudo yum remove -y mariadb-server mariadb
 fi
 
 rm -f "$FLAG_FILE"

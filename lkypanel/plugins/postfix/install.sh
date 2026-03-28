@@ -13,20 +13,20 @@ if [[ -f "$FLAG_FILE" ]]; then
 fi
 
 if command -v apt-get &>/dev/null; then
-    DEBIAN_FRONTEND=noninteractive apt-get install -y postfix mailutils
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y postfix mailutils
 else
-    yum install -y postfix
+    sudo yum install -y postfix
 fi
 
-systemctl enable --now postfix
+sudo systemctl enable --now postfix
 
 if command -v ufw &>/dev/null; then
-    ufw allow 25/tcp
-    ufw allow 587/tcp
+    sudo ufw allow 25/tcp
+    sudo ufw allow 587/tcp
 elif command -v firewall-cmd &>/dev/null; then
-    firewall-cmd --permanent --add-port=25/tcp
-    firewall-cmd --permanent --add-port=587/tcp
-    firewall-cmd --reload
+    sudo firewall-cmd --permanent --add-port=25/tcp
+    sudo firewall-cmd --permanent --add-port=587/tcp
+    sudo firewall-cmd --reload
 fi
 
 mkdir -p "$FLAG_DIR"

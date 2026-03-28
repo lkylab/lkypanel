@@ -12,9 +12,9 @@ if [[ ! -f "$FLAG_FILE" ]]; then
 fi
 
 if command -v apt-get &>/dev/null; then
-    apt-get remove -y phpmyadmin
+    sudo apt-get remove -y phpmyadmin
 else
-    yum remove -y phpmyadmin
+    sudo yum remove -y phpmyadmin
 fi
 
 rm -f "$FLAG_FILE"

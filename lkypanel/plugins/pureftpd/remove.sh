@@ -11,21 +11,21 @@ if [[ ! -f "$FLAG_FILE" ]]; then
     exit 0
 fi
 
-systemctl disable --now pure-ftpd || true
+sudo systemctl disable --now pure-ftpd || true
 
 if command -v apt-get &>/dev/null; then
-    apt-get remove -y pure-ftpd
+    sudo apt-get remove -y pure-ftpd
 else
-    yum remove -y pure-ftpd
+    sudo yum remove -y pure-ftpd
 fi
 
 if command -v ufw &>/dev/null; then
-    ufw delete allow 21/tcp
-    ufw delete allow 20/tcp
+    sudo ufw delete allow 21/tcp
+    sudo ufw delete allow 20/tcp
 elif command -v firewall-cmd &>/dev/null; then
-    firewall-cmd --permanent --remove-port=21/tcp
-    firewall-cmd --permanent --remove-port=20/tcp
-    firewall-cmd --reload
+    sudo firewall-cmd --permanent --remove-port=21/tcp
+    sudo firewall-cmd --permanent --remove-port=20/tcp
+    sudo firewall-cmd --reload
 fi
 
 rm -f "$FLAG_FILE"

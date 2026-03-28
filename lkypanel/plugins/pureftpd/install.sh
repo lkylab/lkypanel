@@ -15,20 +15,20 @@ fi
 if command -v apt-get &>/dev/null; then PKG_MGR="apt"; else PKG_MGR="yum"; fi
 
 if [[ "$PKG_MGR" == "apt" ]]; then
-    apt-get install -y pure-ftpd
+    sudo apt-get install -y pure-ftpd
 else
-    yum install -y pure-ftpd
+    sudo yum install -y pure-ftpd
 fi
 
-systemctl enable --now pure-ftpd
+sudo systemctl enable --now pure-ftpd
 
 if command -v ufw &>/dev/null; then
-    ufw allow 21/tcp
-    ufw allow 20/tcp
+    sudo ufw allow 21/tcp
+    sudo ufw allow 20/tcp
 elif command -v firewall-cmd &>/dev/null; then
-    firewall-cmd --permanent --add-port=21/tcp
-    firewall-cmd --permanent --add-port=20/tcp
-    firewall-cmd --reload
+    sudo firewall-cmd --permanent --add-port=21/tcp
+    sudo firewall-cmd --permanent --add-port=20/tcp
+    sudo firewall-cmd --reload
 fi
 
 mkdir -p "$FLAG_DIR"

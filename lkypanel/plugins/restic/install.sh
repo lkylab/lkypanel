@@ -13,9 +13,9 @@ if [[ -f "$FLAG_FILE" ]]; then
 fi
 
 if command -v apt-get &>/dev/null; then
-    apt-get install -y restic
+    sudo apt-get install -y restic
 else
-    yum install -y restic
+    sudo yum install -y restic
 fi
 
 mkdir -p "$FLAG_DIR"

@@ -12,9 +12,9 @@ if [[ ! -f "$FLAG_FILE" ]]; then
 fi
 
 if command -v apt-get &>/dev/null; then
-    apt-get remove -y restic
+    sudo apt-get remove -y restic
 else
-    yum remove -y restic
+    sudo yum remove -y restic
 fi
 
 rm -f "$FLAG_FILE"

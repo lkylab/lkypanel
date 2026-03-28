@@ -12,13 +12,13 @@ if [[ -f "$FLAG_FILE" ]]; then
     exit 0
 fi
 
-if command -v apt-get &>/dev/null; then
-    apt-get install -y redis-server
+if [[ "$PKG_MGR" == "apt" ]]; then
+    sudo apt-get install -y redis-server
 else
-    yum install -y redis
+    sudo yum install -y redis
 fi
 
-systemctl enable --now redis
+sudo systemctl enable --now redis
 
 mkdir -p "$FLAG_DIR"
 touch "$FLAG_FILE"

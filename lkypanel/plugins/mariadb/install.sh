@@ -15,12 +15,12 @@ fi
 if command -v apt-get &>/dev/null; then PKG_MGR="apt"; else PKG_MGR="yum"; fi
 
 if [[ "$PKG_MGR" == "apt" ]]; then
-    apt-get install -y mariadb-server mariadb-client
+    sudo apt-get install -y mariadb-server mariadb-client
 else
-    yum install -y mariadb-server mariadb
+    sudo yum install -y mariadb-server mariadb
 fi
 
-systemctl enable --now mariadb
+sudo systemctl enable --now mariadb
 
 mkdir -p "$FLAG_DIR"
 touch "$FLAG_FILE"

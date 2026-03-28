@@ -11,12 +11,12 @@ if [[ ! -f "$FLAG_FILE" ]]; then
     exit 0
 fi
 
-systemctl disable --now fail2ban || true
+sudo systemctl disable --now fail2ban || true
 
 if command -v apt-get &>/dev/null; then
-    apt-get remove -y fail2ban
+    sudo apt-get remove -y fail2ban
 else
-    yum remove -y fail2ban
+    sudo yum remove -y fail2ban
 fi
 
 rm -f "$FLAG_FILE"

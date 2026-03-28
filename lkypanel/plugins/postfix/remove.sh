@@ -11,21 +11,21 @@ if [[ ! -f "$FLAG_FILE" ]]; then
     exit 0
 fi
 
-systemctl disable --now postfix || true
+sudo systemctl disable --now postfix || true
 
 if command -v apt-get &>/dev/null; then
-    apt-get remove -y postfix mailutils
+    sudo apt-get remove -y postfix mailutils
 else
-    yum remove -y postfix
+    sudo yum remove -y postfix
 fi
 
 if command -v ufw &>/dev/null; then
-    ufw delete allow 25/tcp
-    ufw delete allow 587/tcp
+    sudo ufw delete allow 25/tcp
+    sudo ufw delete allow 587/tcp
 elif command -v firewall-cmd &>/dev/null; then
-    firewall-cmd --permanent --remove-port=25/tcp
-    firewall-cmd --permanent --remove-port=587/tcp
-    firewall-cmd --reload
+    sudo firewall-cmd --permanent --remove-port=25/tcp
+    sudo firewall-cmd --permanent --remove-port=587/tcp
+    sudo firewall-cmd --reload
 fi
 
 rm -f "$FLAG_FILE"

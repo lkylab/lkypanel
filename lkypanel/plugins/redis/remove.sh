@@ -11,12 +11,12 @@ if [[ ! -f "$FLAG_FILE" ]]; then
     exit 0
 fi
 
-systemctl disable --now redis || true
+sudo systemctl disable --now redis || true
 
 if command -v apt-get &>/dev/null; then
-    apt-get remove -y redis-server
+    sudo apt-get remove -y redis-server
 else
-    yum remove -y redis
+    sudo yum remove -y redis
 fi
 
 rm -f "$FLAG_FILE"
