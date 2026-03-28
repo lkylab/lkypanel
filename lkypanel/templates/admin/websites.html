@@ -1,0 +1,278 @@
+{% extends 'base.html' %}
+
+{% block title %}Websites — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>Websites</h1>
+    <p>Manage your OpenLiteSpeed vhosts and configurations.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 2rem;">
+        <button class="btn btn-primary" onclick="openCreateModal()">
+            <i class="ph ph-plus"></i> Create Website
+        </button>
+    </div>
+
+    <div class="section-card">
+        <div class="table-container" style="margin-top: 0; border-radius: 20px; border: none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Domain</th>
+                        <th>Owner</th>
+                        <th>PHP</th>
+                        <th>SSL</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="website-list">
+                    {% for site in websites %}
+                    <tr>
+                        <td>
+                            <a href="/admin/websites/{{ site.id }}/detail/" style="font-weight:600; color:var(--accent-primary); text-decoration:none;">
+                                {{ site.domain }}
+                            </a>
+                        </td>
+                        <td style="color:var(--text-dim);">{{ site.owner.username }}</td>
+                        <td><span class="status-pill btn-ghost">PHP {{ site.php_version }}</span></td>
+                        <td>
+                            {% if site.ssl_enabled %}
+                            <span class="badge" style="background:rgba(34,197,94,0.1);color:#22c55e;">
+                                <i class="ph ph-shield-check"></i> Active
+                            </span>
+                            {% else %}
+                            <button class="btn btn-ghost btn-xs" onclick="requestSSL({{ site.id }}, this)" title="Enable SSL">
+                                <i class="ph ph-shield-slash" style="color:#f59e0b;"></i> Enable SSL
+                            </button>
+                            {% endif %}
+                        </td>
+                        <td><span class="status-pill status-online">Running</span></td>
+                        <td>
+                            <div style="display:flex; gap:0.5rem;">
+                                <a href="/admin/websites/{{ site.id }}/detail/" class="btn btn-ghost btn-sm" title="Details">
+                                    <i class="ph ph-eye"></i>
+                                </a>
+                                <button class="btn btn-ghost btn-sm" onclick="openConfigModal({{ site.id }}, '{{ site.php_version }}')" title="Configure">
+                                    <i class="ph ph-sliders"></i>
+                                </button>
+                                <button class="btn btn-ghost btn-sm" onclick="deleteSite({{ site.id }}, this)" title="Delete">
+                                    <i class="ph ph-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim);">
+                            <i class="ph ph-browser" style="font-size:3rem; display:block; margin-bottom:1rem; opacity:0.5;"></i>
+                            No websites yet. Create your first one!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Website Modal -->
+<div id="createModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:460px; border-color:var(--accent-primary); position:relative;">
+        <button onclick="closeCreateModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.25rem;"><i class="ph ph-x"></i></button>
+        <h2 style="margin-bottom:1.5rem;">Create New Website</h2>
+        <div id="createError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#ef4444; font-size:0.9rem;"></div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Domain Name</label>
+            <input type="text" id="new_domain" placeholder="example.com" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Owner (User)</label>
+            <select id="new_owner" style="width:100%; padding:0.85rem; background:#1e293b; border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+                {% for u in users %}
+                <option value="{{ u.id }}">{{ u.username }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">PHP Version</label>
+            <select id="new_php" style="width:100%; padding:0.85rem; background:#1e293b; border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+                <option value="8.1">PHP 8.1</option>
+                <option value="8.2">PHP 8.2</option>
+                <option value="8.3">PHP 8.3</option>
+            </select>
+        </div>
+        <label style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1.5rem; cursor:pointer; font-size:0.9rem; color:var(--text-dim);">
+            <input type="checkbox" id="new_ssl" style="width:16px; height:16px; accent-color:var(--accent-primary); cursor:pointer;">
+            Enable SSL (Let's Encrypt) — DNS must already point to this server
+        </label>
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="closeCreateModal()">Cancel</button>
+            <button class="btn btn-primary" id="createBtn" onclick="submitCreate()">
+                <i class="ph ph-plus"></i> Create Now
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Configure PHP Modal -->
+<div id="configModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:400px; border-color:var(--accent-primary); position:relative;">
+        <button onclick="closeConfigModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.25rem;"><i class="ph ph-x"></i></button>
+        <h2 style="margin-bottom:1.5rem;">Configure Website</h2>
+        <input type="hidden" id="config_site_id">
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">PHP Version</label>
+            <select id="config_php" style="width:100%; padding:0.85rem; background:#1e293b; border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+                <option value="8.1">PHP 8.1</option>
+                <option value="8.2">PHP 8.2</option>
+                <option value="8.3">PHP 8.3</option>
+            </select>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="closeConfigModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitConfig()">Save Changes</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openCreateModal() {
+        document.getElementById('createModal').style.display = 'flex';
+        document.getElementById('createError').style.display = 'none';
+        document.getElementById('new_domain').value = '';
+        document.getElementById('new_ssl').checked = false;
+    }
+    function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
+
+    function openConfigModal(id, php) {
+        document.getElementById('config_site_id').value = id;
+        document.getElementById('config_php').value = php;
+        document.getElementById('configModal').style.display = 'flex';
+    }
+    function closeConfigModal() { document.getElementById('configModal').style.display = 'none'; }
+
+    async function submitCreate() {
+        const domain = document.getElementById('new_domain').value.trim();
+        const owner_id = document.getElementById('new_owner').value;
+        const php_version = document.getElementById('new_php').value;
+        const enable_ssl = document.getElementById('new_ssl').checked;
+        const errBox = document.getElementById('createError');
+        const btn = document.getElementById('createBtn');
+
+        if (!domain) { errBox.textContent = 'Please enter a domain name.'; errBox.style.display = 'block'; return; }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Creating...';
+
+        const resp = await fetch('/admin/websites/create/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ domain, owner_id: parseInt(owner_id), php_version })
+        });
+
+        if (!resp.ok) {
+            const data = await resp.json().catch(() => ({}));
+            errBox.textContent = data.error || 'Failed to create website.';
+            errBox.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph ph-plus"></i> Create Now';
+            return;
+        }
+
+        const site = await resp.json();
+
+        if (enable_ssl) {
+            btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Requesting SSL...';
+            const sslResp = await fetch(`/admin/websites/${site.id}/ssl/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+            });
+            if (!sslResp.ok) {
+                const sslData = await sslResp.json().catch(() => ({}));
+                const msg = sslData.code === 'DNS_CHECK_FAILED'
+                    ? 'Site created but SSL failed: DNS not pointing to this server yet.'
+                    : `Site created but SSL failed: ${sslData.error || 'Unknown error'}`;
+                errBox.textContent = msg;
+                errBox.style.display = 'block';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ph ph-plus"></i> Create Now';
+                // Still reload to show the new site
+                setTimeout(() => { closeCreateModal(); window.location.reload(); }, 2000);
+                return;
+            }
+        }
+
+        closeCreateModal();
+        window.location.reload();
+    }
+
+    async function submitConfig() {
+        const id = document.getElementById('config_site_id').value;
+        const php_version = document.getElementById('config_php').value;
+        const resp = await fetch(`/admin/websites/${id}/config/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ php_version })
+        });
+        if (resp.ok) { closeConfigModal(); window.location.reload(); }
+        else alert('Failed to update configuration.');
+    }
+
+    async function deleteSite(id, btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i>';
+        const resp = await fetch(`/admin/websites/${id}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirm: true, delete_files: true })
+        });
+        if (resp.ok) {
+            window.location.reload();
+        } else {
+            const data = await resp.json().catch(() => ({}));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph ph-trash"></i>';
+            btn.style.color = '#ef4444';
+            alert(data.error || 'Failed to delete website.');
+        }
+    }
+
+    async function requestSSL(id, btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Requesting...';
+        const resp = await fetch(`/admin/websites/${id}/ssl/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+        });
+        if (resp.ok) {
+            window.location.reload();
+        } else {
+            const data = await resp.json().catch(() => ({}));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph ph-shield-slash" style="color:#f59e0b;"></i> Enable SSL';
+            const msg = data.code === 'DNS_CHECK_FAILED'
+                ? `DNS not pointing to this server yet.\n\nPoint your domain's A record to this server's IP, wait for propagation, then try again.`
+                : data.error?.includes('dry-run')
+                ? `SSL validation failed. Ensure:\n• DNS A record points to this server\n• Port 80 is open\n• Cloudflare proxy is disabled (grey cloud) during cert issuance`
+                : (data.error || 'SSL request failed.');
+            alert(msg);
+        }
+    }
+
+    // Close modals on backdrop click
+    document.getElementById('createModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCreateModal();
+    });
+    document.getElementById('configModal').addEventListener('click', function(e) {
+        if (e.target === this) closeConfigModal();
+    });
+</script>
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+{% endblock %}

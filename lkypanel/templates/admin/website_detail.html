@@ -1,0 +1,252 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ site.domain }} — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>{{ site.domain }}</h1>
+    <p>Website details and management.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div style="margin-bottom:1.5rem;">
+        <a href="/admin/websites/" class="btn btn-ghost btn-sm"><i class="ph ph-arrow-left"></i> Back to Websites</a>
+    </div>
+
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px,1fr)); gap:1.25rem; margin-bottom:2rem;">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="ph-bold ph-globe"></i></div>
+            <div>
+                <div class="stat-value" style="font-size:1rem; word-break:break-all;">{{ site.domain }}</div>
+                <div class="stat-label">Domain</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="ph-bold ph-user"></i></div>
+            <div>
+                <div class="stat-value" style="font-size:1rem;">{{ site.owner.username }}</div>
+                <div class="stat-label">Owner</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="ph-bold ph-code"></i></div>
+            <div>
+                <div class="stat-value" style="font-size:1rem;">PHP {{ site.php_version }}</div>
+                <div class="stat-label">PHP Version</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon {% if site.ssl_enabled %}green{% else %}red{% endif %}">
+                <i class="ph-bold ph-shield-{% if site.ssl_enabled %}check{% else %}slash{% endif %}"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="font-size:1rem;">{% if site.ssl_enabled %}Active{% else %}Inactive{% endif %}</div>
+                <div class="stat-label">SSL Status</div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+        <!-- Info Card -->
+        <div class="glass-card" style="padding:1.5rem;">
+            <h3 style="margin-bottom:1.25rem; font-size:1rem;">Site Information</h3>
+            <div style="display:flex; flex-direction:column; gap:0.75rem; font-size:0.9rem;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">Document Root</span>
+                    <code style="font-size:0.8rem; color:var(--accent-primary);">{{ site.doc_root }}</code>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">Created</span>
+                    <span>{{ site.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">FTP Accounts</span>
+                    <span>{{ ftp_count }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">Databases</span>
+                    <span>{{ db_count }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">Git Repos</span>
+                    <span>{{ git_count }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions Card -->
+        <div class="glass-card" style="padding:1.5rem;">
+            <h3 style="margin-bottom:1.25rem; font-size:1rem;">Quick Actions</h3>
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                {% if not site.ssl_enabled %}
+                <button class="btn btn-primary" onclick="requestSSL({{ site.id }}, '{{ site.domain }}')">
+                    <i class="ph ph-shield-check"></i> Enable SSL (Let's Encrypt)
+                </button>
+                {% else %}
+                <button class="btn btn-ghost" disabled style="opacity:0.6;">
+                    <i class="ph ph-shield-check" style="color:#22c55e;"></i> SSL Active
+                </button>
+                {% endif %}
+                <button class="btn btn-ghost" onclick="openConfigModal()">
+                    <i class="ph ph-sliders"></i> Change PHP Version
+                </button>
+                {% if pureftpd_installed %}
+                <a href="/user/sites/{{ site.id }}/ftp/" class="btn btn-ghost">
+                    <i class="ph ph-user"></i> Manage FTP Accounts
+                </a>
+                {% else %}
+                <a href="/admin/packages/" class="btn btn-ghost" style="opacity:0.5;" title="Pure-FTPd must be installed">
+                    <i class="ph ph-user"></i> FTP Accounts <span style="font-size:0.75rem;color:#fb923c;">(Install Pure-FTPd)</span>
+                </a>
+                {% endif %}
+                {% if mariadb_installed %}
+                <a href="/user/sites/{{ site.id }}/databases/" class="btn btn-ghost">
+                    <i class="ph ph-database"></i> Manage Databases
+                </a>
+                {% else %}
+                <a href="/admin/packages/" class="btn btn-ghost" style="opacity:0.5;" title="MariaDB must be installed">
+                    <i class="ph ph-database"></i> Databases <span style="font-size:0.75rem;color:#fb923c;">(Install MariaDB)</span>
+                </a>
+                {% endif %}
+                <button class="btn btn-ghost" style="color:#ef4444;" onclick="deleteSite({{ site.id }}, '{{ site.domain }}')">
+                    <i class="ph ph-trash"></i> Delete Website
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Site Logs -->
+    <div style="margin-top:1.5rem;">
+        <div style="display:flex; gap:1rem; margin-bottom:1rem;">
+            <button class="btn btn-ghost btn-sm {% if log_type == 'access' %}btn-primary{% endif %}" onclick="switchLog('access', this)" id="btnAccess">
+                <i class="ph ph-list-magnifying-glass"></i> Access Log
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="switchLog('error', this)" id="btnError">
+                <i class="ph ph-warning-circle"></i> Error Log
+            </button>
+            <select id="linesSelect" onchange="reloadLog()" style="background:var(--glass); border:1px solid var(--border); border-radius:8px; color:var(--text-main); padding:0.3rem 0.6rem; font-size:0.8rem; outline:none; margin-left:auto;">
+                <option value="100">100 lines</option>
+                <option value="200" selected>200 lines</option>
+                <option value="500">500 lines</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="reloadLog()"><i class="ph ph-arrows-clockwise"></i></button>
+        </div>
+        <div id="logBox" style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:12px; padding:1rem; font-family:monospace; font-size:0.78rem; line-height:1.7; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow-y:auto; color:#94a3b8;">
+            Loading...
+        </div>
+    </div>
+</div>
+
+<!-- Configure PHP Modal -->
+<div id="configModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:400px; border-color:var(--accent-primary); position:relative;">
+        <button onclick="document.getElementById('configModal').style.display='none'" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.25rem;"><i class="ph ph-x"></i></button>
+        <h2 style="margin-bottom:1.5rem;">Change PHP Version</h2>
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">PHP Version</label>
+            <select id="config_php" style="width:100%; padding:0.85rem; background:#1e293b; border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+                <option value="8.1" {% if site.php_version == '8.1' %}selected{% endif %}>PHP 8.1</option>
+                <option value="8.2" {% if site.php_version == '8.2' %}selected{% endif %}>PHP 8.2</option>
+                <option value="8.3" {% if site.php_version == '8.3' %}selected{% endif %}>PHP 8.3</option>
+            </select>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="document.getElementById('configModal').style.display='none'">Cancel</button>
+            <button class="btn btn-primary" onclick="submitConfig()">Save</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openConfigModal() { document.getElementById('configModal').style.display = 'flex'; }
+
+async function submitConfig() {
+    const php_version = document.getElementById('config_php').value;
+    const resp = await fetch('/admin/websites/{{ site.id }}/config/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ php_version })
+    });
+    if (resp.ok) window.location.reload();
+    else alert('Failed to update configuration.');
+}
+
+async function requestSSL(id, domain) {
+    if (!confirm(`Request SSL for ${domain}? Ensure DNS is pointing to this server.`)) return;
+    const btn = event.target.closest('button');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Requesting...';
+    const resp = await fetch(`/admin/websites/${id}/ssl/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    });
+    if (resp.ok) window.location.reload();
+    else {
+        const data = await resp.json();
+        alert(data.error || 'SSL request failed.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph ph-shield-check"></i> Enable SSL (Let\'s Encrypt)';
+    }
+}
+
+let currentLogType = 'access';
+
+function switchLog(type, btn) {
+    currentLogType = type;
+    document.querySelectorAll('#btnAccess, #btnError').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-ghost');
+    });
+    btn.classList.add('btn-primary');
+    btn.classList.remove('btn-ghost');
+    reloadLog();
+}
+
+async function reloadLog() {
+    const lines = document.getElementById('linesSelect').value;
+    const box = document.getElementById('logBox');
+    box.textContent = 'Loading...';
+    try {
+        const resp = await fetch(`/admin/logs/get/?type=site_${currentLogType}&domain={{ site.domain }}&lines=${lines}`);
+        const data = await resp.json();
+        box.textContent = data.content || '[Empty]';
+        box.scrollTop = box.scrollHeight;
+    } catch(e) {
+        box.textContent = 'Failed to load log.';
+    }
+}
+
+// Load access log on page load
+reloadLog();
+
+async function deleteSite(id, domain) {
+    const btn = event.target.closest('button');
+    if (btn.dataset.confirming) {
+        btn.dataset.confirming = '';
+        const resp = await fetch(`/admin/websites/${id}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirm: true, delete_files: true })
+        });
+        if (resp.ok) window.location.href = '/admin/websites/';
+        else alert('Failed to delete website.');
+    } else {
+        btn.dataset.confirming = '1';
+        btn.innerHTML = '<i class="ph ph-warning"></i> Click again to confirm';
+        btn.style.color = '#f59e0b';
+        setTimeout(() => {
+            if (btn.dataset.confirming) {
+                btn.dataset.confirming = '';
+                btn.innerHTML = '<i class="ph ph-trash"></i> Delete Website';
+                btn.style.color = '#ef4444';
+            }
+        }, 3000);
+    }
+}
+</script>
+<style>
+@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+{% endblock %}

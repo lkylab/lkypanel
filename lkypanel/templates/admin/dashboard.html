@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard — LKYPanel{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    .gauge-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    .gauge-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .gauge-title { font-size: 0.85rem; color: var(--text-dim); font-weight: 500; }
+    .gauge-ok { font-size: 0.7rem; background: rgba(34,197,94,0.12); color: #22c55e; padding: 2px 8px; border-radius: 20px; margin-top: 4px; }
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+    }
+    .chart-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+    }
+    .chart-title { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+    .chart-wrap { position: relative; height: 140px; }
+    .recent-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+    .site-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.9rem;
+    }
+    .site-row:last-child { border-bottom: none; }
+    .site-domain { font-weight: 600; }
+    .site-meta { font-size: 0.78rem; color: var(--text-dim); margin-top: 2px; }
+    @media (max-width: 900px) {
+        .charts-grid, .recent-grid { grid-template-columns: 1fr; }
+    }
+</style>
+{% endblock %}
+
+{% block header %}
+    <h1>Dashboard</h1>
+    <p>Server overview and performance metrics.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+
+    <!-- Stat Cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="ph-bold ph-globe"></i></div>
+            <div>
+                <div class="stat-value" id="stat-sites">{{ total_sites }}</div>
+                <div class="stat-label">Total Websites</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="ph-bold ph-users"></i></div>
+            <div>
+                <div class="stat-value" id="stat-users">{{ total_users }}</div>
+                <div class="stat-label">Users</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon green"><i class="ph-bold ph-shield-check"></i></div>
+            <div>
+                <div class="stat-value" id="stat-ssl">{{ ssl_sites }}</div>
+                <div class="stat-label">SSL Active</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="ph-bold ph-database"></i></div>
+            <div>
+                <div class="stat-value" id="stat-db">{{ total_dbs }}</div>
+                <div class="stat-label">Databases</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon red"><i class="ph-bold ph-cloud-arrow-up"></i></div>
+            <div>
+                <div class="stat-value" id="stat-backups">{{ total_backups }}</div>
+                <div class="stat-label">Backup Jobs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Gauges: CPU + RAM -->
+    <div class="gauge-row">
+        <div class="gauge-card">
+            <div class="gauge-title">CPU Utilization</div>
+            <div class="gauge-ring">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#38bdf8" stroke-width="10"
+                        stroke-dasharray="251.2" stroke-dashoffset="{{ cpu_dashoffset }}" stroke-linecap="round"/>
+                </svg>
+                <div class="gauge-label">
+                    <span>{{ cpu_percent }}%</span>
+                    <span class="gauge-sub">CPU</span>
+                </div>
+            </div>
+            <span class="gauge-ok">Service: OK</span>
+        </div>
+        <div class="gauge-card">
+            <div class="gauge-title">RAM Used %</div>
+            <div class="gauge-ring">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="10"
+                        stroke-dasharray="251.2" stroke-dashoffset="{{ ram_dashoffset }}" stroke-linecap="round"/>
+                </svg>
+                <div class="gauge-label">
+                    <span>{{ ram_percent }}%</span>
+                    <span class="gauge-sub">RAM</span>
+                </div>
+            </div>
+            <span class="gauge-ok">Service: OK</span>
+        </div>
+        <div class="gauge-card">
+            <div class="gauge-title">Disk Used %</div>
+            <div class="gauge-ring">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#818cf8" stroke-width="10"
+                        stroke-dasharray="251.2" stroke-dashoffset="{{ disk_dashoffset }}" stroke-linecap="round"/>
+                </svg>
+                <div class="gauge-label">
+                    <span>{{ disk_percent }}%</span>
+                    <span class="gauge-sub">Disk</span>
+                </div>
+            </div>
+            <span class="gauge-ok">Service: OK</span>
+        </div>
+        <div class="gauge-card" style="align-items: flex-start;">
+            <div class="gauge-title">System Info</div>
+            <div style="width: 100%; margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.85rem;">
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">Uptime</span>
+                    <span style="font-weight:600;">{{ uptime }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">Load Avg</span>
+                    <span style="font-weight:600;">{{ load_avg }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">RAM Total</span>
+                    <span style="font-weight:600;">{{ ram_total }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">Disk Total</span>
+                    <span style="font-weight:600;">{{ disk_total }}</span>
+                </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">OLS Status</span>
+                    <span class="badge" style="background:rgba(34,197,94,0.1);color:#22c55e;">Running</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-title">CPU History (last 10 min)</div>
+            <div class="chart-wrap"><canvas id="cpuChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">RAM History (last 10 min)</div>
+            <div class="chart-wrap"><canvas id="ramChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Disk Utilization</div>
+            <div class="chart-wrap"><canvas id="diskChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+            <div class="chart-title">Websites by PHP Version</div>
+            <div class="chart-wrap"><canvas id="phpChart"></canvas></div>
+        </div>
+    </div>
+
+    <!-- Recent Websites + Audit Log -->
+    <div class="recent-grid">
+        <div class="glass-card" style="padding: 1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <span style="font-weight:600;">Recent Websites</span>
+                <a href="/admin/websites/" class="btn btn-ghost btn-sm">View All</a>
+            </div>
+            {% for site in recent_sites %}
+            <div class="site-row">
+                <div>
+                    <div class="site-domain">{{ site.domain }}</div>
+                    <div class="site-meta">{{ site.owner.username }} · PHP {{ site.php_version }}</div>
+                </div>
+                <div style="display:flex; align-items:center; gap:0.5rem;">
+                    {% if site.ssl_enabled %}
+                    <span class="badge" style="background:rgba(34,197,94,0.1);color:#22c55e;"><i class="ph ph-shield-check"></i> SSL</span>
+                    {% else %}
+                    <span class="badge" style="background:rgba(100,116,139,0.1);color:#94a3b8;">No SSL</span>
+                    {% endif %}
+                    <span class="badge" style="background:rgba(34,197,94,0.1);color:#22c55e;">Running</span>
+                </div>
+            </div>
+            {% empty %}
+            <p style="color:var(--text-dim); font-size:0.9rem; padding: 1rem 0;">No websites yet.</p>
+            {% endfor %}
+        </div>
+
+        <div class="glass-card" style="padding: 1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <span style="font-weight:600;">Recent Activity</span>
+            </div>
+            {% for log in audit_logs %}
+            <div class="site-row">
+                <div>
+                    <div class="site-domain" style="font-size:0.85rem;">{{ log.action }}</div>
+                    <div class="site-meta">{{ log.target }} · {{ log.ip_address }}</div>
+                </div>
+                <div style="font-size:0.75rem; color:var(--text-dim);">{{ log.timestamp|timesince }} ago</div>
+            </div>
+            {% empty %}
+            <p style="color:var(--text-dim); font-size:0.9rem; padding: 1rem 0;">No recent activity.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 10 } }, min: 0, max: 100 }
+    }
+};
+
+const labels = Array.from({length: 10}, (_, i) => `-${9-i}m`);
+const cpuData = {{ cpu_history|safe }};
+const ramData = {{ ram_history|safe }};
+
+new Chart(document.getElementById('cpuChart'), {
+    type: 'line',
+    data: {
+        labels,
+        datasets: [{ data: cpuData, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.08)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 }]
+    },
+    options: chartDefaults
+});
+
+new Chart(document.getElementById('ramChart'), {
+    type: 'line',
+    data: {
+        labels,
+        datasets: [{ data: ramData, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.08)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 }]
+    },
+    options: chartDefaults
+});
+
+// Disk bar chart
+const diskOpts = JSON.parse(JSON.stringify(chartDefaults));
+diskOpts.scales.y.max = 100;
+new Chart(document.getElementById('diskChart'), {
+    type: 'bar',
+    data: {
+        labels: ['Used', 'Free'],
+        datasets: [{ data: [{{ disk_percent }}, {{ disk_free_percent }}], backgroundColor: ['rgba(129,140,248,0.7)', 'rgba(255,255,255,0.06)'], borderRadius: 6 }]
+    },
+    options: { ...diskOpts, scales: { x: diskOpts.scales.x, y: { ...diskOpts.scales.y } } }
+});
+
+// PHP version doughnut
+new Chart(document.getElementById('phpChart'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ php_labels|safe }},
+        datasets: [{ data: {{ php_counts|safe }}, backgroundColor: ['#38bdf8','#818cf8','#22c55e','#fb923c'], borderWidth: 0 }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 } } }
+    }
+});
+</script>
+{% endblock %}

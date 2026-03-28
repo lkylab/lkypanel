@@ -1,0 +1,9 @@
+Django>=6.0.3
+gunicorn
+argon2-cffi
+cryptography
+APScheduler
+hypothesis
+pytest-django
+netifaces
+psutil

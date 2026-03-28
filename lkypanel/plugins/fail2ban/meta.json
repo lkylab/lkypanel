@@ -1,0 +1,11 @@
+{
+  "name": "Fail2ban",
+  "description": "Intrusion prevention that bans IPs with too many failed login attempts.",
+  "version": "1.0",
+  "system_packages": {
+    "apt": ["fail2ban"],
+    "yum": ["fail2ban"]
+  },
+  "service": "fail2ban",
+  "firewall_ports": []
+}

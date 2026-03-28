@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>Settings</h1>
+    <p>Panel configuration and system preferences.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade" style="max-width: 800px;">
+
+    <div class="glass-card" style="padding:1.75rem; margin-bottom:1.5rem;">
+        <h3 style="margin-bottom:1.25rem; font-size:1rem; font-weight:600;">Panel Information</h3>
+        <div style="display:flex; flex-direction:column; gap:0.85rem; font-size:0.9rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom:1px solid var(--border);">
+                <span style="color:var(--text-dim);">Panel Version</span>
+                <span class="badge" style="background:rgba(56,189,248,0.1);color:#38bdf8;">LKYPanel 1.0</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom:1px solid var(--border);">
+                <span style="color:var(--text-dim);">Web Server</span>
+                <span>OpenLiteSpeed</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0; border-bottom:1px solid var(--border);">
+                <span style="color:var(--text-dim);">Admin Port</span>
+                <code style="color:var(--accent-primary);">7080</code>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; padding:0.75rem 0;">
+                <span style="color:var(--text-dim);">Panel Port</span>
+                <code style="color:var(--accent-primary);">8080</code>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card" style="padding:1.75rem; margin-bottom:1.5rem;">
+        <h3 style="margin-bottom:1.25rem; font-size:1rem; font-weight:600;">Change Admin Password</h3>
+        <div id="pwError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#ef4444; font-size:0.9rem;"></div>
+        <div id="pwSuccess" style="display:none; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.3); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#22c55e; font-size:0.9rem;"></div>
+        <div style="display:flex; flex-direction:column; gap:1rem;">
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.85rem;">New Password</label>
+                <input type="password" id="new_pw" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.85rem;">Confirm Password</label>
+                <input type="password" id="confirm_pw" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+            </div>
+            <div>
+                <button class="btn btn-primary" onclick="changePassword()">Update Password</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-card" style="padding:1.75rem;">
+        <h3 style="margin-bottom:1.25rem; font-size:1rem; font-weight:600;">Danger Zone</h3>
+        <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:1.25rem;">These actions are irreversible. Proceed with caution.</p>
+        <div style="display:flex; gap:1rem; flex-wrap:wrap;">
+            <a href="/admin/export/websites/" class="btn btn-ghost btn-sm">
+                <i class="ph ph-export"></i> Export Websites CSV
+            </a>
+            <a href="/admin/export/users/" class="btn btn-ghost btn-sm">
+                <i class="ph ph-export"></i> Export Users CSV
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function changePassword() {
+    const pw = document.getElementById('new_pw').value;
+    const confirm = document.getElementById('confirm_pw').value;
+    const errBox = document.getElementById('pwError');
+    const okBox = document.getElementById('pwSuccess');
+    errBox.style.display = 'none';
+    okBox.style.display = 'none';
+
+    if (!pw) { errBox.textContent = 'Password cannot be empty.'; errBox.style.display = 'block'; return; }
+    if (pw !== confirm) { errBox.textContent = 'Passwords do not match.'; errBox.style.display = 'block'; return; }
+    if (pw.length < 8) { errBox.textContent = 'Password must be at least 8 characters.'; errBox.style.display = 'block'; return; }
+
+    const resp = await fetch('/admin/users/{{ panel_user.id }}/reset-password/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+    });
+    if (resp.ok) {
+        okBox.textContent = 'Password updated successfully.';
+        okBox.style.display = 'block';
+        document.getElementById('new_pw').value = '';
+        document.getElementById('confirm_pw').value = '';
+    } else {
+        errBox.textContent = 'Failed to update password.';
+        errBox.style.display = 'block';
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}My Websites — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>My Websites</h1>
+    <p>Manage your hosted sites, FTP, and databases.</p>
+{% endblock %}
+
+{% block content %}
+    <div class="animate-fade">
+        <div class="card">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Domain</th>
+                            <th>PHP</th>
+                            <th>SSL</th>
+                            <th>Status</th>
+                            <th>Quick Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for site in websites %}
+                        <tr>
+                            <td style="font-weight: 600;">{{ site.domain }}</td>
+                            <td><span class="status-pill btn-ghost">{{ site.php_version }}</span></td>
+                            <td>
+                                {% if site.ssl_enabled %}
+                                <i class="ph-fill ph-shield-check" style="color: var(--accent-primary); font-size: 1.25rem;"></i>
+                                {% else %}
+                                <i class="ph ph-shield-slash" style="color: var(--text-dim); font-size: 1.25rem;"></i>
+                                {% endif %}
+                            </td>
+                            <td><span class="status-pill status-online">Running</span></td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <a href="/user/sites/{{ site.id }}/ftp/" class="btn btn-ghost" title="FTP Accounts">
+                                        <i class="ph ph-user"></i>
+                                    </a>
+                                    <a href="/user/sites/{{ site.id }}/git/" class="btn btn-ghost" title="Git Sync">
+                                        <i class="ph ph-git-branch"></i>
+                                    </a>
+                                    <a href="/user/sites/{{ site.id }}/databases/" class="btn btn-ghost" title="Databases">
+                                        <i class="ph ph-database"></i>
+                                    </a>
+                                    <a href="/user/sites/{{ site.id }}/ssl/" class="btn btn-ghost" title="SSL Certificate">
+                                        <i class="ph ph-shield-star"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 4rem; color: var(--text-dim);">
+                                <i class="ph ph-house" style="font-size: 3rem; display: block; margin-bottom: 1rem; opacity: 0.5;"></i>
+                                No websites assigned to your account yet.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}

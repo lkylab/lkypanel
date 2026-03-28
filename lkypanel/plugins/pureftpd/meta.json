@@ -1,0 +1,11 @@
+{
+  "name": "Pure-FTPd",
+  "description": "Secure FTP server for file transfers.",
+  "version": "1.0",
+  "system_packages": {
+    "apt": ["pure-ftpd"],
+    "yum": ["pure-ftpd"]
+  },
+  "service": "pure-ftpd",
+  "firewall_ports": ["21/tcp", "20/tcp"]
+}

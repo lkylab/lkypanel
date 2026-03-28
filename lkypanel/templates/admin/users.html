@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+
+{% block title %}Users — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>User Management</h1>
+    <p>Control access and roles for the hosting panel.</p>
+{% endblock %}
+
+{% block content %}
+    <div class="animate-fade">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 2rem;">
+            <button class="btn" onclick="openCreateUserModal()">
+                <i class="ph ph-user-plus"></i>
+                Create User
+            </button>
+        </div>
+
+        <div class="card">
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for u in users %}
+                        <tr>
+                            <td style="font-weight: 600;">{{ u.username }}</td>
+                            <td style="color: var(--text-dim);">{{ u.email }}</td>
+                            <td>
+                                <span class="status-pill {% if u.role == 'admin' %}status-online{% else %}btn-ghost{% endif %}">
+                                    {{ u.role|capfirst }}
+                                </span>
+                            </td>
+                            <td>
+                                {% if u.is_active %}
+                                <span style="color: #22c55e;">Active</span>
+                                {% else %}
+                                <span style="color: #ef4444;">Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td style="color: var(--text-dim); font-size: 0.85rem;">{{ u.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button class="btn btn-ghost" onclick="resetPw({{ u.id }}, '{{ u.username }}')" title="Reset Password">
+                                        <i class="ph ph-key"></i>
+                                    </button>
+                                    {% if u.username != 'admin' %}
+                                    <button class="btn btn-ghost" style="color: #ef4444;" onclick="deleteUser({{ u.id }}, '{{ u.username }}')" title="Delete">
+                                        <i class="ph ph-user-minus"></i>
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="createUserModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div class="card animate-fade" style="width: 450px; border-color: var(--accent-primary);">
+            <h2 style="margin-bottom: 1.5rem;">Create User</h2>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.9rem;">Username</label>
+                <input type="text" id="new_username" style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.9rem;">Email</label>
+                <input type="email" id="new_email" style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.9rem;">Password</label>
+                <input type="password" id="new_password" style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none;">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-ghost" onclick="closeCreateUserModal()">Cancel</button>
+                <button class="btn" onclick="submitCreateUser()">Create User</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openCreateUserModal() { document.getElementById('createUserModal').style.display = 'flex'; }
+    function closeCreateUserModal() { document.getElementById('createUserModal').style.display = 'none'; }
+
+    async function submitCreateUser() {
+        const username = document.getElementById('new_username').value.trim();
+        const email = document.getElementById('new_email').value.trim();
+        const password = document.getElementById('new_password').value;
+        if (!username || !password) return alert('Username and password are required');
+
+        const resp = await fetch('/admin/users/create/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password, role: 'user' })
+        });
+        if (resp.ok) window.location.reload();
+        else {
+            const data = await resp.json();
+            alert(data.error || 'Failed to create user');
+        }
+    }
+
+    async function deleteUser(id, username) {
+        if (!confirm(`Permanently delete user ${username}?`)) return;
+        const resp = await fetch(`/admin/users/${id}/delete/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ confirm: true })
+        });
+        if (resp.ok) window.location.reload();
+        else alert('Failed to delete user');
+    }
+
+    async function resetPw(id, username) {
+        const pw = prompt(`Enter new password for ${username}:`);
+        if (!pw) return;
+        const resp = await fetch(`/admin/users/${id}/reset-password/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: pw })
+        });
+        if (resp.ok) alert('Password updated!');
+        else alert('Failed to reset password');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,11 @@
+{
+  "name": "phpMyAdmin",
+  "description": "Web-based MariaDB/MySQL administration interface.",
+  "version": "5.2",
+  "system_packages": {
+    "apt": ["phpmyadmin"],
+    "yum": ["phpmyadmin"]
+  },
+  "service": "",
+  "firewall_ports": []
+}

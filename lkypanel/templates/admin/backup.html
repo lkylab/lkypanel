@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}Backup Management — LKYPanel{% endblock %}
+
+{% block head %}
+<style>
+    .backup-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
+    .config-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 1.75rem;
+        transition: transform 0.2s, border-color 0.2s;
+    }
+    .config-card:hover { border-color: var(--accent-primary); transform: translateY(-2px); }
+    .config-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; }
+    .config-info h3 { margin: 0; font-size: 1.25rem; }
+    .config-type { font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; margin-top: 0.25rem; display: block; }
+    .config-stats { display: flex; gap: 1.5rem; margin: 1.5rem 0; font-size: 0.9rem; }
+    .stat-item i { color: var(--accent-primary); margin-right: 0.5rem; }
+    
+    .job-status { padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; }
+    .status-success { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+    .status-failed { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+    .status-running { background: rgba(56, 189, 248, 0.1); color: #38bdf8; animation: pulse 2s infinite; }
+
+    @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+    
+    .modal {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
+        backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center;
+    }
+    .modal-content {
+        background: var(--bg-dark); border: 1px solid var(--border); border-radius: 24px;
+        width: 100%; max-width: 500px; padding: 2.5rem; position: relative;
+    }
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-dim); }
+    .form-control {
+        width: 100%; background: var(--glass); border: 1px solid var(--border);
+        border-radius: 10px; padding: 0.75rem 1rem; color: white; outline: none;
+    }
+    .form-control:focus { border-color: var(--accent-primary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="header-main">
+        <h1>Backup Management</h1>
+        <p>Configure automated incremental backups and manual snapshots.</p>
+    </div>
+    <div class="header-actions">
+        {% if restic_installed %}
+        <button class="btn btn-primary" onclick="showModal('createConfigModal')">
+            <i class="ph-bold ph-plus"></i> Add Destination
+        </button>
+        {% else %}
+        <a href="/admin/packages/" class="btn btn-secondary" title="Restic must be installed to create backups">
+            <i class="ph-bold ph-package"></i> Install Restic
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if not restic_installed %}
+<div style="margin-bottom:1.5rem;padding:1rem 1.25rem;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:12px;display:flex;align-items:center;gap:0.75rem;color:#fb923c;">
+  <i class="ph-bold ph-warning" style="font-size:1.25rem;flex-shrink:0;"></i>
+  <span>Restic is not installed. Backups are disabled.
+    <a href="/admin/packages/" style="color:#fb923c;font-weight:600;text-decoration:underline;">Install it from the Packages page.</a>
+  </span>
+</div>
+{% endif %}
+
+<div class="backup-grid animate-fade">
+    {% for config in configs %}
+    <div class="config-card">
+        <div class="config-header">
+            <div class="config-info">
+                <h3>{{ config.name }}</h3>
+                <span class="config-type">{{ config.get_repo_type_display }}</span>
+            </div>
+            <div class="config-actions">
+                <button class="btn btn-ghost btn-sm" onclick="triggerBackup({{ config.id }})">
+                    <i class="ph ph-play"></i> Backup
+                </button>
+            </div>
+        </div>
+        <p style="font-size: 0.85rem; color: var(--text-dim); word-break: break-all;">
+            <i class="ph ph-map-pin"></i> {{ config.destination }}
+        </p>
+        <div class="config-stats">
+            <div class="stat-item"><i class="ph ph-files"></i> {{ config.snapshot_count }} Snapshots</div>
+            <div class="stat-item"><i class="ph ph-clock"></i> {{ config.retention_days }} Days</div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="glass-card" style="grid-column: 1/-1; padding: 3rem; text-align: center;">
+        <p style="color: var(--text-dim);">No backup destinations configured yet.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="section-card animate-fade" style="margin-top: 2rem;">
+    <div class="card-header">
+        <h2>Recent Jobs</h2>
+    </div>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Job ID</th>
+                    <th>Destination</th>
+                    <th>Status</th>
+                    <th>Started</th>
+                    <th>Duration</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for job in jobs %}
+                <tr>
+                    <td>#{{ job.id }}</td>
+                    <td>{{ job.config.name }}</td>
+                    <td><span class="job-status status-{{ job.status }}">{{ job.status }}</span></td>
+                    <td>{{ job.start_time|date:"M d, H:i" }}</td>
+                    <td>
+                        {% if job.end_time %}
+                            {{ job.end_time|timesince:job.start_time }}
+                        {% else %}
+                            Running...
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if job.status == 'success' %}
+                        <button class="btn btn-ghost btn-xs" onclick="showRestoreModal({{ job.config.id }}, '{{ job.snapshot_id }}')">
+                            Restore
+                        </button>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create Config Modal -->
+<div id="createConfigModal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-bottom: 1.5rem;">New Backup Destination</h2>
+        <form action="/admin/backup/create/" method="POST">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Friendly Name</label>
+                <input type="text" name="name" class="form-control" placeholder="e.g. Daily S3" required>
+            </div>
+            <div class="form-group">
+                <label>Storage Type</label>
+                <select name="repo_type" id="repoTypeSelect" class="form-control" onchange="toggleCredsForm()">
+                    <option value="s3">Amazon S3 / DigitalOcean Spaces</option>
+                    <option value="sftp">SFTP (External Server)</option>
+                    <option value="local">Local Directory</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Destination (Bucket Path or Host:/path)</label>
+                <input type="text" name="destination" class="form-control" placeholder="my-bucket/backups" required>
+            </div>
+            
+            <div id="s3-creds">
+                <div class="form-group">
+                    <label>AWS Access Key</label>
+                    <input type="text" name="aws_access_key" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label>AWS Secret Key</label>
+                    <input type="password" name="aws_secret_key" class="form-control">
+                </div>
+            </div>
+
+            <div id="sftp-creds" style="display:none;">
+                <div class="form-group">
+                    <label>SFTP Password</label>
+                    <input type="password" name="sftp_password" class="form-control">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Repository Password (Encryption)</label>
+                <input type="password" name="repo_password" class="form-control" required>
+            </div>
+
+            <div class="form-group">
+                <label>Retention (Days to keep)</label>
+                <input type="number" name="retention_days" class="form-control" value="7" min="1" required>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="flex: 1;">Create & Init</button>
+                <button type="button" class="btn btn-ghost" onclick="hideModal('createConfigModal')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Restore Modal -->
+<div id="restoreModal" class="modal">
+    <div class="modal-content">
+        <h2 style="margin-bottom: 1.5rem;">Restore Snapshot</h2>
+        <form id="restoreForm">
+            {% csrf_token %}
+            <input type="hidden" name="config_id" id="restoreConfigId">
+            <input type="hidden" name="snapshot_id" id="restoreSnapshotId">
+            <p style="color: var(--text-dim); margin-bottom: 1.5rem;">
+                Snapshot: <code id="displaySnapshotId"></code>
+            </p>
+            <div class="form-group">
+                <label>Target Directory</label>
+                <input type="text" name="target_dir" class="form-control" value="/tmp/restored_backup" required>
+                <small style="color: var(--text-dim);">Enter the full path where you want to restore the files.</small>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="button" class="btn btn-primary" style="flex: 1;" onclick="submitRestore()">Start Restoration</button>
+                <button type="button" class="btn btn-ghost" onclick="hideModal('restoreModal')">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function showModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function hideModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function toggleCredsForm() {
+        const type = document.getElementById('repoTypeSelect').value;
+        document.getElementById('s3-creds').style.display = (type === 's3') ? 'block' : 'none';
+        document.getElementById('sftp-creds').style.display = (type === 'sftp') ? 'block' : 'none';
+    }
+
+    function triggerBackup(configId) {
+        if (!confirm('Start manual backup now?')) return;
+        
+        fetch('/admin/backup/trigger/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: `config_id=${configId}`
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) alert(data.error);
+            else location.reload();
+        });
+    }
+
+    function showRestoreModal(configId, snapshotId) {
+        document.getElementById('restoreConfigId').value = configId;
+        document.getElementById('restoreSnapshotId').value = snapshotId;
+        document.getElementById('displaySnapshotId').innerText = snapshotId;
+        showModal('restoreModal');
+    }
+
+    function submitRestore() {
+        const form = document.getElementById('restoreForm');
+        const formData = new FormData(form);
+        
+        fetch('/admin/backup/restore/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            body: new URLSearchParams(formData)
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) alert(data.error);
+            else {
+                alert('Restoration successful! Files are in: ' + data.msg);
+                hideModal('restoreModal');
+            }
+        });
+    }
+</script>
+{% endblock %}

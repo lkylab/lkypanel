@@ -1,0 +1,681 @@
+#!/usr/bin/env python3
+"""
+lkypanel — Command line interface for LkyPanel
+Usage: lkypanel <command> [subcommand] [args]
+"""
+import os
+import sys
+
+# Bootstrap Django
+INSTALL_DIR = '/usr/local/lkypanel'
+sys.path.insert(0, INSTALL_DIR)
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lkypanel.settings')
+
+import django
+django.setup()
+
+import argparse
+import getpass
+import json
+import subprocess
+from datetime import datetime, timezone
+
+# ── Colours ──────────────────────────────────────────────────────────────────
+R = '\033[0;31m'; G = '\033[0;32m'; Y = '\033[1;33m'
+C = '\033[0;36m'; B = '\033[1m'; NC = '\033[0m'
+
+def ok(msg):    print(f'{G}✓{NC}  {msg}')
+def err(msg):   print(f'{R}✗{NC}  {msg}', file=sys.stderr)
+def info(msg):  print(f'{C}→{NC}  {msg}')
+def warn(msg):  print(f'{Y}!{NC}  {msg}')
+def bold(msg):  print(f'{B}{msg}{NC}')
+
+def table(headers, rows):
+    if not rows:
+        print('  (none)')
+        return
+    widths = [max(len(str(h)), max((len(str(r[i])) for r in rows), default=0))
+              for i, h in enumerate(headers)]
+    fmt = '  ' + '  '.join(f'{{:<{w}}}' for w in widths)
+    print(fmt.format(*headers))
+    print('  ' + '  '.join('-' * w for w in widths))
+    for row in rows:
+        print(fmt.format(*[str(c) for c in row]))
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+def _services():
+    return ['lky-admin', 'lky-user']
+
+def _svc_status(name):
+    r = subprocess.run(['systemctl', 'is-active', name],
+                       capture_output=True, text=True)
+    return r.stdout.strip()
+
+def _require_root():
+    if os.geteuid() != 0:
+        err('This command requires root. Run with sudo.')
+        sys.exit(1)
+
+# ── status ────────────────────────────────────────────────────────────────────
+def cmd_status(args):
+    bold('LkyPanel Service Status')
+    print()
+    for svc in _services():
+        status = _svc_status(svc)
+        colour = G if status == 'active' else R
+        port = '2087' if 'admin' in svc else '2083'
+        print(f'  {colour}{status:8}{NC}  {svc}  (port {port})')
+    print()
+
+# ── start / stop / restart ────────────────────────────────────────────────────
+def cmd_start(args):
+    _require_root()
+    for svc in _services():
+        subprocess.run(['systemctl', 'start', svc], check=False)
+        ok(f'Started {svc}')
+
+def cmd_stop(args):
+    _require_root()
+    for svc in _services():
+        subprocess.run(['systemctl', 'stop', svc], check=False)
+        ok(f'Stopped {svc}')
+
+def cmd_restart(args):
+    _require_root()
+    for svc in _services():
+        subprocess.run(['systemctl', 'restart', svc], check=False)
+        ok(f'Restarted {svc}')
+
+# ── version ───────────────────────────────────────────────────────────────────
+def cmd_version(args):
+    print('LkyPanel v1.0.0')
+
+# ── check ─────────────────────────────────────────────────────────────────────
+def cmd_check(args):
+    venv_python = os.path.join(INSTALL_DIR, 'venv', 'bin', 'python')
+    manage = os.path.join(INSTALL_DIR, 'manage.py')
+    subprocess.run([venv_python, manage, 'check_requirements'])
+
+# ── logs ──────────────────────────────────────────────────────────────────────
+def cmd_logs(args):
+    lines = getattr(args, 'lines', 50)
+    log_file = '/var/log/lkypanel/panel.log'
+    if not os.path.exists(log_file):
+        err(f'Log file not found: {log_file}')
+        return
+    subprocess.run(['tail', f'-n{lines}', log_file])
+
+# ── user commands ─────────────────────────────────────────────────────────────
+def cmd_user_list(args):
+    from lkypanel.models import User
+    users = User.objects.all().order_by('username')
+    bold(f'Users ({users.count()})')
+    print()
+    table(
+        ['ID', 'Username', 'Email', 'Role', 'Active', 'Created'],
+        [(u.pk, u.username, u.email, u.role,
+          'yes' if u.is_active else 'no',
+          u.created_at.strftime('%Y-%m-%d')) for u in users]
+    )
+
+def cmd_user_create(args):
+    _require_root()
+    from lkypanel.models import User
+    bold('Create User')
+    username = input('  Username: ').strip()
+    email    = input('  Email:    ').strip()
+    role     = input('  Role [admin/user] (default: user): ').strip() or 'user'
+    password = getpass.getpass('  Password: ')
+    confirm  = getpass.getpass('  Confirm:  ')
+
+    if password != confirm:
+        err('Passwords do not match.')
+        return
+    if role not in ('admin', 'user'):
+        err('Role must be admin or user.')
+        return
+    if User.objects.filter(username=username).exists():
+        err(f'User "{username}" already exists.')
+        return
+
+    try:
+        u = User.objects.create_user(username=username, email=email,
+                                     password=password, role=role)
+        ok(f'User created: {u.username} ({u.role})')
+    except Exception as e:
+        err(str(e))
+
+def cmd_user_delete(args):
+    _require_root()
+    from lkypanel.models import User
+    try:
+        u = User.objects.get(username=args.username)
+    except User.DoesNotExist:
+        err(f'User not found: {args.username}')
+        return
+    confirm = input(f'  Delete user "{u.username}"? [y/N] ').strip().lower()
+    if confirm != 'y':
+        warn('Cancelled.')
+        return
+    u.delete()
+    ok(f'Deleted user: {args.username}')
+
+def cmd_user_passwd(args):
+    _require_root()
+    from lkypanel.models import User
+    try:
+        u = User.objects.get(username=args.username)
+    except User.DoesNotExist:
+        err(f'User not found: {args.username}')
+        return
+    password = getpass.getpass(f'  New password for {args.username}: ')
+    confirm  = getpass.getpass('  Confirm: ')
+    if password != confirm:
+        err('Passwords do not match.')
+        return
+    u.set_password(password)
+    u.save(update_fields=['password'])
+    ok(f'Password updated for {args.username}')
+
+# ── website commands ──────────────────────────────────────────────────────────
+def cmd_website_list(args):
+    from lkypanel.models import Website
+    sites = Website.objects.select_related('owner').order_by('domain')
+    bold(f'Websites ({sites.count()})')
+    print()
+    table(
+        ['ID', 'Domain', 'Owner', 'PHP', 'SSL', 'Created'],
+        [(s.pk, s.domain, s.owner.username, s.php_version,
+          'yes' if s.ssl_enabled else 'no',
+          s.created_at.strftime('%Y-%m-%d')) for s in sites]
+    )
+
+def cmd_website_create(args):
+    _require_root()
+    from lkypanel.models import Website, User
+    from lkypanel.services.ols import create_docroot, write_vhost_config, reload_ols
+    bold('Create Website')
+    domain      = input('  Domain:      ').strip().lower()
+    owner_name  = input('  Owner (username): ').strip()
+    php_version = input('  PHP version [8.1]: ').strip() or '8.1'
+
+    try:
+        owner = User.objects.get(username=owner_name)
+    except User.DoesNotExist:
+        err(f'User not found: {owner_name}')
+        return
+    if Website.objects.filter(domain=domain).exists():
+        err(f'Domain already exists: {domain}')
+        return
+    try:
+        site = Website(owner=owner, domain=domain, php_version=php_version)
+        site.full_clean()
+        site.save()
+        create_docroot(domain)
+        write_vhost_config(domain, php_version)
+        reload_ols()
+        ok(f'Website created: {domain}')
+        info(f'Doc root: {site.doc_root}')
+    except Exception as e:
+        err(str(e))
+
+def cmd_website_delete(args):
+    _require_root()
+    from lkypanel.models import Website
+    from lkypanel.services.ols import delete_vhost_config, reload_ols
+    try:
+        site = Website.objects.get(domain=args.domain)
+    except Website.DoesNotExist:
+        err(f'Website not found: {args.domain}')
+        return
+    confirm = input(f'  Delete website "{args.domain}"? [y/N] ').strip().lower()
+    if confirm != 'y':
+        warn('Cancelled.')
+        return
+    del_files = input('  Also delete website files? [y/N] ').strip().lower() == 'y'
+    if del_files:
+        import shutil, pathlib
+        home = pathlib.Path(f'/home/{args.domain}')
+        if home.exists():
+            shutil.rmtree(str(home))
+            info(f'Deleted files: {home}')
+    delete_vhost_config(args.domain)
+    site.delete()
+    reload_ols()
+    ok(f'Deleted website: {args.domain}')
+
+def cmd_website_info(args):
+    from lkypanel.models import Website
+    try:
+        s = Website.objects.select_related('owner').get(domain=args.domain)
+    except Website.DoesNotExist:
+        err(f'Website not found: {args.domain}')
+        return
+    bold(f'Website: {s.domain}')
+    print(f'  ID:          {s.pk}')
+    print(f'  Owner:       {s.owner.username}')
+    print(f'  Doc root:    {s.doc_root}')
+    print(f'  PHP version: {s.php_version}')
+    print(f'  SSL:         {"enabled" if s.ssl_enabled else "disabled"}')
+    print(f'  Created:     {s.created_at.strftime("%Y-%m-%d %H:%M")}')
+    ftp_count = s.ftp_accounts.count()
+    db_count  = s.databases.count()
+    git_count = s.git_repos.count()
+    print(f'  FTP accounts: {ftp_count}')
+    print(f'  Databases:    {db_count}')
+    print(f'  Git repos:    {git_count}')
+
+# ── ftp commands ──────────────────────────────────────────────────────────────
+def cmd_ftp_list(args):
+    from lkypanel.models import FTPAccount, Website
+    if args.domain:
+        try:
+            site = Website.objects.get(domain=args.domain)
+            accounts = site.ftp_accounts.all()
+        except Website.DoesNotExist:
+            err(f'Website not found: {args.domain}')
+            return
+    else:
+        accounts = FTPAccount.objects.select_related('website').all()
+    bold(f'FTP Accounts ({accounts.count()})')
+    print()
+    table(
+        ['ID', 'Username', 'Domain', 'Quota (MB)', 'Status'],
+        [(a.pk, a.username, a.website.domain, a.quota_mb, a.status) for a in accounts]
+    )
+
+def cmd_ftp_create(args):
+    _require_root()
+    from lkypanel.models import Website
+    from lkypanel.services.ftp import create_ftp_account, is_pureftpd_installed
+    if not is_pureftpd_installed():
+        err('Pure-FTPd is not installed. Run: lkypanel ftp install')
+        return
+    bold('Create FTP Account')
+    domain   = input('  Domain:   ').strip()
+    username = input('  Username: ').strip()
+    password = getpass.getpass('  Password: ')
+    confirm  = getpass.getpass('  Confirm:  ')
+    quota    = input('  Quota MB [1024]: ').strip() or '1024'
+    if password != confirm:
+        err('Passwords do not match.')
+        return
+    try:
+        site = Website.objects.get(domain=domain)
+        acc = create_ftp_account(site, username, password, int(quota))
+        ok(f'FTP account created: {acc.username} → {acc.home_dir}')
+    except Exception as e:
+        err(str(e))
+
+def cmd_ftp_delete(args):
+    _require_root()
+    from lkypanel.models import FTPAccount
+    from lkypanel.services.ftp import delete_ftp_account
+    try:
+        acc = FTPAccount.objects.get(username=args.username)
+    except FTPAccount.DoesNotExist:
+        err(f'FTP account not found: {args.username}')
+        return
+    confirm = input(f'  Delete FTP account "{args.username}"? [y/N] ').strip().lower()
+    if confirm != 'y':
+        warn('Cancelled.')
+        return
+    delete_ftp_account(acc)
+    ok(f'Deleted FTP account: {args.username}')
+
+def cmd_ftp_passwd(args):
+    _require_root()
+    from lkypanel.models import FTPAccount
+    from lkypanel.services.ftp import change_ftp_password
+    try:
+        acc = FTPAccount.objects.get(username=args.username)
+    except FTPAccount.DoesNotExist:
+        err(f'FTP account not found: {args.username}')
+        return
+    password = getpass.getpass(f'  New password for {args.username}: ')
+    confirm  = getpass.getpass('  Confirm: ')
+    if password != confirm:
+        err('Passwords do not match.')
+        return
+    change_ftp_password(acc, password)
+    ok(f'FTP password updated: {args.username}')
+
+def cmd_ftp_install(args):
+    _require_root()
+    from lkypanel.services.ftp import install_pureftpd
+    info('Installing Pure-FTPd...')
+    try:
+        install_pureftpd()
+        ok('Pure-FTPd installed')
+    except Exception as e:
+        err(str(e))
+
+# ── ssl commands ──────────────────────────────────────────────────────────────
+def cmd_ssl_request(args):
+    _require_root()
+    from lkypanel.models import Website
+    from lkypanel.services.ssl import request_certificate
+    try:
+        site = Website.objects.get(domain=args.domain)
+    except Website.DoesNotExist:
+        err(f'Website not found: {args.domain}')
+        return
+    info(f'Requesting SSL certificate for {args.domain}...')
+    try:
+        cert = request_certificate(site)
+        ok(f'SSL certificate issued')
+        info(f'Cert path:  {cert.cert_path}')
+        info(f'Expires:    {cert.expires_at.strftime("%Y-%m-%d")}')
+    except Exception as e:
+        err(str(e))
+
+def cmd_ssl_status(args):
+    from lkypanel.models import Website
+    try:
+        site = Website.objects.get(domain=args.domain)
+    except Website.DoesNotExist:
+        err(f'Website not found: {args.domain}')
+        return
+    bold(f'SSL Status: {args.domain}')
+    if not site.ssl_enabled:
+        warn('SSL not enabled for this website.')
+        return
+    try:
+        cert = site.ssl_certificate
+        now = datetime.now(timezone.utc)
+        days_left = (cert.expires_at - now).days
+        colour = G if days_left > 30 else (Y if days_left > 7 else R)
+        print(f'  Cert path:   {cert.cert_path}')
+        print(f'  Issued:      {cert.issued_at.strftime("%Y-%m-%d")}')
+        print(f'  Expires:     {cert.expires_at.strftime("%Y-%m-%d")} '
+              f'({colour}{days_left} days{NC})')
+        print(f'  Auto-renew:  {"yes" if cert.auto_renew else "no"}')
+    except Exception:
+        warn('No SSL certificate record found.')
+
+def cmd_ssl_renew(args):
+    _require_root()
+    from lkypanel.models import Website
+    from lkypanel.services.ssl import renew_certificate
+    try:
+        site = Website.objects.get(domain=args.domain)
+        cert = site.ssl_certificate
+    except Website.DoesNotExist:
+        err(f'Website not found: {args.domain}')
+        return
+    except Exception:
+        err(f'No SSL certificate found for {args.domain}')
+        return
+    info(f'Renewing SSL for {args.domain}...')
+    try:
+        renew_certificate(cert)
+        ok(f'SSL renewed for {args.domain}')
+    except Exception as e:
+        err(str(e))
+
+# ── git commands ──────────────────────────────────────────────────────────────
+def cmd_git_status(args):
+    from lkypanel.models import Website
+    try:
+        site = Website.objects.get(domain=args.domain)
+    except Website.DoesNotExist:
+        err(f'Website not found: {args.domain}')
+        return
+    repo = site.git_repos.first()
+    if not repo:
+        warn(f'No Git repo linked to {args.domain}')
+        return
+    bold(f'Git Repo: {args.domain}')
+    print(f'  URL:    {repo.repo_url}')
+    print(f'  Branch: {repo.branch}')
+    print(f'  Auth:   {repo.auth_type}')
+    if repo.git_user:
+        print(f'  User:   {repo.git_user} <{repo.git_email}>')
+
+def cmd_git_pull(args):
+    _require_root()
+    from lkypanel.models import Website
+    from lkypanel.services.git import pull_repo
+    try:
+        site = Website.objects.get(domain=args.domain)
+        repo = site.git_repos.first()
+    except Website.DoesNotExist:
+        err(f'Website not found: {args.domain}')
+        return
+    if not repo:
+        err(f'No Git repo linked to {args.domain}')
+        return
+    info(f'Pulling {repo.branch} for {args.domain}...')
+    try:
+        output = pull_repo(repo)
+        ok('Pull complete')
+        if output.strip():
+            print(output)
+    except Exception as e:
+        err(str(e))
+
+def cmd_git_push(args):
+    _require_root()
+    from lkypanel.models import Website
+    from lkypanel.services.git import push_repo
+    try:
+        site = Website.objects.get(domain=args.domain)
+        repo = site.git_repos.first()
+    except Website.DoesNotExist:
+        err(f'Website not found: {args.domain}')
+        return
+    if not repo:
+        err(f'No Git repo linked to {args.domain}')
+        return
+    info(f'Pushing {repo.branch} for {args.domain}...')
+    try:
+        output = push_repo(repo)
+        ok('Push complete')
+        if output.strip():
+            print(output)
+    except Exception as e:
+        err(str(e))
+
+# ── db commands ───────────────────────────────────────────────────────────────
+def cmd_db_list(args):
+    from lkypanel.models import Database, Website
+    if args.domain:
+        try:
+            site = Website.objects.get(domain=args.domain)
+            dbs = site.databases.all()
+        except Website.DoesNotExist:
+            err(f'Website not found: {args.domain}')
+            return
+    else:
+        dbs = Database.objects.select_related('website').all()
+    bold(f'Databases ({dbs.count()})')
+    print()
+    table(
+        ['ID', 'DB Name', 'DB User', 'Domain', 'Created'],
+        [(d.pk, d.db_name, d.db_user, d.website.domain,
+          d.created_at.strftime('%Y-%m-%d')) for d in dbs]
+    )
+
+def cmd_db_create(args):
+    _require_root()
+    from lkypanel.models import Website
+    from lkypanel.services.db_manager import create_database
+    bold('Create Database')
+    domain  = input('  Domain:    ').strip()
+    db_name = input('  DB name:   ').strip()
+    try:
+        site = Website.objects.get(domain=domain)
+        db = create_database(site, db_name)
+        ok(f'Database created: {db.db_name}')
+        info(f'DB user: {db.db_user}')
+    except Exception as e:
+        err(str(e))
+
+def cmd_db_delete(args):
+    _require_root()
+    from lkypanel.models import Database
+    from lkypanel.services.db_manager import delete_database
+    try:
+        db = Database.objects.get(db_name=args.db_name)
+    except Database.DoesNotExist:
+        err(f'Database not found: {args.db_name}')
+        return
+    confirm = input(f'  Delete database "{args.db_name}" and user "{db.db_user}"? [y/N] ').strip().lower()
+    if confirm != 'y':
+        warn('Cancelled.')
+        return
+    delete_database(db)
+    ok(f'Deleted database: {args.db_name}')
+
+"""
+lky — Command line interface for LkyPanel
+Usage: lky <command> [subcommand] [args]
+"""
+
+# ── Argument parser ───────────────────────────────────────────────────────────
+def build_parser():
+    p = argparse.ArgumentParser(
+        prog='lky',
+        description='LkyPanel — Lightweight Hosting Control Panel CLI',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  lky status
+  lky website list
+  lky website create
+  lky website info example.com
+  lky ssl request example.com
+  lky git pull example.com
+  lky db list example.com
+  lky logs --lines 100
+        """
+    )
+    sub = p.add_subparsers(dest='command', metavar='command')
+
+    # ── top-level ──
+    sub.add_parser('status',  help='Show service status')
+    sub.add_parser('start',   help='Start panel services')
+    sub.add_parser('stop',    help='Stop panel services')
+    sub.add_parser('restart', help='Restart panel services')
+    sub.add_parser('version', help='Show panel version')
+    sub.add_parser('check',   help='Run system requirements check')
+
+    logs_p = sub.add_parser('logs', help='Tail panel logs')
+    logs_p.add_argument('--lines', '-n', type=int, default=50, metavar='N')
+
+    # ── user ──
+    u = sub.add_parser('user', help='User management')
+    us = u.add_subparsers(dest='subcommand', metavar='subcommand')
+    us.add_parser('list',   help='List all users')
+    us.add_parser('create', help='Create a user (interactive)')
+    ud = us.add_parser('delete', help='Delete a user')
+    ud.add_argument('username')
+    up = us.add_parser('passwd', help='Reset user password')
+    up.add_argument('username')
+
+    # ── website ──
+    w = sub.add_parser('website', help='Website management')
+    ws = w.add_subparsers(dest='subcommand', metavar='subcommand')
+    ws.add_parser('list',   help='List all websites')
+    ws.add_parser('create', help='Create a website (interactive)')
+    wd = ws.add_parser('delete', help='Delete a website')
+    wd.add_argument('domain')
+    wi = ws.add_parser('info', help='Show website details')
+    wi.add_argument('domain')
+
+    # ── ftp ──
+    f = sub.add_parser('ftp', help='FTP account management')
+    fs = f.add_subparsers(dest='subcommand', metavar='subcommand')
+    fl = fs.add_parser('list',    help='List FTP accounts')
+    fl.add_argument('domain', nargs='?', default=None)
+    fs.add_parser('create',  help='Create FTP account (interactive)')
+    fs.add_parser('install', help='Install Pure-FTPd')
+    fd = fs.add_parser('delete',  help='Delete FTP account')
+    fd.add_argument('username')
+    fp = fs.add_parser('passwd',  help='Change FTP password')
+    fp.add_argument('username')
+
+    # ── ssl ──
+    s = sub.add_parser('ssl', help='SSL certificate management')
+    ss = s.add_subparsers(dest='subcommand', metavar='subcommand')
+    sr = ss.add_parser('request', help='Request Let\'s Encrypt SSL')
+    sr.add_argument('domain')
+    sst = ss.add_parser('status', help='Show SSL status')
+    sst.add_argument('domain')
+    srn = ss.add_parser('renew', help='Force SSL renewal')
+    srn.add_argument('domain')
+
+    # ── git ──
+    g = sub.add_parser('git', help='Git repository management')
+    gs = g.add_subparsers(dest='subcommand', metavar='subcommand')
+    gst = gs.add_parser('status', help='Show linked Git repo')
+    gst.add_argument('domain')
+    gpl = gs.add_parser('pull', help='Git pull')
+    gpl.add_argument('domain')
+    gps = gs.add_parser('push', help='Git push')
+    gps.add_argument('domain')
+
+    # ── db ──
+    d = sub.add_parser('db', help='Database management')
+    ds = d.add_subparsers(dest='subcommand', metavar='subcommand')
+    dl = ds.add_parser('list',   help='List databases')
+    dl.add_argument('domain', nargs='?', default=None)
+    ds.add_parser('create', help='Create database (interactive)')
+    dd = ds.add_parser('delete', help='Delete database')
+    dd.add_argument('db_name')
+
+    return p
+
+# ── Dispatch ──────────────────────────────────────────────────────────────────
+DISPATCH = {
+    ('status',  None):       cmd_status,
+    ('start',   None):       cmd_start,
+    ('stop',    None):       cmd_stop,
+    ('restart', None):       cmd_restart,
+    ('version', None):       cmd_version,
+    ('check',   None):       cmd_check,
+    ('logs',    None):       cmd_logs,
+    ('user',    'list'):     cmd_user_list,
+    ('user',    'create'):   cmd_user_create,
+    ('user',    'delete'):   cmd_user_delete,
+    ('user',    'passwd'):   cmd_user_passwd,
+    ('website', 'list'):     cmd_website_list,
+    ('website', 'create'):   cmd_website_create,
+    ('website', 'delete'):   cmd_website_delete,
+    ('website', 'info'):     cmd_website_info,
+    ('ftp',     'list'):     cmd_ftp_list,
+    ('ftp',     'create'):   cmd_ftp_create,
+    ('ftp',     'delete'):   cmd_ftp_delete,
+    ('ftp',     'passwd'):   cmd_ftp_passwd,
+    ('ftp',     'install'):  cmd_ftp_install,
+    ('ssl',     'request'):  cmd_ssl_request,
+    ('ssl',     'status'):   cmd_ssl_status,
+    ('ssl',     'renew'):    cmd_ssl_renew,
+    ('git',     'status'):   cmd_git_status,
+    ('git',     'pull'):     cmd_git_pull,
+    ('git',     'push'):     cmd_git_push,
+    ('db',      'list'):     cmd_db_list,
+    ('db',      'create'):   cmd_db_create,
+    ('db',      'delete'):   cmd_db_delete,
+}
+
+def main():
+    parser = build_parser()
+    args = parser.parse_args()
+
+    if not args.command:
+        parser.print_help()
+        return
+
+    subcommand = getattr(args, 'subcommand', None)
+    key = (args.command, subcommand)
+
+    handler = DISPATCH.get(key)
+    if handler:
+        handler(args)
+    else:
+        # Print subcommand help
+        parser.parse_args([args.command, '--help'])
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Security & Brute-force — LKYPanel{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="header-main">
+        <h1>Security & Brute-force</h1>
+        <p>Manage Fail2Ban jails and blocked intruders.</p>
+    </div>
+</div>
+
+{% if not fail2ban_installed %}
+<div style="margin-bottom:1.5rem;padding:1rem 1.25rem;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:12px;display:flex;align-items:center;gap:0.75rem;color:#fb923c;">
+  <i class="ph-bold ph-warning" style="font-size:1.25rem;flex-shrink:0;"></i>
+  <span>Fail2ban is not installed. Brute-force protection is disabled.
+    <a href="/admin/packages/" style="color:#fb923c;font-weight:600;text-decoration:underline;">Install it from the Packages page.</a>
+  </span>
+</div>
+{% endif %}
+
+<div class="jails-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+    {% for name, status in jails.items %}
+    <div class="glass-card status-card" style="padding: 1.5rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div style="width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: var(--accent-primary);">
+                    <i class="ph-bold ph-shield"></i>
+                </div>
+                <h3 style="font-weight: 600;">{{ name }}</h3>
+            </div>
+            <span class="badge" style="background: rgba(34,197,94,0.1); color: #22c55e;">Enabled</span>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="stat-box">
+                <div style="color: var(--text-muted); font-size: 0.8rem;">Currently Banned</div>
+                <div style="font-size: 1.25rem; font-weight: 700;">{{ status.currently_banned }}</div>
+            </div>
+            <div class="stat-box">
+                <div style="color: var(--text-muted); font-size: 0.8rem;">Total Banned</div>
+                <div style="font-size: 1.25rem; font-weight: 700;">{{ status.total_banned }}</div>
+            </div>
+        </div>
+
+        <div class="banned-list">
+            <h4 style="font-size: 0.85rem; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.75rem;">IP Blacklist</h4>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; max-height: 120px; overflow-y: auto;">
+                {% for ip in status.banned_ips %}
+                <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.03); padding: 0.5rem 0.75rem; border-radius: 6px;">
+                    <span style="font-family: monospace; font-size: 0.9rem;">{{ ip }}</span>
+                    <button class="btn btn-icon-sm" onclick="manageBan('unban', '{{ name }}', '{{ ip }}')" title="Unban IP">
+                        <i class="ph-bold ph-minus-circle"></i>
+                    </button>
+                </div>
+                {% empty %}
+                <div style="font-size: 0.85rem; color: var(--text-muted); italic; padding: 0.5rem;">No active bans.</div>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 1rem; display: flex; gap: 0.5rem;">
+                <input type="text" id="ban-input-{{ name }}" class="glass-input-sm" placeholder="1.2.3.4" style="flex: 1;">
+                <button class="btn btn-primary-sm" onclick="manageBan('ban', '{{ name }}', document.getElementById('ban-input-{{ name }}').value)">Ban</button>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="glass-card table-card" style="margin-top: 2rem;">
+    <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-weight: 600;">System Logs (fail2ban)</h3>
+        <button class="btn btn-secondary-sm" onclick="location.reload()">
+            <i class="ph ph-arrows-clockwise"></i> Refresh
+        </button>
+    </div>
+    <div style="padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 0 0 12px 12px; font-family: monospace; font-size: 0.85rem; line-height: 1.6; max-height: 400px; overflow-y: auto;">
+        {% for line in logs %}
+        <div style="white-space: pre-wrap; margin-bottom: 0.25rem;">
+            {% if 'ERROR' in line %}<span style="color: #ef4444;">{{ line }}</span>
+            {% elif 'WARNING' in line %}<span style="color: #f59e0b;">{{ line }}</span>
+            {% elif 'Ban' in line %}<span style="color: #ef4444; font-weight: bold;">{{ line }}</span>
+            {% elif 'Unban' in line %}<span style="color: #22c55e;">{{ line }}</span>
+            {% else %}{{ line }}{% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<script>
+async function manageBan(action, jail, ip) {
+    if(!ip) return alert('IP address is required');
+    if(action === 'unban' && !confirm(`Unban IP ${ip}?`)) return;
+    
+    try {
+        const response = await fetch('/admin/security/manage-ban/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+            body: JSON.stringify({ action, jail, ip })
+        });
+        const res = await response.json();
+        if(response.ok) {
+            alert(res.message);
+            location.reload();
+        } else {
+            alert(res.error || res.message);
+        }
+    } catch(e) { alert('Error processing request'); }
+}
+</script>
+
+<style>
+.glass-input-sm {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 0.4rem 0.75rem;
+    color: white;
+    font-size: 0.85rem;
+    outline: none;
+}
+.btn-primary-sm {
+    padding: 0.4rem 1rem;
+    font-size: 0.85rem;
+    background: var(--accent-primary);
+}
+.btn-icon-sm {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+}
+.btn-icon-sm:hover { color: #ef4444; }
+.stat-box {
+    background: rgba(255,255,255,0.03);
+    padding: 0.75rem;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.02);
+}
+</style>
+{% endblock %}

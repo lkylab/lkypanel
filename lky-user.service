@@ -1,0 +1,24 @@
+[Unit]
+Description=LKYPanel — User Interface (port 2083)
+After=network.target
+
+[Service]
+Type=simple
+User=lkypanel
+Group=lkypanel
+WorkingDirectory=/usr/local/lkypanel/lkypanel
+EnvironmentFile=/usr/local/lkypanel/.env
+ExecStart=/usr/local/lkypanel/venv/bin/gunicorn \
+    --workers 2 \
+    --bind 0.0.0.0:2083 \
+    --certfile /usr/local/lkypanel/ssl/panel.crt \
+    --keyfile  /usr/local/lkypanel/ssl/panel.key \
+    --access-logfile /var/log/lkypanel/user-access.log \
+    --error-logfile  /var/log/lkypanel/user-error.log \
+    --timeout 60 \
+    lkypanel.wsgi:application
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

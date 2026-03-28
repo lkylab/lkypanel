@@ -1,0 +1,11 @@
+{
+  "name": "MariaDB",
+  "description": "MySQL-compatible database server required for websites and phpMyAdmin.",
+  "version": "10.11",
+  "system_packages": {
+    "apt": ["mariadb-server", "mariadb-client"],
+    "yum": ["mariadb-server", "mariadb"]
+  },
+  "service": "mariadb",
+  "firewall_ports": []
+}

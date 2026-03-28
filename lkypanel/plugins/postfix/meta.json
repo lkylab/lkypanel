@@ -1,0 +1,11 @@
+{
+  "name": "Postfix",
+  "description": "Mail transfer agent for sending and receiving email.",
+  "version": "3.7",
+  "system_packages": {
+    "apt": ["postfix", "mailutils"],
+    "yum": ["postfix"]
+  },
+  "service": "postfix",
+  "firewall_ports": ["25/tcp", "587/tcp"]
+}

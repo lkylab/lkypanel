@@ -1,0 +1,11 @@
+{
+  "name": "Redis",
+  "description": "In-memory data store for caching and sessions.",
+  "version": "7.0",
+  "system_packages": {
+    "apt": ["redis-server"],
+    "yum": ["redis"]
+  },
+  "service": "redis",
+  "firewall_ports": []
+}
