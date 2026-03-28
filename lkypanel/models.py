@@ -276,6 +276,43 @@ class BackupJob(models.Model):
 
 
 # ---------------------------------------------------------------------------
+# Email
+# ---------------------------------------------------------------------------
+
+class MailDomain(models.Model):
+    website = models.OneToOneField(Website, on_delete=models.CASCADE, related_name='mail_domain')
+    domain = models.CharField(max_length=253, unique=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'lkypanel'
+
+    def save(self, *args, **kwargs):
+        self.domain = _validate_domain(self.domain)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.domain
+
+
+class MailAccount(models.Model):
+    domain = models.ForeignKey(MailDomain, on_delete=models.CASCADE, related_name='accounts')
+    email_user = models.CharField(max_length=150)  # e.g. 'info' for info@domain.com
+    password_hash = models.CharField(max_length=256)
+    quota_mb = models.PositiveIntegerField(default=1024)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'lkypanel'
+        unique_together = ('domain', 'email_user')
+
+    def __str__(self):
+        return f'{self.email_user}@{self.domain.domain}'
+
+
+# ---------------------------------------------------------------------------
 # AuditLog
 # ---------------------------------------------------------------------------
 

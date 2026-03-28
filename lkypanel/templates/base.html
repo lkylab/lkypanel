@@ -407,18 +407,22 @@
                 <i class="ph ph-users"></i>
                 <span>Users</span>
             </a>
+            {% if restic_installed %}
             <a href="/admin/backup/" class="nav-link {% if active_page == 'backup' %}active{% endif %}">
                 <i class="ph ph-cloud-arrow-up"></i>
                 <span>Backup</span>
             </a>
+            {% endif %}
             <a href="/admin/firewall/" class="nav-link {% if active_page == 'firewall' %}active{% endif %}">
                 <i class="ph ph-wall"></i>
                 <span>Firewall</span>
             </a>
+            {% if fail2ban_installed %}
             <a href="/admin/security/" class="nav-link {% if active_page == 'security' %}active{% endif %}">
                 <i class="ph ph-shield-check"></i>
                 <span>Security</span>
             </a>
+            {% endif %}
             {% if postfix_installed %}
             <a href="/admin/email/" class="nav-link {% if active_page == 'email' %}active{% endif %}">
                 <i class="ph ph-envelope"></i>
@@ -442,10 +446,12 @@
                 <i class="ph ph-house"></i>
                 <span>My Dashboard</span>
             </a>
+            {% if mariadb_installed %}
             <a href="/user/dashboard/" class="nav-link">
                 <i class="ph ph-database"></i>
                 <span>My Databases</span>
             </a>
+            {% endif %}
             <a href="/user/profile/" class="nav-link">
                 <i class="ph ph-user"></i>
                 <span>Account Profile</span>

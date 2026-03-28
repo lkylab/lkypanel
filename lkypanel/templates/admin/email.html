@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Email Server - LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>Email Server Management</h1>
+    <p>Manage mail domains and accounts for your websites.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div class="grid">
+        <div class="stat-card">
+            <div class="stat-icon blue">
+                <i class="ph-bold ph-envelope"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ total_accounts }}</div>
+                <div class="stat-label">Mail Accounts</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple">
+                <i class="ph-bold ph-globe"></i>
+            </div>
+            <div>
+                <div class="stat-value">{{ mail_domains.count }}</div>
+                <div class="stat-label">Mail Domains</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="section-card" style="margin-top: 2rem;">
+        <div class="card-header">
+            <h2 style="font-size: 1.1rem; font-weight: 600;">Email Domains</h2>
+            <button class="btn btn-sm" onclick="alert('Mail domain management feature is being prepared!')">
+                <i class="ph ph-plus"></i> Add Domain
+            </button>
+        </div>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Domain</th>
+                        <th>Accounts</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for md in mail_domains %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ md.domain }}</td>
+                        <td>{{ md.accounts.count }}</td>
+                        <td>
+                            <span class="status-pill status-online">Active</span>
+                        </td>
+                        <td>
+                            <div class="header-actions">
+                                <button class="btn btn-xs btn-ghost">Manage</button>
+                                <button class="btn btn-xs btn-ghost" style="color: #ef4444;">Delete</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align: center; color: var(--text-dim); padding: 3rem;">
+                            No mail domains configured yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="card" style="margin-top: 2rem; border-color: var(--accent-secondary);">
+        <h3 style="margin-bottom: 1rem; color: var(--accent-secondary);">
+            <i class="ph ph-info"></i> Virtual Mailbox Status
+        </h3>
+        <p style="color: var(--text-dim); line-height: 1.6;">
+            The Postfix plugin is installed. To start hosting email, you need to add a mail domain first. 
+            LKYPanel will automatically configure Postfix and Dovecot virtual mailboxes for you.
+        </p>
+    </div>
+</div>
+{% endblock %}

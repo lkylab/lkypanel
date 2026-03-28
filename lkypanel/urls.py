@@ -2,7 +2,7 @@
 from django.urls import path
 from lkypanel.views.auth import login_index, admin_login, user_login, logout_view
 from lkypanel.admin_views import users as au, websites as aw, backup as ab, packages as ap, firewall as af, security as as_
-from lkypanel.admin_views import settings as aset
+from lkypanel.admin_views import settings as aset, email as ae
 from lkypanel.admin_views import logs as al
 from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw
 from lkypanel.api import views as av
@@ -32,6 +32,7 @@ urlpatterns = [
     path('admin/settings/',                 aset.settings_page,   name='admin_settings'),
     path('admin/logs/',                     al.logs_page,         name='admin_logs'),
     path('admin/logs/get/',                 al.get_log,           name='admin_get_log'),
+    path('admin/email/',                    ae.email_dashboard,   name='admin_email'),
     path('admin/users/create/',             au.create_user,     name='admin_create_user'),
     path('admin/users/<int:user_id>/delete/', au.delete_user,   name='admin_delete_user'),
     path('admin/users/<int:user_id>/reset-password/', au.reset_password, name='admin_reset_password'),
