@@ -70,8 +70,8 @@ echo -e "  Arch:  ${ARCH_LABEL}   OS: ${OS_ID} ${OS_VER}"
 echo -e "  Admin: https://YOUR_IP:${ADMIN_PORT}   User: https://YOUR_IP:${USER_PORT}"
 echo ""
 
-# ── Step 1: System packages ───────────────────────────────────────────────────
-info "Step 1/9 — Installing system packages..."
+# ── System packages ───────────────────────────────────────────────────────────
+info "Installing system packages..."
 
 if [[ "$PKG_MGR" == "apt-get" ]]; then
     export DEBIAN_FRONTEND=noninteractive
@@ -100,8 +100,8 @@ else
 fi
 success "System packages installed"
 
-# ── Step 2: OpenLiteSpeed ─────────────────────────────────────────────────────
-info "Step 2/9 — Installing OpenLiteSpeed..."
+# ── OpenLiteSpeed ─────────────────────────────────────────────────────────────
+info "Installing OpenLiteSpeed..."
 
 if ! command -v lswsctrl &>/dev/null && [[ ! -f /usr/local/lsws/bin/lswsctrl ]]; then
     if [[ "$IS_ARM" == true ]]; then
@@ -131,11 +131,25 @@ fi
 # Ensure lswsctrl is in PATH
 export PATH="$PATH:/usr/local/lsws/bin"
 
-# Skip Step 3 (MariaDB setup) during initial install — handle via Packages panel
-info "Step 3/9 — Skipping MariaDB setup (optional package)..."
+# Skip MariaDB setup (optional package) during initial install — handle via panel
+info "Skipping MariaDB setup (optional package)..."
 
-# ── Step 4: Create system user and directories ────────────────────────────────
-info "Step 4/9 — Creating directories and system user..."
+# ── Create system user and directories ────────────────────────────────────────
+info "Creating directories and system user..."
+
+if ! getent group "$PANEL_USER" >/dev/null; then
+    groupadd --system "$PANEL_USER"
+fi
+
+if ! getent passwd "$PANEL_USER" >/dev/null; then
+    useradd --system \
+        --gid "$PANEL_USER" \
+        --create-home \
+        --home-dir "/home/$PANEL_USER" \
+        --shell /sbin/nologin \
+        --comment "LkyPanel System User" \
+        "$PANEL_USER"
+fi
 
 mkdir -p "/home/$PANEL_USER"
 chown "$PANEL_USER":"$PANEL_USER" "/home/$PANEL_USER"
@@ -150,8 +164,8 @@ chmod 700 "$DB_DIR" "$SSL_DIR"
 
 success "Directories created"
 
-# ── Step 5: Clone repository ──────────────────────────────────────────────────
-info "Step 5/9 — Cloning LkyPanel from ${REPO_URL}..."
+# ── Clone repository ──────────────────────────────────────────────────────────
+info "Cloning LkyPanel from ${REPO_URL}..."
 
 if [[ -d "$INSTALL_DIR" ]] && [[ ! -d "$INSTALL_DIR/.git" ]]; then
     warn "Installation directory $INSTALL_DIR exists but is not a git repo. Cleaning up..."
@@ -168,8 +182,8 @@ fi
 
 success "Repository cloned to $INSTALL_DIR"
 
-# ── Step 6: Python virtualenv and dependencies ────────────────────────────────
-info "Step 6/9 — Setting up Python virtualenv..."
+# ── Python virtualenv and dependencies ────────────────────────────────────────
+info "Setting up Python virtualenv..."
 
 python3 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --quiet --upgrade pip
@@ -177,8 +191,8 @@ python3 -m venv "$VENV_DIR"
 
 success "Python dependencies installed"
 
-# ── Step 7: Generate secrets and .env ────────────────────────────────────────
-info "Step 7/9 — Generating secrets..."
+# ── Generate secrets and .env ────────────────────────────────────────────────
+info "Generating secrets..."
 
 ENV_FILE="$INSTALL_DIR/.env"
 
@@ -202,8 +216,8 @@ EOF
     success "Secrets generated → $ENV_FILE"
 fi
 
-# ── Step 8: Self-signed SSL cert for panel ports ──────────────────────────────
-info "Step 8/9 — Generating self-signed SSL certificate for panel..."
+# ── Self-signed SSL cert for panel ports ──────────────────────────────────────
+info "Generating self-signed SSL certificate for panel..."
 
 mkdir -p "$SSL_DIR"
 if [[ ! -f "$SSL_DIR/panel.crt" ]] || [[ ! -f "$SSL_DIR/panel.key" ]]; then
@@ -220,8 +234,8 @@ else
     success "SSL cert already exists — skipping"
 fi
 
-# ── Step 9: Django setup ──────────────────────────────────────────────────────
-info "Step 9/9 — Running Django migrations and setup..."
+# ── Django setup ──────────────────────────────────────────────────────────────
+info "Running Django migrations and setup..."
 
 cd "$APP_ROOT"
 export DJANGO_SETTINGS_MODULE=lkypanel.settings
