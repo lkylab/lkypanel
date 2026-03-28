@@ -273,18 +273,6 @@ PYEOF
 
 success "Django setup complete"
 
-# ── Plugin installation ───────────────────────────────────────────────────────
-info "Installing all available plugins..."
-
-plugins_dir="$APP_ROOT/lkypanel/plugins"
-for dir in "$plugins_dir"/*/; do
-    [[ -d "$dir" ]] || continue
-    id=$(basename "$dir")
-    info "Installing plugin: $id"
-    # Run the install script for each plugin
-    bash "$dir/install.sh" || warn "Plugin $id install failed — continuing"
-done
-
 # ── Systemd services ──────────────────────────────────────────────────────────
 info "Installing systemd services..."
 
