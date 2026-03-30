@@ -273,7 +273,7 @@ index  {{
   indexFiles              index.php, index.html
 }}
 
-context /phpmyadmin/ {{
+context /adminphpmyadmin/ {{
   type                    static
   location                {PHP_MYADMIN_DIR}/
   allowBrowse             1

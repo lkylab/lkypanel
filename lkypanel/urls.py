@@ -81,6 +81,6 @@ urlpatterns = [
     path('api/v1/tokens/create/',         av.create_token,   name='api_create_token'),
 
     # ── Tools Proxy ──────────────────────────────────────────────────────
-    path('phpmyadmin/',                   phpMyAdminProxyView.as_view(), name='pma_index'),
-    path('phpmyadmin/<path:path>',        phpMyAdminProxyView.as_view(), name='pma_proxy'),
+    path('adminphpmyadmin/',                   phpMyAdminProxyView.as_view(), name='pma_index'),
+    path('adminphpmyadmin/<path:path>',        phpMyAdminProxyView.as_view(), name='pma_proxy'),
 ]
