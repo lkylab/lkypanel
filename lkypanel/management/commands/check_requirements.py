@@ -25,8 +25,8 @@ class Command(BaseCommand):
             errors.append(f'Unsupported architecture: {arch}')
 
         # Python version
-        if sys.version_info < (3, 8):
-            errors.append(f'Python >= 3.8 required (found {sys.version})')
+        if sys.version_info < (3, 12):
+            errors.append(f'Python >= 3.12 required (found {sys.version.split()[0]})')
         else:
             self.stdout.write(self.style.SUCCESS(f'✓ Python {sys.version.split()[0]}'))
 
@@ -67,11 +67,9 @@ class Command(BaseCommand):
         else:
             self.stdout.write(self.style.WARNING('⚠ certbot not found — SSL management will not work'))
 
-        # Pure-FTPd
+        # Pure-FTPd (Optional, no warning needed if missing at check time)
         if shutil.which('pure-ftpd'):
             self.stdout.write(self.style.SUCCESS('✓ Pure-FTPd found'))
-        else:
-            self.stdout.write(self.style.WARNING('⚠ Pure-FTPd not found — install from admin panel'))
 
         if errors:
             self.stdout.write('')

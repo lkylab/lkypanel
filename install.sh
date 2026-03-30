@@ -87,7 +87,7 @@ if [[ "$PKG_MGR" == "apt-get" ]]; then
     apt-get update -qq
     
     PACKAGES=(
-        python3 python3-pip python3-venv python3-dev git curl wget openssl certbot build-essential libssl-dev libffi-dev ufw
+        python3.12 python3.12-venv python3.12-dev git curl wget openssl certbot build-essential libssl-dev libffi-dev ufw
     )
 
     for PKG in "${PACKAGES[@]}"; do
@@ -101,7 +101,7 @@ if [[ "$PKG_MGR" == "apt-get" ]]; then
     done
 else
     yum install -y -q \
-        python3 python3-pip python3-devel \
+        python3.12 python3.12-devel \
         git curl wget openssl \
         certbot \
         gcc openssl-devel libffi-devel \
@@ -198,7 +198,7 @@ success "Repository cloned to $INSTALL_DIR"
 # ── Python virtualenv and dependencies ────────────────────────────────────────
 info "Setting up Python virtualenv..."
 
-python3 -m venv "$VENV_DIR"
+python3.12 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --quiet --upgrade pip
 "$VENV_DIR/bin/pip" install --quiet -r "$APP_ROOT/requirements.txt"
 
@@ -319,7 +319,7 @@ success "Services and hardening deployed"
 info "Installing lky CLI..."
 chmod +x "$APP_ROOT/lky"
 # Fix shebang to use venv
-sed -i "1s|#!.*|#!${VENV_DIR}/bin/python3|" "$APP_ROOT/lky"
+sed -i "1s|#!.*|#!${VENV_DIR}/bin/python3.12|" "$APP_ROOT/lky"
 ln -sf "$APP_ROOT/lky" /usr/local/bin/lky
 success "CLI installed → /usr/local/bin/lky"
 
