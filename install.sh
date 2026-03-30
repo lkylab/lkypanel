@@ -347,7 +347,7 @@ systemctl enable --now lky-user
 # Deploy hardening configs
 info "Deploying sudoers hardening..."
 cat > "/etc/sudoers.d/lkypanel" <<EOF
-lkypanel ALL=(ALL) NOPASSWD: /usr/local/lsws/bin/lswsctrl, /usr/bin/pure-pw, /usr/bin/certbot, /usr/bin/openssl, /usr/bin/apt-get, /usr/bin/yum, /usr/bin/dnf, /usr/sbin/ufw, /usr/sbin/firewall-cmd, /usr/bin/systemctl, /bin/systemctl, /usr/bin/fail2ban-client, /usr/bin/tail, /usr/bin/restic, /bin/mkdir, /usr/bin/mkdir, /bin/chown, /usr/bin/chown, /bin/chmod, /usr/bin/chmod, /usr/bin/tee, /bin/tee, /bin/rm, /usr/bin/rm, /bin/rmdir, /usr/bin/rmdir, /bin/cat, /usr/bin/cat, /usr/bin/touch, /bin/touch, /usr/sbin/useradd, /usr/sbin/usermod, /usr/sbin/userdel, /usr/sbin/adduser, /usr/sbin/groupadd, /usr/sbin/groupdel, /usr/bin/wget, /usr/bin/curl, /usr/sbin/postconf, /usr/sbin/postmap, /usr/bin/doveadm, /usr/bin/debconf-set-selections
+lkypanel ALL=(ALL) NOPASSWD: /usr/local/lsws/bin/lswsctrl, /usr/bin/pure-pw, /usr/bin/certbot, /usr/bin/openssl, /usr/bin/apt-get, /usr/bin/yum, /usr/bin/dnf, /usr/sbin/ufw, /usr/sbin/firewall-cmd, /usr/bin/systemctl, /bin/systemctl, /usr/bin/fail2ban-client, /usr/bin/tail, /usr/bin/restic, /bin/mkdir, /usr/bin/mkdir, /bin/chown, /usr/bin/chown, /bin/chmod, /usr/bin/chmod, /usr/bin/tee, /bin/tee, /bin/rm, /usr/bin/rm, /bin/rmdir, /usr/bin/rmdir, /bin/cat, /usr/bin/cat, /usr/bin/cp, /bin/cp, /usr/bin/tar, /bin/tar, /usr/bin/touch, /bin/touch, /usr/sbin/useradd, /usr/sbin/usermod, /usr/sbin/userdel, /usr/sbin/adduser, /usr/sbin/groupadd, /usr/sbin/groupdel, /usr/bin/wget, /usr/bin/curl, /usr/sbin/postconf, /usr/sbin/postmap, /usr/bin/doveadm, /usr/bin/debconf-set-selections
 EOF
 chmod 440 "/etc/sudoers.d/lkypanel"
 
