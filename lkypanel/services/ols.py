@@ -108,10 +108,6 @@ virtualHost {domain} {{
   configFile              {vhost_dir}/{domain}/vhconf.conf
   allowSymbolLink         1
 }}
-
-listener HTTP {{
-  map                     {domain} {domain}
-}}
 """
 
 HTTPD_LISTENER_ENTRY = """
@@ -175,7 +171,13 @@ def _register_vhost_in_httpd(domain: str) -> None:
             return  # already registered
 
         entry = HTTPD_VHOST_ENTRY.format(domain=domain, vhost_dir=VHOST_DIR)
-        _sudo_write(HTTPD_CONF, current + entry)
+        
+        # Inject domain mapping into the main HTTP listener block
+        map_entry = f'\\n  map                     {domain} {domain}, www.{domain}'
+        if 'listener HTTP {' in current:
+            current = current.replace('listener HTTP {', f'listener HTTP {{{map_entry}', 1)
+            
+        _sudo_write(HTTPD_CONF, current + '\\n' + entry)
         logger.info('Registered vhost %s in httpd_config.conf', domain)
     except Exception as e:
         logger.warning('Could not register vhost in httpd_config.conf: %s', e)
@@ -201,6 +203,11 @@ def _unregister_vhost_from_httpd(domain: str) -> None:
                     pos = i + 1
                     break
         new_content = current[:start] + current[pos:]
+        
+        # Also remove the listener map entry
+        import re
+        new_content = re.sub(rf'\\n\\s*map\\s+{domain}\\s+[^\\n]*', '', new_content)
+        
         _sudo_write(HTTPD_CONF, new_content)
         logger.info('Unregistered vhost %s from httpd_config.conf', domain)
     except Exception as e:
