@@ -288,6 +288,37 @@ context /phpmyadmin/ {
         raise
 
 
+DEFAULT_INDEX_PHP = """\
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to <?php echo htmlspecialchars($_SERVER['HTTP_HOST'] ?? 'your new website'); ?></title>
+    <style>
+        body { margin: 0; padding: 0; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #1a1c29 0%, #0d0e15 100%); color: #ffffff; text-align: center; }
+        .container { padding: 3rem; background: rgba(255, 255, 255, 0.03); border-radius: 24px; border: 1px solid rgba(255, 255, 255, 0.05); box-shadow: 0 20px 40px rgba(0,0,0,0.4); backdrop-filter: blur(10px); max-width: 600px; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0 auto; }
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(to right, #4facfe 0%, #00f2fe 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p { font-size: 1.1rem; color: #a0a5b8; line-height: 1.6; margin-bottom: 2.5rem; }
+        .loader { display: inline-grid; width: 80px; aspect-ratio: 1; margin: 0 auto 2rem auto; }
+        .loader:before, .loader:after { content: ""; grid-area: 1/1; border-radius: 50%; }
+        .loader:before { margin: 25%; background: repeating-conic-gradient(#C02942 0 60deg, #0B486B 0 120deg); transform: rotate(0turn) translate(50%) rotate(0turn); animation: l2 2s alternate infinite ease-in-out; }
+        .loader:after { padding: 10%; margin: -10%; background: repeating-conic-gradient(from -15deg, #C02942 0 30deg, #0B486B 0 60deg); mask: conic-gradient(from 75deg, #000 210deg, #0000 0) content-box exclude, conic-gradient(from 75deg, #000 210deg, #0000 0); -webkit-mask: conic-gradient(from 75deg, #000 210deg, #0000 0) content-box exclude, conic-gradient(from 75deg, #000 210deg, #0000 0); }
+        @keyframes l2 { to { transform: rotate(.5turn) translate(50%) rotate(-1turn); } }
+        .footer { margin-top: 3rem; font-size: 0.9rem; color: #565b73; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loader"></div>
+        <h1>Website Ready</h1>
+        <p>Your new domain <strong style="color: #fff;"><?php echo htmlspecialchars($_SERVER['HTTP_HOST'] ?? 'your new website'); ?></strong> has been successfully set up and is ready for development.</p>
+        <div class="footer">Powered by LkyPanel Server Management</div>
+    </div>
+</body>
+</html>
+"""
+
 def create_docroot(domain: str) -> Path:
     domain = _safe_domain(domain)
 
@@ -334,6 +365,12 @@ def create_docroot(domain: str) -> Path:
     subprocess.run(['sudo', 'mkdir', '-p', str(docroot)], check=True, timeout=10)
     subprocess.run(['sudo', 'chown', f'{linux_user}:{group_name}', str(docroot)], check=True, timeout=10)
     subprocess.run(['sudo', 'chmod', '750', str(docroot)], check=True, timeout=10)
+
+    # Default index.php
+    index_file = docroot / 'index.php'
+    _sudo_write(str(index_file), DEFAULT_INDEX_PHP)
+    subprocess.run(['sudo', 'chown', f'{linux_user}:{group_name}', str(index_file)], check=True, timeout=10)
+    subprocess.run(['sudo', 'chmod', '644', str(index_file)], check=True, timeout=10)
 
     # /home/domain/logs — owned root:nogroup, chmod 750
     subprocess.run(['sudo', 'mkdir', '-p', str(logs_dir)], check=True, timeout=10)
