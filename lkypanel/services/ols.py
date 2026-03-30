@@ -221,7 +221,7 @@ def reload_ols() -> None:
         logger.warning('lswsctrl not found — skipping OLS reload')
         return
     result = subprocess.run(
-        ['sudo', LSWS_CTRL, 'graceful'],
+        ['sudo', LSWS_CTRL, 'restart'],
         shell=False, timeout=60, capture_output=True, text=True,
     )
     if result.returncode != 0:
