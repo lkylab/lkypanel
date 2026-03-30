@@ -24,7 +24,6 @@ def get_linux_user(domain: str) -> str:
 
 
 VHOST_TEMPLATE = """\
-virtualHost {domain} {{
   vhRoot                  /home/{domain}/
   docRoot                 /home/{domain}/public_html/
   allowSymbolLink         1
@@ -90,7 +89,7 @@ RewriteRule ^/package\\.json$ - [F]
 RewriteRule ^/package-lock\\.json$ - [F]
 END_REWRITE
   }}
-{ssl_block}}}
+{ssl_block}
 """
 
 SSL_BLOCK = """\
