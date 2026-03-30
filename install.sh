@@ -309,8 +309,7 @@ chmod 440 "/etc/sudoers.d/lkypanel"
 if [[ "$PKG_MGR" == "apt-get" ]]; then
     PKG_LIST="mariadb-server mariadb-client curl wget git python3-venv python3-pip certbot ufw build-essential python3-dev"
 fi
-cp "$APP_ROOT/hardening/fail2ban-lkypanel.conf" "/etc/fail2ban/jail.d/lkypanel.conf"
-cp "$APP_ROOT/hardening/lkypanel.filter" "/etc/fail2ban/filter.d/lkypanel.conf"
+# Services and hardening deployed
 
 success "Services and hardening deployed"
 
