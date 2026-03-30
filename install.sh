@@ -134,12 +134,12 @@ if ! command -v lswsctrl &>/dev/null && [[ ! -f /usr/local/lsws/bin/lswsctrl ]];
         info "Installing core OpenLiteSpeed and PHP 8.3..."
         apt-get install -y -qq openlitespeed lsphp83 lsphp83-common lsphp83-mysql
         # Attempt to install extra extensions (may be built-in or missing on some ARM builds)
-        info "Attempting to install extra PHP extensions (GD, MBString, ZIP, XML)..."
-        apt-get install -y -qq lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml || warn "Some extra PHP extensions may not be available on this arch; ignoring."
+        info "Attempting to install extra PHP extensions (GD, MBString, ZIP, XML, Curl, BCMath, SOAP, Intl)..."
+        apt-get install -y -qq lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml lsphp83-bcmath lsphp83-soap lsphp83-intl || warn "Some extra PHP extensions may not be available on this arch; ignoring."
     else
         wget -qO - https://repo.litespeed.sh | bash
         yum install -y -q openlitespeed lsphp83 lsphp83-common lsphp83-mysql
-        yum install -y -q lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml || warn "Some extra PHP extensions may not be available on this arch; ignoring."
+        yum install -y -q lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml lsphp83-bcmath lsphp83-soap lsphp83-intl || warn "Some extra PHP extensions may not be available on this arch; ignoring."
     fi
 
     # Verify install succeeded
