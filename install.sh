@@ -97,7 +97,7 @@ if [[ "$PKG_MGR" == "apt-get" ]]; then
     apt-get update -qq
     
     PACKAGES=(
-        python3.12 python3.12-venv python3.12-dev git curl wget openssl certbot build-essential libssl-dev libffi-dev ufw
+        python3.12 python3.12-venv python3.12-dev python3-pip git curl wget openssl certbot build-essential libssl-dev libffi-dev ufw
     )
 
     for PKG in "${PACKAGES[@]}"; do
@@ -112,7 +112,7 @@ if [[ "$PKG_MGR" == "apt-get" ]]; then
 else
     yum install -y -q \
         python3.12 python3.12-devel \
-        git curl wget openssl \
+        python3-pip git curl wget openssl \
         certbot \
         gcc openssl-devel libffi-devel \
         firewalld
