@@ -1,3 +1,0 @@
-[Definition]
-failregex = Failed login attempt for user '.*' from IP <ADDR>
-ignoreregex =

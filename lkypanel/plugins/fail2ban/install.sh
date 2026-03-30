@@ -23,8 +23,31 @@ else
 fi
 
 # 2. Deploy hardening configs
-sudo cp "$APP_ROOT/hardening/fail2ban-lkypanel.conf" "/etc/fail2ban/jail.d/lkypanel.conf"
-sudo cp "$APP_ROOT/hardening/lkypanel.filter" "/etc/fail2ban/filter.d/lkypanel.conf"
+sudo tee "/etc/fail2ban/jail.d/lkypanel.conf" > /dev/null <<EOF
+[lky-admin]
+enabled = True
+port = 2087
+filter = lkypanel
+logpath = /var/log/lkypanel/admin-error.log
+maxretry = 3
+findtime = 600
+bantime = 3600
+
+[lky-user]
+enabled = True
+port = 2083
+filter = lkypanel
+logpath = /var/log/lkypanel/user-error.log
+maxretry = 3
+findtime = 600
+bantime = 3600
+EOF
+
+sudo tee "/etc/fail2ban/filter.d/lkypanel.conf" > /dev/null <<EOF
+[Definition]
+failregex = Failed login attempt for user '.*' from IP <ADDR>
+ignoreregex =
+EOF
 
 # 3. Enable and start fail2ban
 sudo systemctl enable --now fail2ban
