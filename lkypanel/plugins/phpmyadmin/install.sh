@@ -14,7 +14,7 @@ if [[ -f "$FLAG_FILE" ]]; then
     exit 0
 fi
 
-echo "[INFO] Starting phpMyAdmin installation (CyberPanel-style)..."
+echo "[INFO] Starting phpMyAdmin installation..."
 
 # 1. Stop and disable Apache if it exists
 if command -v apache2 &>/dev/null; then
@@ -33,20 +33,20 @@ if command -v apt-get &>/dev/null; then
     done
 fi
 
-# 3. Install dependencies (lsphp extensions individually for ARM compatibility)
+# 3. Install dependencies (lsphp extensions — only packages that exist as separate packages)
 echo "[INFO] Installing PHP extensions for OpenLiteSpeed..."
 if command -v apt-get &>/dev/null; then
     sudo apt-get update -qq
     # Core packages
     sudo apt-get install -y -qq lsphp83 lsphp83-common lsphp83-mysql || true
-    # Extra extensions (may be built-in on ARM)
-    for EXT in lsphp83-curl lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-xml; do
-        sudo apt-get install -y -qq "$EXT" 2>/dev/null || echo "[WARN] $EXT not available (may be built-in) — skipping"
+    # Extra extensions that exist as separate packages (gd, mbstring, zip, xml are built into lsphp83-common on ARM)
+    for EXT in lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap; do
+        sudo apt-get install -y -qq "$EXT" 2>/dev/null && echo "[OK] $EXT installed" || echo "[WARN] $EXT not available — skipping"
     done
 else
     sudo yum install -y -q lsphp83 lsphp83-common lsphp83-mysql || true
-    for EXT in lsphp83-curl lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-xml; do
-        sudo yum install -y -q "$EXT" 2>/dev/null || echo "[WARN] $EXT not available (may be built-in) — skipping"
+    for EXT in lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap; do
+        sudo yum install -y -q "$EXT" 2>/dev/null && echo "[OK] $EXT installed" || echo "[WARN] $EXT not available — skipping"
     done
 fi
 

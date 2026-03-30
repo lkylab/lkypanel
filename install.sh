@@ -155,19 +155,19 @@ if ! command -v lswsctrl &>/dev/null && [[ ! -f /usr/local/lsws/bin/lswsctrl ]];
     if [[ "$PKG_MGR" == "apt-get" ]]; then
         wget -qO - https://repo.litespeed.sh | bash
         apt-get update -qq
-        # Install core OLS and LSPHP
+        # Install core OLS and PHP 8.3
         info "Installing core OpenLiteSpeed and PHP 8.3..."
         apt-get install -y -qq openlitespeed lsphp83 lsphp83-common lsphp83-mysql
-        # Install extensions individually (on ARM, many are built into lsphp83-common)
-        info "Installing extra PHP extensions individually..."
-        for EXT in lsphp83-curl lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-xml lsphp83-bcmath lsphp83-soap lsphp83-intl; do
-            apt-get install -y -qq "$EXT" 2>/dev/null && success "$EXT installed" || warn "$EXT not available (may be built-in) — skipping"
+        # Install extensions individually (gd, mbstring, zip, xml are built into lsphp83-common on ARM)
+        info "Installing extra PHP extensions..."
+        for EXT in lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap; do
+            apt-get install -y -qq "$EXT" 2>/dev/null && success "$EXT installed" || warn "$EXT not available — skipping"
         done
     else
         wget -qO - https://repo.litespeed.sh | bash
         yum install -y -q openlitespeed lsphp83 lsphp83-common lsphp83-mysql
-        for EXT in lsphp83-curl lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-xml lsphp83-bcmath lsphp83-soap lsphp83-intl; do
-            yum install -y -q "$EXT" 2>/dev/null && success "$EXT installed" || warn "$EXT not available (may be built-in) — skipping"
+        for EXT in lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap; do
+            yum install -y -q "$EXT" 2>/dev/null && success "$EXT installed" || warn "$EXT not available — skipping"
         done
     fi
 
