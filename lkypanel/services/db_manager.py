@@ -1,6 +1,6 @@
 """
 MariaDB/MySQL database management service.
-Uses subprocess + mysql CLI (root via unix socket) — same pattern as CyberPanel.
+Uses subprocess + mysql CLI (root via unix socket).
 Never uses Django's default SQLite connection for MariaDB operations.
 """
 import logging
