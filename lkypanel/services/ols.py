@@ -319,7 +319,7 @@ DEFAULT_INDEX_PHP = """\
         <div class="loader"></div>
         <h1>Website Ready</h1>
         <p>Your new domain <strong style="color: #fff;"><?php echo htmlspecialchars($_SERVER['HTTP_HOST'] ?? 'your new website'); ?></strong> has been successfully set up and is ready for development.</p>
-        <div class="footer">Powered by LKYPanel Server Management</div>
+        <div class="footer">Powered by LKYPanel</div>
     </div>
 </body>
 </html>
