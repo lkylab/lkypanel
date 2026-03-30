@@ -108,6 +108,10 @@ virtualHost {domain} {{
   configFile              {vhost_dir}/{domain}/vhconf.conf
   allowSymbolLink         1
 }}
+
+listener HTTP {{
+  map                     {domain} {domain}
+}}
 """
 
 HTTPD_LISTENER_ENTRY = """
@@ -234,11 +238,23 @@ def setup_panel_ols() -> None:
     the tools (like phpMyAdmin) on an internal port (8088) for proxying.
     """
     try:
-        # 1. Inject phpMyAdmin context into Example vhost (internal tools host)
-        example_vhost_conf = '/usr/local/lsws/conf/vhosts/Example/vhconf.conf'
-        conf = _sudo_read(example_vhost_conf)
+        conf = _sudo_read(HTTPD_CONF)
+        if 'listener HTTP {' not in conf:
+            http_listener = """
+listener HTTP {
+  address                 *:80
+  secure                  0
+}
+"""
+            conf += http_listener
+            _sudo_write(HTTPD_CONF, conf)
+            logger.info('Added HTTP listener (port 80) to OLS for websites')
         
-        if 'context /phpmyadmin/' not in conf:
+        # 1. Inject phpMyAdmin context into Example vhost (internal tools host on 8088)
+        example_vhost_conf = '/usr/local/lsws/conf/vhosts/Example/vhconf.conf'
+        conf_example = _sudo_read(example_vhost_conf)
+        
+        if 'context /phpmyadmin/' not in conf_example:
             pma_context = """
 context /phpmyadmin/ {
   location                /usr/local/lkypanel/phpmyadmin/
@@ -261,8 +277,8 @@ context /phpmyadmin/ {
   }
 }
 """
-            conf += pma_context
-            _sudo_write(example_vhost_conf, conf)
+            conf_example += pma_context
+            _sudo_write(example_vhost_conf, conf_example)
             logger.info('Injected phpMyAdmin context into OLS Example vhost')
 
         reload_ols()
