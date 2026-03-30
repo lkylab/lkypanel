@@ -6,6 +6,7 @@ from lkypanel.admin_views import settings as aset, email as ae
 from lkypanel.admin_views import logs as al
 from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw
 from lkypanel.api import views as av
+from lkypanel.views.tools import phpMyAdminProxyView
 
 urlpatterns = [
     # ── Login / logout ────────────────────────────────────────────────────
@@ -78,4 +79,8 @@ urlpatterns = [
     path('api/v1/git/',                   av.git_repos,      name='api_git'),
     path('api/v1/databases/',             av.databases,      name='api_databases'),
     path('api/v1/tokens/create/',         av.create_token,   name='api_create_token'),
+
+    # ── Tools Proxy ──────────────────────────────────────────────────────
+    path('phpmyadmin/',                   phpMyAdminProxyView.as_view(), name='pma_index'),
+    path('phpmyadmin/<path:path>',        phpMyAdminProxyView.as_view(), name='pma_proxy'),
 ]

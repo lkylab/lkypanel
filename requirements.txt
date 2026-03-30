@@ -7,3 +7,5 @@ hypothesis
 pytest-django
 netifaces
 psutil
+requests
+django-revproxy

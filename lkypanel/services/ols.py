@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 LSWS_CTRL = '/usr/local/lsws/bin/lswsctrl'
 VHOST_DIR  = '/usr/local/lsws/conf/vhosts'
 HTTPD_CONF = '/usr/local/lsws/conf/httpd_config.conf'
+PHP_MYADMIN_DIR = '/usr/local/lkypanel/phpmyadmin'
+SSL_DIR = '/usr/local/lkypanel/ssl'
 
 _DOMAIN_RE = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9\-\.]{1,251}[a-zA-Z0-9]$')
 
@@ -223,6 +225,86 @@ def reload_ols() -> None:
         # Non-fatal — site is created, OLS just needs manual reload
     else:
         logger.info('OLS graceful reload OK')
+
+
+def setup_panel_ols() -> None:
+    """Refactor OLS to serve panel ports (2087/2083) and phpMyAdmin."""
+    try:
+        current_httpd = _sudo_read(HTTPD_CONF)
+        
+        # 1. Create LkyPanel virtual host in httpd_config.conf if missing
+        if 'virtualHost LkyPanel' not in current_httpd:
+            vhost_entry = """
+virtualHost LkyPanel {
+  vhRoot                  /usr/local/lkypanel/
+  configFile              conf/vhosts/LkyPanel/vhconf.conf
+  allowSymbolLink         1
+}
+"""
+            _sudo_write(HTTPD_CONF, current_httpd + vhost_entry)
+            
+        # 2. Add listeners for 2087 and 2083
+        for name, port in [('PanelAdmin', 2087), ('PanelUser', 2083)]:
+            if f'listener {name}' not in current_httpd:
+                listener_entry = f"""
+listener {name} {{
+  address                 *:{port}
+  secure                  1
+  keyFile                 {SSL_DIR}/panel.key
+  certFile                {SSL_DIR}/panel.crt
+  map                     LkyPanel *
+}}
+"""
+                current_httpd = _sudo_read(HTTPD_CONF) # Refresh
+                _sudo_write(HTTPD_CONF, current_httpd + listener_entry)
+
+        # 3. Create vhconf.conf for LkyPanel
+        panel_vhost_dir = Path(VHOST_DIR) / 'LkyPanel'
+        subprocess.run(['sudo', 'mkdir', '-p', str(panel_vhost_dir)], check=True, timeout=10)
+        
+        panel_vhconf = f"""
+docRoot                   $VH_ROOT/
+allowSymbolLink           1
+enableScript              1
+restrained                1
+
+index  {{
+  useServer               0
+  indexFiles              index.php, index.html
+}}
+
+context /phpmyadmin/ {{
+  type                    static
+  location                {PHP_MYADMIN_DIR}/
+  allowBrowse             1
+  indexFiles              index.php
+}}
+
+context / {{
+  type                    proxy
+  handler                 LkyPanelGunicorn
+  addDefaultCharset       off
+}}
+
+extprocessor LkyPanelGunicorn {{
+  type                    proxy
+  address                 127.0.0.1:2087
+  maxConns                100
+  pcKeepAliveTimeout      60
+  initTimeout             60
+  retryTimeout            0
+  respBuffer              0
+}}
+"""
+        # Note: For dual port proxying, we might need separate vhosts or a more complex proxy handler.
+        # But since LkyPanel (Django) handles both ports identically, proxying to 2087 is fine.
+        _sudo_write(str(panel_vhost_dir / 'vhconf.conf'), panel_vhconf)
+        
+        reload_ols()
+        logger.info('Setup LkyPanel OLS infrastructure for ports 2087/2083')
+    except Exception as e:
+        logger.error('Failed to setup LkyPanel OLS: %s', e)
+        raise
 
 
 def create_docroot(domain: str) -> Path:

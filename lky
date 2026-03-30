@@ -177,6 +177,16 @@ def cmd_user_passwd(args):
     u.save(update_fields=['password'])
     ok(f'Password updated for {args.username}')
 
+def cmd_ols_setup_panel(args):
+    _require_root()
+    from lkypanel.services.ols import setup_panel_ols
+    info('Refactoring OpenLiteSpeed to serve Panel ports...')
+    try:
+        setup_panel_ols()
+        ok('OpenLiteSpeed configured for Panel (2087/2083) and phpMyAdmin')
+    except Exception as e:
+        err(str(e))
+
 # ── website commands ──────────────────────────────────────────────────────────
 def cmd_website_list(args):
     from lkypanel.models import Website
@@ -624,6 +634,11 @@ Examples:
     dd = ds.add_parser('delete', help='Delete database')
     dd.add_argument('db_name')
 
+    # ── ols ──
+    ol = sub.add_parser('ols', help='OpenLiteSpeed management')
+    ols = ol.add_subparsers(dest='subcommand', metavar='subcommand')
+    ols.add_parser('setup-panel', help='Refactor OLS to serve Panel ports')
+
     return p
 
 # ── Dispatch ──────────────────────────────────────────────────────────────────
@@ -657,6 +672,7 @@ DISPATCH = {
     ('db',      'list'):     cmd_db_list,
     ('db',      'create'):   cmd_db_create,
     ('db',      'delete'):   cmd_db_delete,
+    ('ols',     'setup-panel'): cmd_ols_setup_panel,
 }
 
 def main():
