@@ -228,19 +228,45 @@ def reload_ols() -> None:
 
 
 def setup_panel_ols() -> None:
-    """Ensure OLS is ready for website hosting (80/443 only).
+    """Ensure OLS is ready for website hosting and panel tools.
     
-    The panel (2087/2083) is served directly by Gunicorn and does NOT
-    depend on OLS. This function only prepares OLS for website hosting.
+    The panel (2087/2083) is served directly by Gunicorn. OLS only serves
+    the tools (like phpMyAdmin) on an internal port (8088) for proxying.
     """
     try:
-        current_httpd = _sudo_read(HTTPD_CONF)
+        # 1. Inject phpMyAdmin context into Example vhost (internal tools host)
+        example_vhost_conf = '/usr/local/lsws/conf/vhosts/Example/vhconf.conf'
+        conf = _sudo_read(example_vhost_conf)
         
-        # Ensure OLS has its default listener on port 8088 (or 80/443 for websites)
-        # No panel-specific listeners needed — Gunicorn handles 2087/2083 directly
-        
+        if 'context /phpmyadmin/' not in conf:
+            pma_context = """
+context /phpmyadmin/ {
+  location                /usr/local/lkypanel/phpmyadmin/
+  allowBrowse             1
+  indexFiles              index.php
+  
+  rewrite  {
+    enable                1
+    inherit               1
+    RewriteFile           .htaccess
+  }
+  
+  addDefaultCharset       off
+
+  php {
+    useServer             0
+    initTimeout           60
+    retryTimeout          0
+    respBuffer            0
+  }
+}
+"""
+            conf += pma_context
+            _sudo_write(example_vhost_conf, conf)
+            logger.info('Injected phpMyAdmin context into OLS Example vhost')
+
         reload_ols()
-        logger.info('OLS ready for website hosting (panel is independent on 2087/2083)')
+        logger.info('OLS ready (panel is independent on 2087/2083)')
     except Exception as e:
         logger.error('Failed to setup OLS: %s', e)
         raise
@@ -256,7 +282,7 @@ def create_docroot(domain: str) -> Path:
     docroot   = home_dir / 'public_html'
     logs_dir  = home_dir / 'logs'
 
-    # Detect distro for group name (CyberPanel pattern)
+    # Detect distro for group name
     try:
         with open('/etc/lsb-release') as f:
             is_ubuntu = True
@@ -278,7 +304,7 @@ def create_docroot(domain: str) -> Path:
             capture_output=True, timeout=15
         )
 
-    # Create group and add user to it (CyberPanel pattern)
+    # Create group and add user to it
     subprocess.run(['sudo', '/usr/sbin/groupadd', linux_user], capture_output=True, timeout=10)
     subprocess.run(['sudo', '/usr/sbin/usermod', '-a', '-G', linux_user, linux_user],
                    capture_output=True, timeout=10)
