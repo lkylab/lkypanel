@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# phpMyAdmin install script (CyberPanel-style, No Apache)
+# phpMyAdmin install script — source-based, no Apache
 FLAG_DIR="${FLAG_DIR:-/usr/local/lkypanel/plugins}"
 FLAG_FILE="${FLAG_FILE:-$FLAG_DIR/phpmyadmin}"
 LOG_FILE="${LOG_FILE:-/usr/local/lkypanel/plugin_install.log}"
@@ -16,30 +16,22 @@ fi
 
 echo "[INFO] Starting phpMyAdmin installation..."
 
-# 1. Stop and disable Apache if it exists
-if command -v apache2 &>/dev/null; then
-    echo "[INFO] Stopping and disabling Apache2 to prevent port conflicts..."
-    sudo systemctl stop apache2 || true
-    sudo systemctl disable apache2 || true
-fi
-
-# 2. Wait for dpkg lock (unattended-upgrades may be running)
+# 1. Stop unattended-upgrades and wait for dpkg lock
 if command -v apt-get &>/dev/null; then
+    sudo systemctl stop unattended-upgrades 2>/dev/null || true
     MAX_WAIT=120; WAITED=0
-    while fuser /var/lib/dpkg/lock-frontend &>/dev/null 2>&1; do
+    while sudo fuser /var/lib/dpkg/lock-frontend &>/dev/null 2>&1; do
         [[ $WAITED -eq 0 ]] && echo "[INFO] Waiting for dpkg lock to be released..."
         sleep 5; WAITED=$((WAITED + 5))
         [[ $WAITED -ge $MAX_WAIT ]] && echo "[WARN] Timed out waiting for dpkg lock." && break
     done
 fi
 
-# 3. Install dependencies (lsphp extensions — only packages that exist as separate packages)
+# 2. Install PHP extensions (individually for ARM compatibility)
 echo "[INFO] Installing PHP extensions for OpenLiteSpeed..."
 if command -v apt-get &>/dev/null; then
     sudo apt-get update -qq
-    # Core packages
     sudo apt-get install -y -qq lsphp83 lsphp83-common lsphp83-mysql || true
-    # Extra extensions that exist as separate packages (gd, mbstring, zip, xml are built into lsphp83-common on ARM)
     for EXT in lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap; do
         sudo apt-get install -y -qq "$EXT" 2>/dev/null && echo "[OK] $EXT installed" || echo "[WARN] $EXT not available — skipping"
     done
@@ -50,16 +42,16 @@ else
     done
 fi
 
-# 4. Download phpMyAdmin
+# 3. Download phpMyAdmin
 echo "[INFO] Downloading phpMyAdmin source..."
 sudo mkdir -p "$INSTALL_DIR"
 cd /tmp
-wget -q https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
-tar -xzf phpMyAdmin-latest-all-languages.tar.gz
+sudo wget -q https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+sudo tar -xzf phpMyAdmin-latest-all-languages.tar.gz
 sudo mv phpMyAdmin-*-all-languages/* "$INSTALL_DIR/"
-rm -rf phpMyAdmin-*-all-languages phpMyAdmin-latest-all-languages.tar.gz
+sudo rm -rf phpMyAdmin-*-all-languages phpMyAdmin-latest-all-languages.tar.gz
 
-# 5. Configure phpMyAdmin
+# 4. Configure phpMyAdmin
 echo "[INFO] Generating config.inc.php..."
 BLOWFISH_SECRET=$(openssl rand -base64 32)
 sudo tee "$INSTALL_DIR/config.inc.php" > /dev/null <<EOF
@@ -75,11 +67,11 @@ sudo tee "$INSTALL_DIR/config.inc.php" > /dev/null <<EOF
 \$cfg['SaveDir'] = '';
 EOF
 
-# 6. Set permissions
+# 5. Set permissions
 sudo chown -R lkypanel:lkypanel "$INSTALL_DIR"
 sudo chmod -R 755 "$INSTALL_DIR"
 
-# 7. Mark as installed
+# 6. Mark as installed
 mkdir -p "$FLAG_DIR"
 touch "$FLAG_FILE"
 echo "Plugin installed.[200]" >> "$LOG_FILE"
