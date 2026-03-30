@@ -224,6 +224,7 @@
     }
 
     async function deleteSite(id, btn) {
+        if (!confirm('Are you sure you want to permanently delete this website and all its files?')) return;
         btn.disabled = true;
         btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i>';
         const resp = await fetch(`/admin/websites/${id}/delete/`, {

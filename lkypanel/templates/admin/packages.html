@@ -67,6 +67,9 @@ document.querySelectorAll('.plugin-btn').forEach(btn => {
 });
 
 async function triggerOp(pluginId, operation) {
+  if (operation === 'remove') {
+      if (!confirm('Are you sure you want to uninstall this server package?')) return;
+  }
   const card = document.getElementById('card-' + pluginId);
   const btn  = card.querySelector('.plugin-btn');
   setSpinner(card, btn, operation);
