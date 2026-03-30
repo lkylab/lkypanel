@@ -80,6 +80,16 @@ elif command -v httpd &>/dev/null; then
     systemctl disable httpd || true
 fi
 
+# Add deadsnakes PPA for Python 3.12 on older Ubuntu
+if [[ "$OS_ID" == "ubuntu" ]] && [[ "$OS_VER" < "24.04" ]]; then
+    info "Adding deadsnakes PPA for Python 3.12 support..."
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -qq
+    apt-get install -y -qq software-properties-common
+    add-apt-repository -y ppa:deadsnakes/ppa
+    apt-get update -qq
+fi
+
 info "Installing system packages..."
 
 if [[ "$PKG_MGR" == "apt-get" ]]; then
@@ -114,18 +124,22 @@ info "Installing OpenLiteSpeed..."
 
 if ! command -v lswsctrl &>/dev/null && [[ ! -f /usr/local/lsws/bin/lswsctrl ]]; then
     if [[ "$IS_ARM" == true ]]; then
-        # ARM: OLS repo script handles aarch64 since OLS 1.7.x
-        # Verify the repo supports this arch before proceeding
         info "ARM architecture detected — using LiteSpeed repo (aarch64 supported since OLS 1.7)"
     fi
 
     if [[ "$PKG_MGR" == "apt-get" ]]; then
         wget -qO - https://repo.litespeed.sh | bash
         apt-get update -qq
-        apt-get install -y -qq openlitespeed lsphp83-mysql lsphp83-common lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml
+        # Install core OLS and LSPHP
+        info "Installing core OpenLiteSpeed and PHP 8.3..."
+        apt-get install -y -qq openlitespeed lsphp83 lsphp83-common lsphp83-mysql
+        # Attempt to install extra extensions (may be built-in or missing on some ARM builds)
+        info "Attempting to install extra PHP extensions (GD, MBString, ZIP, XML)..."
+        apt-get install -y -qq lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml || warn "Some extra PHP extensions may not be available on this arch; ignoring."
     else
         wget -qO - https://repo.litespeed.sh | bash
-        yum install -y -q openlitespeed lsphp83-mysql lsphp83-common lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml
+        yum install -y -q openlitespeed lsphp83 lsphp83-common lsphp83-mysql
+        yum install -y -q lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml || warn "Some extra PHP extensions may not be available on this arch; ignoring."
     fi
 
     # Verify install succeeded
