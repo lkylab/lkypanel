@@ -42,16 +42,18 @@ else
     done
 fi
 
-# 3. Download phpMyAdmin
+# 3. Download phpMyAdmin (no sudo needed for /tmp)
 echo "[INFO] Downloading phpMyAdmin source..."
-sudo mkdir -p "$INSTALL_DIR"
 cd /tmp
-sudo wget -q https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
-sudo tar -xzf phpMyAdmin-latest-all-languages.tar.gz
-sudo mv phpMyAdmin-*-all-languages/* "$INSTALL_DIR/"
-sudo rm -rf phpMyAdmin-*-all-languages phpMyAdmin-latest-all-languages.tar.gz
+wget -q https://www.phpmyadmin.net/downloads/phpMyAdmin-latest-all-languages.tar.gz
+tar -xzf phpMyAdmin-latest-all-languages.tar.gz
 
-# 4. Configure phpMyAdmin
+# 4. Move to install dir (sudo needed for /usr/local paths)
+sudo mkdir -p "$INSTALL_DIR"
+sudo cp -r phpMyAdmin-*-all-languages/* "$INSTALL_DIR/"
+rm -rf phpMyAdmin-*-all-languages phpMyAdmin-latest-all-languages.tar.gz
+
+# 5. Configure phpMyAdmin
 echo "[INFO] Generating config.inc.php..."
 BLOWFISH_SECRET=$(openssl rand -base64 32)
 sudo tee "$INSTALL_DIR/config.inc.php" > /dev/null <<EOF
@@ -67,11 +69,11 @@ sudo tee "$INSTALL_DIR/config.inc.php" > /dev/null <<EOF
 \$cfg['SaveDir'] = '';
 EOF
 
-# 5. Set permissions
+# 6. Set permissions
 sudo chown -R lkypanel:lkypanel "$INSTALL_DIR"
 sudo chmod -R 755 "$INSTALL_DIR"
 
-# 6. Mark as installed
+# 7. Mark as installed
 mkdir -p "$FLAG_DIR"
 touch "$FLAG_FILE"
 echo "Plugin installed.[200]" >> "$LOG_FILE"
