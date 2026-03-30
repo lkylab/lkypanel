@@ -228,81 +228,21 @@ def reload_ols() -> None:
 
 
 def setup_panel_ols() -> None:
-    """Refactor OLS to serve panel ports (2087/2083) and phpMyAdmin."""
+    """Ensure OLS is ready for website hosting (80/443 only).
+    
+    The panel (2087/2083) is served directly by Gunicorn and does NOT
+    depend on OLS. This function only prepares OLS for website hosting.
+    """
     try:
         current_httpd = _sudo_read(HTTPD_CONF)
         
-        # 1. Create LkyPanel virtual host in httpd_config.conf if missing
-        if 'virtualHost LkyPanel' not in current_httpd:
-            vhost_entry = """
-virtualHost LkyPanel {
-  vhRoot                  /usr/local/lkypanel/
-  configFile              conf/vhosts/LkyPanel/vhconf.conf
-  allowSymbolLink         1
-}
-"""
-            _sudo_write(HTTPD_CONF, current_httpd + vhost_entry)
-            
-        # 2. Add listeners for 2087 and 2083
-        for name, port in [('PanelAdmin', 2087), ('PanelUser', 2083)]:
-            if f'listener {name}' not in current_httpd:
-                listener_entry = f"""
-listener {name} {{
-  address                 *:{port}
-  secure                  1
-  keyFile                 {SSL_DIR}/panel.key
-  certFile                {SSL_DIR}/panel.crt
-  map                     LkyPanel *
-}}
-"""
-                current_httpd = _sudo_read(HTTPD_CONF) # Refresh
-                _sudo_write(HTTPD_CONF, current_httpd + listener_entry)
-
-        # 3. Create vhconf.conf for LkyPanel
-        panel_vhost_dir = Path(VHOST_DIR) / 'LkyPanel'
-        subprocess.run(['sudo', 'mkdir', '-p', str(panel_vhost_dir)], check=True, timeout=10)
-        
-        panel_vhconf = f"""
-docRoot                   $VH_ROOT/
-allowSymbolLink           1
-enableScript              1
-restrained                1
-
-index  {{
-  useServer               0
-  indexFiles              index.php, index.html
-}}
-
-context /adminphpmyadmin/ {{
-  type                    static
-  location                {PHP_MYADMIN_DIR}/
-  allowBrowse             1
-  indexFiles              index.php
-}}
-
-context / {{
-  type                    proxy
-  handler                 LkyPanelGunicorn
-  addDefaultCharset       off
-}}
-
-extprocessor LkyPanelGunicorn {{
-  type                    proxy
-  address                 127.0.0.1:8087
-  maxConns                100
-  pcKeepAliveTimeout      60
-  initTimeout             60
-  retryTimeout            0
-  respBuffer              0
-}}
-"""
-        # OLS owns ports 2087/2083 (with SSL) and proxies to Gunicorn on internal ports 8087/8083.
-        _sudo_write(str(panel_vhost_dir / 'vhconf.conf'), panel_vhconf)
+        # Ensure OLS has its default listener on port 8088 (or 80/443 for websites)
+        # No panel-specific listeners needed — Gunicorn handles 2087/2083 directly
         
         reload_ols()
-        logger.info('Setup LkyPanel OLS infrastructure for ports 2087/2083')
+        logger.info('OLS ready for website hosting (panel is independent on 2087/2083)')
     except Exception as e:
-        logger.error('Failed to setup LkyPanel OLS: %s', e)
+        logger.error('Failed to setup OLS: %s', e)
         raise
 
 

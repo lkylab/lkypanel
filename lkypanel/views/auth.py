@@ -8,19 +8,10 @@ from django.views.decorators.csrf import csrf_protect
 
 from lkypanel.auth import authenticate_user, AccountLocked, InvalidCredentials
 
-# Map internal Gunicorn ports to public OLS ports
-# OLS (2087/2083) → Gunicorn (8087/8083)
-_PORT_MAP = {8087: 2087, 8083: 2083, 2087: 2087, 2083: 2083}
-
-def _resolve_port(request):
-    """Get the effective public port, accounting for OLS reverse proxy."""
-    raw_port = int(request.META.get('SERVER_PORT', 2083))
-    return _PORT_MAP.get(raw_port, raw_port)
-
 
 def login_index(request):
     """Route root / based on port: 2087 -> admin, 2083 -> user."""
-    port = _resolve_port(request)
+    port = int(request.META.get('SERVER_PORT', 2083))
     if port == 2087:
         return admin_login(request)
     return user_login(request)
@@ -84,5 +75,5 @@ def user_login(request):
 
 def logout_view(request):
     request.session.flush()
-    port = _resolve_port(request)
+    port = int(request.META.get('SERVER_PORT', 2083))
     return redirect('/' if port == 2087 else '/')

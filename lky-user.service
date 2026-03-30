@@ -1,5 +1,5 @@
 [Unit]
-Description=LkyPanel — User Interface (internal port 8083, OLS proxied on 2083)
+Description=LkyPanel — User Interface (port 2083)
 After=network.target
 
 [Service]
@@ -10,7 +10,9 @@ WorkingDirectory=/usr/local/lkypanel
 EnvironmentFile=/usr/local/lkypanel/.env
 ExecStart=/usr/local/lkypanel/venv/bin/gunicorn \
     --workers 2 \
-    --bind 127.0.0.1:8083 \
+    --bind 0.0.0.0:2083 \
+    --certfile /usr/local/lkypanel/ssl/panel.crt \
+    --keyfile  /usr/local/lkypanel/ssl/panel.key \
     --access-logfile /var/log/lkypanel/user-access.log \
     --error-logfile  /var/log/lkypanel/user-error.log \
     --timeout 60 \
