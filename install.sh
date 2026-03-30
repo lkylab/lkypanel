@@ -370,10 +370,6 @@ success "CLI installed → /usr/local/bin/lky"
 info "Configuring OpenLiteSpeed for LkyPanel ports (2087/2083)..."
 lky ols setup-panel
 
-# Install phpMyAdmin plugin automatically
-info "Installing phpMyAdmin..."
-bash "$APP_ROOT/lkypanel/plugins/phpmyadmin/install.sh"
-
 # ── Firewall ──────────────────────────────────────────────────────────────────
 info "Configuring firewall..."
 
