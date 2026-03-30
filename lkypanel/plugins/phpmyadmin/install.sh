@@ -23,16 +23,34 @@ if command -v apache2 &>/dev/null; then
     sudo systemctl disable apache2 || true
 fi
 
-# 2. Install dependencies (lsphp extensions)
+# 2. Wait for dpkg lock (unattended-upgrades may be running)
+if command -v apt-get &>/dev/null; then
+    MAX_WAIT=120; WAITED=0
+    while fuser /var/lib/dpkg/lock-frontend &>/dev/null 2>&1; do
+        [[ $WAITED -eq 0 ]] && echo "[INFO] Waiting for dpkg lock to be released..."
+        sleep 5; WAITED=$((WAITED + 5))
+        [[ $WAITED -ge $MAX_WAIT ]] && echo "[WARN] Timed out waiting for dpkg lock." && break
+    done
+fi
+
+# 3. Install dependencies (lsphp extensions individually for ARM compatibility)
 echo "[INFO] Installing PHP extensions for OpenLiteSpeed..."
 if command -v apt-get &>/dev/null; then
     sudo apt-get update -qq
-    sudo apt-get install -y -qq lsphp83-mysql lsphp83-common lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml
+    # Core packages
+    sudo apt-get install -y -qq lsphp83 lsphp83-common lsphp83-mysql || true
+    # Extra extensions (may be built-in on ARM)
+    for EXT in lsphp83-curl lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-xml; do
+        sudo apt-get install -y -qq "$EXT" 2>/dev/null || echo "[WARN] $EXT not available (may be built-in) — skipping"
+    done
 else
-    sudo yum install -y -q lsphp83-mysql lsphp83-common lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml
+    sudo yum install -y -q lsphp83 lsphp83-common lsphp83-mysql || true
+    for EXT in lsphp83-curl lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-xml; do
+        sudo yum install -y -q "$EXT" 2>/dev/null || echo "[WARN] $EXT not available (may be built-in) — skipping"
+    done
 fi
 
-# 3. Download phpMyAdmin
+# 4. Download phpMyAdmin
 echo "[INFO] Downloading phpMyAdmin source..."
 sudo mkdir -p "$INSTALL_DIR"
 cd /tmp
@@ -41,7 +59,7 @@ tar -xzf phpMyAdmin-latest-all-languages.tar.gz
 sudo mv phpMyAdmin-*-all-languages/* "$INSTALL_DIR/"
 rm -rf phpMyAdmin-*-all-languages phpMyAdmin-latest-all-languages.tar.gz
 
-# 4. Configure phpMyAdmin
+# 5. Configure phpMyAdmin
 echo "[INFO] Generating config.inc.php..."
 BLOWFISH_SECRET=$(openssl rand -base64 32)
 sudo tee "$INSTALL_DIR/config.inc.php" > /dev/null <<EOF
@@ -57,11 +75,11 @@ sudo tee "$INSTALL_DIR/config.inc.php" > /dev/null <<EOF
 \$cfg['SaveDir'] = '';
 EOF
 
-# 5. Set permissions
+# 6. Set permissions
 sudo chown -R lkypanel:lkypanel "$INSTALL_DIR"
 sudo chmod -R 755 "$INSTALL_DIR"
 
-# 6. Mark as installed
+# 7. Mark as installed
 mkdir -p "$FLAG_DIR"
 touch "$FLAG_FILE"
 echo "Plugin installed.[200]" >> "$LOG_FILE"

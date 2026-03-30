@@ -70,6 +70,23 @@ echo -e "  Arch:  ${ARCH_LABEL}   OS: ${OS_ID} ${OS_VER}"
 echo -e "  Admin: https://YOUR_IP:${ADMIN_PORT}   User: https://YOUR_IP:${USER_PORT}"
 echo ""
 
+# ── Helper: wait for dpkg lock ────────────────────────────────────────────────
+wait_for_apt() {
+    local max_wait=120
+    local waited=0
+    while fuser /var/lib/dpkg/lock-frontend &>/dev/null 2>&1 || fuser /var/lib/apt/lists/lock &>/dev/null 2>&1; do
+        if [[ $waited -eq 0 ]]; then
+            info "Waiting for other package managers (apt/dpkg) to finish..."
+        fi
+        sleep 5
+        waited=$((waited + 5))
+        if [[ $waited -ge $max_wait ]]; then
+            warn "Timed out waiting for dpkg lock after ${max_wait}s — attempting to proceed."
+            break
+        fi
+    done
+}
+
 # ── System packages ───────────────────────────────────────────────────────────
 info "Cleaning up conflicting services (Apache)..."
 if command -v apache2 &>/dev/null; then
@@ -79,6 +96,14 @@ elif command -v httpd &>/dev/null; then
     systemctl stop httpd || true
     systemctl disable httpd || true
 fi
+
+# Stop unattended-upgrades to prevent dpkg lock conflicts
+if systemctl is-active --quiet unattended-upgrades 2>/dev/null; then
+    info "Stopping unattended-upgrades to prevent lock conflicts..."
+    systemctl stop unattended-upgrades || true
+    systemctl disable unattended-upgrades || true
+fi
+wait_for_apt
 
 # Add deadsnakes PPA for Python 3.12 on older Ubuntu
 if [[ "$OS_ID" == "ubuntu" ]] && [[ "$OS_VER" < "24.04" ]]; then
@@ -133,13 +158,17 @@ if ! command -v lswsctrl &>/dev/null && [[ ! -f /usr/local/lsws/bin/lswsctrl ]];
         # Install core OLS and LSPHP
         info "Installing core OpenLiteSpeed and PHP 8.3..."
         apt-get install -y -qq openlitespeed lsphp83 lsphp83-common lsphp83-mysql
-        # Attempt to install extra extensions (may be built-in or missing on some ARM builds)
-        info "Attempting to install extra PHP extensions (GD, MBString, ZIP, XML, Curl, BCMath, SOAP, Intl)..."
-        apt-get install -y -qq lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml lsphp83-bcmath lsphp83-soap lsphp83-intl || warn "Some extra PHP extensions may not be available on this arch; ignoring."
+        # Install extensions individually (on ARM, many are built into lsphp83-common)
+        info "Installing extra PHP extensions individually..."
+        for EXT in lsphp83-curl lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-xml lsphp83-bcmath lsphp83-soap lsphp83-intl; do
+            apt-get install -y -qq "$EXT" 2>/dev/null && success "$EXT installed" || warn "$EXT not available (may be built-in) — skipping"
+        done
     else
         wget -qO - https://repo.litespeed.sh | bash
         yum install -y -q openlitespeed lsphp83 lsphp83-common lsphp83-mysql
-        yum install -y -q lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml lsphp83-bcmath lsphp83-soap lsphp83-intl || warn "Some extra PHP extensions may not be available on this arch; ignoring."
+        for EXT in lsphp83-curl lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-xml lsphp83-bcmath lsphp83-soap lsphp83-intl; do
+            yum install -y -q "$EXT" 2>/dev/null && success "$EXT installed" || warn "$EXT not available (may be built-in) — skipping"
+        done
     fi
 
     # Verify install succeeded
