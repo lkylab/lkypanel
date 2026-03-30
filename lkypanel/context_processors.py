@@ -10,4 +10,5 @@ def plugin_states(request):
         'mariadb_installed': is_plugin_installed('mariadb'),
         'pureftpd_installed': is_plugin_installed('pureftpd'),
         'restic_installed': is_plugin_installed('restic'),
+        'phpmyadmin_installed': is_plugin_installed('phpmyadmin'),
     }
