@@ -71,6 +71,15 @@ echo -e "  Admin: https://YOUR_IP:${ADMIN_PORT}   User: https://YOUR_IP:${USER_P
 echo ""
 
 # ── System packages ───────────────────────────────────────────────────────────
+info "Cleaning up conflicting services (Apache)..."
+if command -v apache2 &>/dev/null; then
+    systemctl stop apache2 || true
+    systemctl disable apache2 || true
+elif command -v httpd &>/dev/null; then
+    systemctl stop httpd || true
+    systemctl disable httpd || true
+fi
+
 info "Installing system packages..."
 
 if [[ "$PKG_MGR" == "apt-get" ]]; then
@@ -113,10 +122,10 @@ if ! command -v lswsctrl &>/dev/null && [[ ! -f /usr/local/lsws/bin/lswsctrl ]];
     if [[ "$PKG_MGR" == "apt-get" ]]; then
         wget -qO - https://repo.litespeed.sh | bash
         apt-get update -qq
-        apt-get install -y -qq openlitespeed
+        apt-get install -y -qq openlitespeed lsphp83-mysql lsphp83-common lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml
     else
         wget -qO - https://repo.litespeed.sh | bash
-        yum install -y -q openlitespeed
+        yum install -y -q openlitespeed lsphp83-mysql lsphp83-common lsphp83-gd lsphp83-mbstring lsphp83-zip lsphp83-curl lsphp83-xml
     fi
 
     # Verify install succeeded
@@ -312,6 +321,14 @@ chmod +x "$APP_ROOT/lky"
 sed -i "1s|#!.*|#!${VENV_DIR}/bin/python3|" "$APP_ROOT/lky"
 ln -sf "$APP_ROOT/lky" /usr/local/bin/lky
 success "CLI installed → /usr/local/bin/lky"
+
+# ── OLS Panel Integration ───────────────────────────────────────────────────
+info "Configuring OpenLiteSpeed for LkyPanel ports (2087/2083)..."
+lky ols setup-panel
+
+# Install phpMyAdmin plugin automatically
+info "Installing phpMyAdmin..."
+bash "$APP_ROOT/lkypanel/plugins/phpmyadmin/install.sh"
 
 # ── Firewall ──────────────────────────────────────────────────────────────────
 info "Configuring firewall..."
