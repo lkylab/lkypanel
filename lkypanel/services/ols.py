@@ -288,7 +288,7 @@ context / {{
 
 extprocessor LkyPanelGunicorn {{
   type                    proxy
-  address                 127.0.0.1:2087
+  address                 127.0.0.1:8087
   maxConns                100
   pcKeepAliveTimeout      60
   initTimeout             60
@@ -296,8 +296,7 @@ extprocessor LkyPanelGunicorn {{
   respBuffer              0
 }}
 """
-        # Note: For dual port proxying, we might need separate vhosts or a more complex proxy handler.
-        # But since LkyPanel (Django) handles both ports identically, proxying to 2087 is fine.
+        # OLS owns ports 2087/2083 (with SSL) and proxies to Gunicorn on internal ports 8087/8083.
         _sudo_write(str(panel_vhost_dir / 'vhconf.conf'), panel_vhconf)
         
         reload_ols()
