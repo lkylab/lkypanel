@@ -15,6 +15,12 @@ HTTPD_CONF = '/usr/local/lsws/conf/httpd_config.conf'
 
 _DOMAIN_RE = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9\-\.]{1,251}[a-zA-Z0-9]$')
 
+
+def get_linux_user(domain: str) -> str:
+    """Derive a valid Linux username (must be <= 32 chars) from the domain."""
+    return re.sub(r'[^a-z0-9_-]', '_', domain.lower())[:32]
+
+
 VHOST_TEMPLATE = """\
 virtualHost {domain} {{
   vhRoot                  /home/{domain}/
@@ -23,28 +29,73 @@ virtualHost {domain} {{
   enableScript            1
   restrained              1
 
+  index  {{
+    useServer             0
+    indexFiles            index.php, index.html, index.htm
+  }}
+
+  errorlog $VH_ROOT/logs/error.log {{
+    useServer             0
+    logLevel              DEBUG
+    rollingSize           10M
+  }}
+
+  accesslog $VH_ROOT/logs/access.log {{
+    useServer             0
+    logFormat             "%h %l %u %t \\"%r\\" %>s %b \\"%{{Referer}}i\\" \\"%{{User-Agent}}i\\""
+    logHeaders            Referer, User-Agent
+    rollingSize           10M
+    keepDays              30
+    compressArchive       1
+  }}
+
   extprocessor lsphp{php_ver_flat} {{
     type                  lsapi
     address               uds://tmp/lshttpd/lsphp{php_ver_flat}.sock
-    maxConns              10
-    env                   PHP_LSAPI_CHILDREN=10
+    maxConns              50
+    env                   PHP_LSAPI_CHILDREN=50
     initTimeout           60
     retryTimeout          0
     persistConn           1
+    pcKeepAliveTimeout    1
+    respBuffer            0
+    autoStart             1
+    path                  /usr/local/lsws/lsphp{php_version}/bin/lsphp
+    extUser               {linux_user}
+    extGroup              {linux_user}
+    memSoftLimit          2047M
+    memHardLimit          2047M
+    procSoftLimit         400
+    procHardLimit         500
   }}
 
   scripthandler {{
     add lsphp{php_ver_flat} php
   }}
+
+  rewrite  {{
+    enable                1
+    autoLoadHtaccess      1
+    logLevel              0
+    rules                 <<<END_REWRITE
+RewriteRule ^/\\.git/ - [F]
+RewriteRule ^/\\.env$ - [F]
+RewriteRule ^/\\.htaccess$ - [F]
+RewriteRule ^/\\.htpasswd$ - [F]
+RewriteRule ^/composer\\.json$ - [F]
+RewriteRule ^/composer\\.lock$ - [F]
+RewriteRule ^/package\\.json$ - [F]
+RewriteRule ^/package-lock\\.json$ - [F]
+END_REWRITE
+  }}
 {ssl_block}}}
 """
 
 SSL_BLOCK = """\
-  listener SSL_{domain} {{
-    address               *:443
-    secure                1
+  vhssl  {{
     keyFile               /etc/letsencrypt/live/{domain}/privkey.pem
     certFile              /etc/letsencrypt/live/{domain}/fullchain.pem
+    certChain             1
   }}
 """
 
@@ -87,8 +138,15 @@ def _sudo_write(path: str, content: str) -> None:
 def write_vhost_config(domain: str, php_version: str = '8.1', ssl: bool = False) -> Path:
     domain = _safe_domain(domain)
     php_flat = php_version.replace('.', '')
+    linux_user = get_linux_user(domain)
     ssl_block = SSL_BLOCK.format(domain=domain) if ssl else ''
-    config = VHOST_TEMPLATE.format(domain=domain, php_ver_flat=php_flat, ssl_block=ssl_block)
+    config = VHOST_TEMPLATE.format(
+        domain=domain,
+        php_ver_flat=php_flat,
+        php_version=php_version,
+        linux_user=linux_user,
+        ssl_block=ssl_block
+    )
 
     vhost_dir = Path(VHOST_DIR) / domain
     conf_file = vhost_dir / 'vhconf.conf'
@@ -170,9 +228,8 @@ def reload_ols() -> None:
 def create_docroot(domain: str) -> Path:
     domain = _safe_domain(domain)
 
-    # Derive a valid Linux username (CyberPanel uses the domain as username directly
-    # but sanitized — we strip dots and truncate to 32 chars)
-    linux_user = re.sub(r'[^a-z0-9_-]', '_', domain.lower())[:32]
+    # Derive a valid Linux username
+    linux_user = get_linux_user(domain)
 
     home_dir  = Path(f'/home/{domain}')
     docroot   = home_dir / 'public_html'
