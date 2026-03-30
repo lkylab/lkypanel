@@ -1,8 +1,17 @@
 """Package management service — modular plugin system."""
 import json
+import logging
 import os
 import subprocess
+import time
 from pathlib import Path
+
+logger = logging.getLogger('lkypanel.packages')
+
+# Configure file handler for packages.log
+_pkg_log_handler = logging.FileHandler('/var/log/lkypanel/packages.log')
+_pkg_log_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+logger.addHandler(_pkg_log_handler)
 
 PLUGINS_FLAG_DIR = "/usr/local/lkypanel/plugins"
 PLUGIN_STATUS_LOG = "/usr/local/lkypanel/plugin_install.log"
@@ -46,8 +55,6 @@ def get_all_plugins() -> list[dict]:
     return plugins
 
 
-import time
-
 PLUGIN_OP_START_FILE = "/usr/local/lkypanel/plugin_op_start"
 
 def launch_plugin_op(plugin_id: str, operation: str) -> None:
@@ -57,6 +64,8 @@ def launch_plugin_op(plugin_id: str, operation: str) -> None:
     operation: 'install' | 'remove'
     """
     script_path = PLUGINS_SOURCE_DIR / plugin_id / f"{operation}.sh"
+    logger.info('Starting plugin %s: %s', operation, plugin_id)
+
     # Truncate log and record start time
     try:
         open(PLUGIN_STATUS_LOG, "w").close()
@@ -87,15 +96,17 @@ def read_plugin_status() -> dict:
         return {"state": "running", "message": ""}
 
     if "[200]" in last:
+        logger.info('Plugin operation completed successfully')
         return {"state": "success", "message": last}
     if "[404]" in last or "error:" in text.lower() or "unbound variable" in text.lower():
-        # Return the whole log (or last 20 lines) to show trace
+        logger.error('Plugin operation failed:\n%s', text)
         return {"state": "error", "message": text}
 
     # Timeout check (10 minutes)
     try:
         start_time = int(Path(PLUGIN_OP_START_FILE).read_text())
         if time.time() - start_time > 600:
+            logger.error('Plugin operation timed out after 10 minutes')
             return {"state": "error", "message": "Operation timed out after 10 minutes."}
     except (OSError, ValueError):
         pass

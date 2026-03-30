@@ -55,7 +55,7 @@
   {% endfor %}
 </div>
 
-<div id="op-error" style="display:none;margin-top:1rem;padding:1rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#ef4444;"></div>
+<div id="op-error" style="display:none;margin-top:1rem;padding:1rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#ef4444;max-height:300px;overflow-y:auto;"><pre id="op-error-text" style="white-space:pre-wrap;word-break:break-word;margin:0;font-size:0.8rem;font-family:monospace;"></pre></div>
 {% endblock %}
 
 {% block scripts %}
@@ -119,9 +119,10 @@ function restoreBtn(card, btn) {
 
 function showError(msg) {
   const el = document.getElementById('op-error');
-  el.textContent = msg;
+  const textEl = document.getElementById('op-error-text');
+  textEl.textContent = msg;
   el.style.display = 'block';
-  setTimeout(() => { el.style.display = 'none'; }, 8000);
+  setTimeout(() => { el.style.display = 'none'; }, 30000);
 }
 </script>
 <style>
