@@ -100,7 +100,7 @@ export function initDashboard(data) {
         chart.update('none');
     }
 
-    setInterval(updateStats, 10000);
+    setInterval(updateStats, 5000);
 }
 
 window.initDashboard = initDashboard;
