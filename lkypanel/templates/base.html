@@ -74,8 +74,8 @@
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
-                    <a href="/admin/packages/" class="dropdown-item {% if active_page == 'packages' %}active{% endif %}">
-                        <i class="ph ph-list-dashes"></i> Manage Packages
+                    <a href="/admin/packages/?tab=packages" class="dropdown-item {% if active_page == 'packages' and active_tab == 'packages' %}active{% endif %}">
+                        <i class="ph ph-cube"></i> Manage Packages
                     </a>
                 </div>
             </details>
@@ -169,6 +169,11 @@
             </details>
 
             {% if panel_user.role == 'admin' %}
+            <a href="/admin/packages/?tab=plugins" class="nav-link {% if active_page == 'packages' and active_tab == 'plugins' %}active{% endif %}">
+                <i class="ph ph-puzzle-piece"></i>
+                <span>Plugins</span>
+            </a>
+
             <a href="/admin/settings/" class="nav-link {% if active_page == 'settings' %}active{% endif %}">
                 <i class="ph ph-gear"></i>
                 <span>Settings</span>

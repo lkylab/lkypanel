@@ -52,12 +52,14 @@ def list_packages(request):
     # GET: List everything
     packages = Package.objects.all().order_by("name")
     plugins = get_all_plugins()
+    active_tab = request.GET.get("tab", "packages") # Default to resources (renamed as Packages in sidebar)
     
     return render(request, "admin/packages.html", {
         "packages": packages,
         "plugins": plugins,
         "mariadb_installed": is_plugin_installed("mariadb"),
         "active_page": "packages",
+        "active_tab": active_tab,
         "panel_user": request.panel_user,
     })
 
