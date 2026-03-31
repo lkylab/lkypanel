@@ -115,6 +115,10 @@ if [[ "$OS_ID" == "ubuntu" ]] && [[ "$OS_VER" < "24.04" ]]; then
     apt-get update -qq
 fi
 
+# Add NodeSource for Node.js 22 (required for Vite 8)
+info "Adding NodeSource repository for Node.js 22..."
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+
 info "Installing system packages..."
 
 if [[ "$PKG_MGR" == "apt-get" ]]; then
@@ -122,7 +126,7 @@ if [[ "$PKG_MGR" == "apt-get" ]]; then
     apt-get update -qq
     
     PACKAGES=(
-        python3.12 python3.12-venv python3.12-dev python3-pip git curl wget openssl certbot build-essential libssl-dev libffi-dev ufw
+        python3.12 python3.12-venv python3.12-dev python3-pip nodejs git curl wget openssl certbot build-essential libssl-dev libffi-dev ufw
     )
 
     for PKG in "${PACKAGES[@]}"; do
@@ -328,6 +332,19 @@ else:
 PYEOF
 
 success "Django setup complete"
+
+# ── Frontend build ────────────────────────────────────────────────────────────
+info "Building frontend assets..."
+
+if [[ -d "$INSTALL_DIR/frontend" ]] && command -v npm &>/dev/null; then
+    cd "$INSTALL_DIR/frontend"
+    npm install --quiet
+    npm run build
+    chown -R "$PANEL_USER":"$PANEL_USER" "$INSTALL_DIR/lkypanel/static/dist"
+    success "Frontend built and assets generated"
+else
+    warn "Frontend directory not found or npm not installed — skipping build"
+fi
 
 # ── Systemd services ──────────────────────────────────────────────────────────
 info "Installing systemd services..."
