@@ -32,8 +32,9 @@ class PortIsolationMiddleware:
 
         if port == USER_PORT and path.startswith(ADMIN_PREFIX):
             return HttpResponseForbidden('Admin routes not available on this port.')
-        if port == ADMIN_PORT and path.startswith(USER_PREFIX):
-            return HttpResponseForbidden('User routes not available on this port.')
+
+        # We allow User routes on the Admin port for a unified admin experience.
+        # RoleEnforcementMiddleware will still protect against non-admin access to port 2087.
 
         return self.get_response(request)
 
@@ -43,23 +44,28 @@ class PortIsolationMiddleware:
 # ---------------------------------------------------------------------------
 
 class RoleEnforcementMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
-
     def __call__(self, request):
         port = int(request.META.get('SERVER_PORT', 0))
         user = getattr(request, 'user', None)
 
         if user and user.is_authenticated:
             role = getattr(user, 'role', None)
-            if port == ADMIN_PORT and role != 'admin':
-                request.session.flush()
-                _log_unauthorized(user, request)
-                return HttpResponseForbidden('Admin access only on this port.')
-            if port == USER_PORT and role != 'user':
-                request.session.flush()
-                _log_unauthorized(user, request)
-                return HttpResponseForbidden('User access only on this port.')
+            path = request.path_info
+            
+            if port == ADMIN_PORT:
+                # Admins can access anything on port 2087.
+                # Standard users can ONLY access /user/ routes on port 2087.
+                if role != 'admin' and not path.startswith(USER_PREFIX):
+                    request.session.flush()
+                    _log_unauthorized(user, request)
+                    return HttpResponseForbidden('Admin access only on this port.')
+            
+            elif port == USER_PORT:
+                # Only standard users on port 2083.
+                if role != 'user':
+                    request.session.flush()
+                    _log_unauthorized(user, request)
+                    return HttpResponseForbidden('User access only on this port.')
 
         return self.get_response(request)
 
