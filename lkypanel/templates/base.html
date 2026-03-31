@@ -24,11 +24,32 @@
 
         <nav class="nav-links">
             {% if panel_user.role == 'admin' %}
+            <!-- Dashboard -->
             <a href="/admin/dashboard/" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
                 <i class="ph ph-squares-four"></i>
                 <span>Dashboard</span>
             </a>
-            <!-- Websites Section -->
+
+            <div class="section-header" style="padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1rem;">Main</div>
+
+            <!-- Users -->
+            <details class="nav-dropdown" {% if active_page == 'users' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-users"></i>
+                    <span>Users</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/users/" class="dropdown-item {% if active_page == 'users' and not active_subpage %}active{% endif %}">
+                        <i class="ph ph-list-dashes"></i> List Users
+                    </a>
+                    <a href="/admin/users/create/" class="dropdown-item">
+                        <i class="ph ph-user-plus"></i> Create New User
+                    </a>
+                </div>
+            </details>
+
+            <!-- Websites -->
             <details class="nav-dropdown" {% if active_page == 'websites' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
                     <i class="ph ph-browser"></i>
@@ -45,79 +66,26 @@
                 </div>
             </details>
 
-            <!-- Users Section -->
-            <details class="nav-dropdown" {% if active_page == 'users' %}open{% endif %}>
+            <!-- Packages -->
+            <details class="nav-dropdown" {% if active_page == 'packages' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
-                    <i class="ph ph-users"></i>
-                    <span>Users</span>
+                    <i class="ph ph-package"></i>
+                    <span>Packages</span>
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
-                    <a href="/admin/users/" class="dropdown-item {% if active_page == 'users' and not active_subpage %}active{% endif %}">
-                        <i class="ph ph-list-dashes"></i> List Users
+                    <a href="/admin/packages/" class="dropdown-item {% if active_page == 'packages' %}active{% endif %}">
+                        <i class="ph ph-list-dashes"></i> Manage Plugins
                     </a>
-                    <a href="/admin/users/create/" class="dropdown-item">
-                        <i class="ph ph-user-plus"></i> Create User
-                    </a>
-                </div>
-            </details>
-            {% if restic_installed %}
-            <a href="/admin/backup/" class="nav-link {% if active_page == 'backup' %}active{% endif %}">
-                <i class="ph ph-cloud-arrow-up"></i>
-                <span>Backup</span>
-            </a>
-            {% endif %}
-            <a href="/admin/firewall/" class="nav-link {% if active_page == 'firewall' %}active{% endif %}">
-                <i class="ph ph-wall"></i>
-                <span>Firewall</span>
-            </a>
-            {% if pureftpd_installed %}
-            <details class="nav-dropdown" {% if active_page == 'ftp' %}open{% endif %}>
-                <summary class="nav-link" style="cursor: pointer;">
-                    <i class="ph ph-folder-open"></i>
-                    <span>FTP Accounts</span>
-                    <i class="ph ph-caret-down dropdown-caret"></i>
-                </summary>
-                <div class="dropdown-content">
-                    <a href="/admin/ftp/" class="dropdown-item {% if active_page == 'ftp' %}active{% endif %}">
-                        <i class="ph ph-list-dashes"></i> List Accounts
+                    <a href="/admin/packages/" class="dropdown-item">
+                        <i class="ph ph-cube"></i> List Packages
                     </a>
                 </div>
             </details>
-            {% endif %}
 
-            {% if fail2ban_installed %}
-            <details class="nav-dropdown" {% if active_page == 'security' %}open{% endif %}>
-                <summary class="nav-link" style="cursor: pointer;">
-                    <i class="ph ph-shield-check"></i>
-                    <span>Security</span>
-                    <i class="ph ph-caret-down dropdown-caret"></i>
-                </summary>
-                <div class="dropdown-content">
-                    <a href="/admin/security/" class="dropdown-item {% if active_page == 'security' %}active{% endif %}">
-                        <i class="ph ph-shield-check"></i> Fail2Ban Logs
-                    </a>
-                </div>
-            </details>
-            {% endif %}
+            <div class="section-header" style="padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1rem;">Services</div>
 
-            {% if postfix_installed %}
-            <details class="nav-dropdown" {% if active_page == 'email' %}open{% endif %}>
-                <summary class="nav-link" style="cursor: pointer;">
-                    <i class="ph ph-envelope"></i>
-                    <span>Email Server</span>
-                    <i class="ph ph-caret-down dropdown-caret"></i>
-                </summary>
-                <div class="dropdown-content">
-                    <a href="/admin/email/" class="dropdown-item {% if active_page == 'email' %}active{% endif %}">
-                        <i class="ph ph-list-dashes"></i> Mail Domains
-                    </a>
-                    <a href="/webmail/" target="_blank" class="dropdown-item">
-                        <i class="ph ph-envelope-open"></i> Access Webmail
-                    </a>
-                </div>
-            </details>
-            {% endif %}
+            <!-- Databases -->
             {% if mariadb_installed %}
             <details class="nav-dropdown" {% if active_page == 'databases' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
@@ -127,7 +95,7 @@
                 </summary>
                 <div class="dropdown-content">
                     <a href="/admin/databases/" class="dropdown-item {% if active_page == 'databases' and not active_subpage %}active{% endif %}">
-                        <i class="ph ph-list-dashes"></i> All Databases
+                        <i class="ph ph-list-dashes"></i> List Databases
                     </a>
                     {% if phpmyadmin_installed %}
                     <a href="/admin/phpmyadmin/" class="dropdown-item {% if active_subpage == 'phpmyadmin' %}active{% endif %}">
@@ -137,6 +105,65 @@
                 </div>
             </details>
             {% endif %}
+
+            <!-- Email -->
+            {% if postfix_installed %}
+            <details class="nav-dropdown" {% if active_page == 'email' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-envelope"></i>
+                    <span>Email Server</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/email/" class="dropdown-item {% if active_page == 'email' %}active{% endif %}">
+                        <i class="ph ph-at"></i> Mail Domains
+                    </a>
+                    <a href="/admin/email/account/add/" class="dropdown-item">
+                        <i class="ph ph-plus-circle"></i> Create Email
+                    </a>
+                    <a href="/webmail/" target="_blank" class="dropdown-item">
+                        <i class="ph ph-envelope-open"></i> Access Webmail
+                    </a>
+                </div>
+            </details>
+            {% endif %}
+
+            <!-- FTP -->
+            {% if pureftpd_installed %}
+            <details class="nav-dropdown" {% if active_page == 'ftp' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-folder-open"></i>
+                    <span>FTP Accounts</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/ftp/" class="dropdown-item {% if active_page == 'ftp' %}active{% endif %}">
+                        <i class="ph ph-list-dashes"></i> List FTP Accounts
+                    </a>
+                </div>
+            </details>
+            {% endif %}
+
+            <div class="section-header" style="padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1rem;">System</div>
+
+            <!-- Security -->
+            <details class="nav-dropdown" {% if active_page == 'security' or active_page == 'firewall' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-shield-check"></i>
+                    <span>Security</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/firewall/" class="dropdown-item {% if active_page == 'firewall' %}active{% endif %}">
+                        <i class="ph ph-wall"></i> Firewall
+                    </a>
+                    {% if fail2ban_installed %}
+                    <a href="/admin/security/" class="dropdown-item {% if active_page == 'security' %}active{% endif %}">
+                        <i class="ph ph-shield-warning"></i> Fail2Ban Logs
+                    </a>
+                    {% endif %}
+                </div>
+            </details>
 
             <details class="nav-dropdown" {% if active_page == 'logs' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
