@@ -1,6 +1,6 @@
 """URL configuration for Lite Hosting Panel."""
 from django.urls import path
-from lkypanel.views.auth import login_index, admin_login, user_login, logout_view
+from lkypanel.views.auth import login_index, admin_login, user_login, logout_view, verify_2fa
 from lkypanel.admin_views import (
     users as au, websites as aw, backup as ab, packages as ap,
     firewall as af, security as as_, databases as adb, monitoring as am,
