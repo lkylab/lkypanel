@@ -9,7 +9,7 @@ import requests
 
 logger = logging.getLogger(__name__)
 
-SNAPPYMAIL_URL = "https://github.com/the-djmaze/snappymail/releases/latest/download/snappymail-php.tar.gz"
+SNAPPYMAIL_URL = "https://github.com/the-djmaze/snappymail/releases/download/v2.38.2/snappymail-2.38.2.tar.gz"
 INSTALL_PATH = "/usr/local/lkypanel/webmail"
 
 def install_snappymail():
