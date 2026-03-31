@@ -91,8 +91,8 @@ def admin_dashboard(request):
 
     # ── PHP breakdown ─────────────────────────────────────────────────────
     php_data   = Website.objects.values('php_version').annotate(count=Count('id'))
-    php_labels = json.dumps([d['php_version'] for d in php_data] or ['None'])
-    php_counts = json.dumps([d['count'] for d in php_data] or [0])
+    php_labels = [d['php_version'] for d in php_data] or ['None']
+    php_counts = [d['count'] for d in php_data] or [0]
 
     return render(request, 'admin/dashboard.html', {
         'total_sites':      sites.count(),
@@ -111,8 +111,8 @@ def admin_dashboard(request):
         'disk_total':       fmt_bytes(disk.total),
         'uptime':           uptime_str,
         'load_avg':         load_str,
-        'cpu_history':      json.dumps(cpu_history),
-        'ram_history':      json.dumps(ram_history),
+        'cpu_history':      cpu_history,
+        'ram_history':      ram_history,
         'php_labels':       php_labels,
         'php_counts':       php_counts,
         'recent_sites':     sites[:6],

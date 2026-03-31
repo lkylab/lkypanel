@@ -187,8 +187,6 @@ fi
 # Ensure lswsctrl is in PATH
 export PATH="$PATH:/usr/local/lsws/bin"
 
-# Skip MariaDB setup (optional package) during initial install — handle via panel
-info "Skipping MariaDB setup (optional package)..."
 
 # ── Create system user and directories ────────────────────────────────────────
 info "Creating system user and core directories..."
