@@ -50,6 +50,12 @@
                 <i class="ph ph-wall"></i>
                 <span>Firewall</span>
             </a>
+            {% if pureftpd_installed %}
+            <a href="/admin/ftp/" class="nav-link {% if active_page == 'ftp' %}active{% endif %}">
+                <i class="ph ph-folder-open"></i>
+                <span>FTP Accounts</span>
+            </a>
+            {% endif %}
             {% if fail2ban_installed %}
             <a href="/admin/security/" class="nav-link {% if active_page == 'security' %}active{% endif %}">
                 <i class="ph ph-shield-check"></i>

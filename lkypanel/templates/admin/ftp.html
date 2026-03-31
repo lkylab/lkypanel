@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FTP Accounts - LKYPanelAdmin{% endblock %}
+
+{% block header %}FTP Accounts{% endblock %}
+
+{% block content %}
+<div class="glass-card" style="padding: 1.5rem;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+        <div>
+            <h2 style="margin:0; font-size:1.25rem;">Global FTP Accounts</h2>
+            <p style="margin:0.25rem 0 0; color:var(--text-dim); font-size:0.875rem;">Showing all FTP accounts across the server.</p>
+        </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.9rem;">
+            <thead>
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.06); text-align:left; color:var(--text-dim);">
+                    <th style="padding:0.75rem 1rem;">Username</th>
+                    <th style="padding:0.75rem 1rem;">Website</th>
+                    <th style="padding:0.75rem 1rem;">Owner</th>
+                    <th style="padding:0.75rem 1rem;">Quota</th>
+                    <th style="padding:0.75rem 1rem;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for account in accounts %}
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.02)'" onmouseout="this.style.background='transparent'">
+                    <td style="padding:1rem;">
+                        <div style="display:flex; align-items:center; gap:0.5rem;">
+                            <i class="ph ph-user" style="color:var(--primary); font-size:1.1rem;"></i>
+                            <span style="font-weight:500;">{{ account.username }}</span>
+                        </div>
+                    </td>
+                    <td style="padding:1rem;">
+                        <a href="/admin/websites/{{ account.website.id }}/detail/" style="color:var(--text); text-decoration:none;">{{ account.website.domain }}</a>
+                    </td>
+                    <td style="padding:1rem; color:var(--text-dim);">{{ account.website.owner.username }}</td>
+                    <td style="padding:1rem;">{{ account.quota_mb }} MB</td>
+                    <td style="padding:1rem;">
+                        <span class="badge" style="background:{% if account.status == 'active' %}rgba(34,197,94,0.1){% else %}rgba(239,68,68,0.1){% endif %}; color:{% if account.status == 'active' %}#22c55e{% else %}#ef4444{% endif %};">
+                            {{ account.status|capfirst }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="padding:3rem; text-align:center; color:var(--text-dim);">
+                        <i class="ph ph-prohibit" style="font-size:2rem; display:block; margin-bottom:0.5rem;"></i>
+                        No FTP accounts found.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
