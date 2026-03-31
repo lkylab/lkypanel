@@ -28,18 +28,39 @@
                 <i class="ph ph-squares-four"></i>
                 <span>Dashboard</span>
             </a>
-            <a href="/admin/websites/" class="nav-link {% if active_page == 'websites' %}active{% endif %}">
-                <i class="ph ph-browser"></i>
-                <span>Websites</span>
-            </a>
-            <a href="/webmail/" target="_blank" class="nav-link">
-                <i class="ph ph-envelope"></i>
-                <span>Webmail</span>
-            </a>
-            <a href="/admin/users/" class="nav-link {% if active_page == 'users' %}active{% endif %}">
-                <i class="ph ph-users"></i>
-                <span>Users</span>
-            </a>
+            <!-- Websites Section -->
+            <details class="nav-dropdown" {% if active_page == 'websites' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-browser"></i>
+                    <span>Websites</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/websites/" class="dropdown-item {% if active_page == 'websites' and not active_subpage %}active{% endif %}">
+                        <i class="ph ph-list-dashes"></i> List Websites
+                    </a>
+                    <a href="/admin/websites/create/" class="dropdown-item">
+                        <i class="ph ph-plus-circle"></i> Create Website
+                    </a>
+                </div>
+            </details>
+
+            <!-- Users Section -->
+            <details class="nav-dropdown" {% if active_page == 'users' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-users"></i>
+                    <span>Users</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/users/" class="dropdown-item {% if active_page == 'users' and not active_subpage %}active{% endif %}">
+                        <i class="ph ph-list-dashes"></i> List Users
+                    </a>
+                    <a href="/admin/users/create/" class="dropdown-item">
+                        <i class="ph ph-user-plus"></i> Create User
+                    </a>
+                </div>
+            </details>
             {% if restic_installed %}
             <a href="/admin/backup/" class="nav-link {% if active_page == 'backup' %}active{% endif %}">
                 <i class="ph ph-cloud-arrow-up"></i>
