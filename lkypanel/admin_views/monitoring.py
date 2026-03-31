@@ -26,7 +26,7 @@ def list_notifications(request):
     """
     List all notifications for the admin.
     """
-    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    notifications = Notification.objects.filter(user=request.panel_user).order_by('-created_at')
     return render(request, 'admin/notifications.html', {
         'notifications': notifications,
         'active_page': 'notifications',
@@ -40,7 +40,7 @@ def mark_notification_read(request, notification_id):
     """
     Mark a specific notification as read.
     """
-    notification = get_object_or_404(Notification, pk=notification_id, user=request.user)
+    notification = get_object_or_404(Notification, pk=notification_id, user=request.panel_user)
     notification.is_read = True
     notification.save()
     return JsonResponse({'status': 'success'})
@@ -52,5 +52,5 @@ def mark_all_read(request):
     """
     Mark all unread notifications for the user as read.
     """
-    Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+    Notification.objects.filter(user=request.panel_user, is_read=False).update(is_read=True)
     return JsonResponse({'status': 'success'})

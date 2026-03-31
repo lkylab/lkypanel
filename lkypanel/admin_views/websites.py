@@ -117,7 +117,7 @@ def admin_dashboard(request):
         'php_counts':       php_counts,
         'recent_sites':     sites[:6],
         'audit_logs':       AuditLog.objects.select_related('user').order_by('-timestamp')[:8],
-        'notifications_list': Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')[:5],
+        'notifications_list': Notification.objects.filter(user=request.panel_user, is_read=False).order_by('-created_at')[:5],
         'active_page':      'dashboard',
         'panel_user':       request.panel_user,
     })
@@ -157,7 +157,7 @@ def create_website(request):
             install_framework(site, framework)
             
         ols.reload_ols()
-        log_action(request.user, 'Website Created', f'Domain: {domain}, Framework: {framework}')
+        log_action(request.panel_user, 'Website Created', f'Domain: {domain}, Framework: {framework}')
         return JsonResponse({'status': 'success', 'site_id': site.id})
     except Exception as e:
         logger.error('Failed to create website: %s', e)

@@ -33,7 +33,7 @@ def mail_status(request):
 def run_install_snappymail(request):
     success = install_snappymail()
     if success:
-        log_action(request.user, 'SnappyMail Installed', 'Admin triggered SnappyMail installation')
+        log_action(request.panel_user, 'SnappyMail Installed', 'Admin triggered SnappyMail installation')
         return JsonResponse({'status': 'success'})
     else:
         return JsonResponse({'status': 'error', 'error': 'Installation failed. Check server logs.'}, status=500)
