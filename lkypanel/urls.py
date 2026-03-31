@@ -1,7 +1,10 @@
 """URL configuration for Lite Hosting Panel."""
 from django.urls import path
 from lkypanel.views.auth import login_index, admin_login, user_login, logout_view
-from lkypanel.admin_views import users as au, websites as aw, backup as ab, packages as ap, firewall as af, security as as_, databases as adb
+from lkypanel.admin_views import (
+    users as au, websites as aw, backup as ab, packages as ap,
+    firewall as af, security as as_, databases as adb, monitoring as am
+)
 from lkypanel.admin_views import settings as aset, email as ae
 from lkypanel.admin_views import logs as al
 from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw
@@ -34,6 +37,8 @@ urlpatterns = [
     path('admin/logs/',                     al.logs_page,         name='admin_logs'),
     path('admin/logs/get/',                 al.get_log,           name='admin_get_log'),
     path('admin/email/',                    ae.email_dashboard,   name='admin_email'),
+    path('admin/email/status/',             ae.mail_status,        name='admin_mail_status'),
+    path('admin/email/install/',            ae.run_install_snappymail, name='admin_mail_install'),
     path('admin/email/domain/add/',         ae.add_mail_domain,    name='admin_add_mail_domain'),
     path('admin/email/account/add/',        ae.add_mail_account,   name='admin_add_mail_account'),
     path('admin/databases/',                adb.database_dashboard, name='admin_databases'),
@@ -57,6 +62,11 @@ urlpatterns = [
     path('user/sites/<int:site_id>/ftp/create/',                 uf.create_ftp,   name='user_create_ftp'),
     path('user/sites/<int:site_id>/ftp/<int:account_id>/delete/',uf.delete_ftp,   name='user_delete_ftp'),
     path('user/sites/<int:site_id>/ftp/<int:account_id>/passwd/',uf.change_ftp_pw,name='user_ftp_passwd'),
+    # Monitoring & Notifications
+    path('admin/api/stats/', am.system_stats_api, name='admin_api_stats'),
+    path('admin/notifications/', am.list_notifications, name='admin_notifications'),
+    path('admin/notifications/<int:notification_id>/read/', am.mark_notification_read, name='admin_notification_read'),
+    path('admin/notifications/read-all/', am.mark_all_read, name='admin_notifications_read_all'),
 
     path('user/sites/<int:site_id>/git/',         ug.list_repos, name='user_list_git'),
     path('user/sites/<int:site_id>/git/link/',    ug.link_repo,  name='user_link_git'),

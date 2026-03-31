@@ -25,7 +25,7 @@ def get_linux_user(domain: str) -> str:
 
 VHOST_TEMPLATE = """\
   vhRoot                  /home/{domain}/
-  docRoot                 /home/{domain}/public_html/
+  docRoot                 {doc_root}
   allowSymbolLink         1
   enableScript            1
   restrained              1
@@ -69,6 +69,7 @@ VHOST_TEMPLATE = """\
     procSoftLimit         400
     procHardLimit         500
   }}
+{extra_ext_processors}
 
   scripthandler {{
     add lsphp{php_ver_flat} php
@@ -89,6 +90,7 @@ RewriteRule ^/package\\.json$ - [F]
 RewriteRule ^/package-lock\\.json$ - [F]
 END_REWRITE
   }}
+{extra_contexts}
 {ssl_block}
 """
 
@@ -124,6 +126,12 @@ def _safe_domain(domain: str) -> str:
     return domain
 
 
+def _get_doc_root(domain: str, framework: str) -> str:
+    if framework == 'laravel':
+        return f'/home/{domain}/public_html/public/'
+    return f'/home/{domain}/public_html/'
+
+
 def _sudo_read(path: str) -> str:
     r = subprocess.run(['sudo', 'cat', path], capture_output=True, text=True, timeout=10)
     return r.stdout if r.returncode == 0 else ''
@@ -136,17 +144,46 @@ def _sudo_write(path: str, content: str) -> None:
         raise RuntimeError(f'Failed to write {path}: {r.stderr}')
 
 
-def write_vhost_config(domain: str, php_version: str = '8.1', ssl: bool = False) -> Path:
+def write_vhost_config(domain: str, php_version: str = '8.1', ssl: bool = False, framework: str = 'none') -> Path:
     domain = _safe_domain(domain)
     php_flat = php_version.replace('.', '')
     linux_user = get_linux_user(domain)
     ssl_block = SSL_BLOCK.format(domain=domain) if ssl else ''
+    
+    doc_root = _get_doc_root(domain, framework)
+    
+    extra_contexts = ''
+    extra_ext_processors = ''
+    
+    if framework == 'nodejs':
+        extra_ext_processors = """
+  extprocessor node_app {
+    type                  proxy
+    address               127.0.0.1:3000
+    maxConns              100
+    pcKeepAliveTimeout    60
+    initTimeout           60
+    retryTimeout          0
+    respBuffer            0
+  }
+"""
+        extra_contexts = """
+  context / {
+    type                  proxy
+    handler               node_app
+    addDefaultCharset     off
+  }
+"""
+
     config = VHOST_TEMPLATE.format(
         domain=domain,
+        doc_root=doc_root,
         php_ver_flat=php_flat,
         php_version=php_version,
         linux_user=linux_user,
-        ssl_block=ssl_block
+        ssl_block=ssl_block,
+        extra_ext_processors=extra_ext_processors,
+        extra_contexts=extra_contexts
     )
 
     vhost_dir = Path(VHOST_DIR) / domain
@@ -158,7 +195,7 @@ def write_vhost_config(domain: str, php_version: str = '8.1', ssl: bool = False)
     # Register vhost in httpd_config.conf if not already there
     _register_vhost_in_httpd(domain)
 
-    logger.info('Wrote OLS vhost config: %s', conf_file)
+    logger.info('Wrote OLS vhost config: %s (framework: %s)', conf_file, framework)
     return conf_file
 
 
@@ -286,6 +323,34 @@ context /phpmyadmin/ {
             conf_example += pma_context
             _sudo_write(example_vhost_conf, conf_example)
             logger.info('Injected phpMyAdmin context into OLS Example vhost')
+
+        if 'context /webmail/' not in conf_example:
+            webmail_context = """
+context /webmail/ {
+  location                /usr/local/lkypanel/webmail/
+  allowBrowse             1
+  indexFiles              index.php
+  
+  rewrite  {
+    enable                1
+    inherit               1
+    RewriteFile           .htaccess
+  }
+  
+  addDefaultCharset       off
+
+  php {
+    useServer             0
+    initTimeout           60
+    retryTimeout          0
+    respBuffer            0
+  }
+}
+"""
+            conf_example = _sudo_read(example_vhost_conf) # Re-read to get latest
+            conf_example += webmail_context
+            _sudo_write(example_vhost_conf, conf_example)
+            logger.info('Injected Webmail (SnappyMail) context into OLS Example vhost')
 
         reload_ols()
         logger.info('OLS ready (panel is independent on 2087/2083)')

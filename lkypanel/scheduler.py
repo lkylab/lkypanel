@@ -23,6 +23,12 @@ def start_scheduler():
             id='ssl_renewal',
             replace_existing=True,
         )
+        scheduler.add_job(
+            _check_system_alerts,
+            trigger=CronTrigger(minute='*/5'),
+            id='system_alerts',
+            replace_existing=True,
+        )
         scheduler.start()
         _scheduler_started = True
         logger.info('APScheduler started — SSL renewal job registered at 03:00 UTC')
@@ -44,3 +50,32 @@ def _renew_expiring_certs():
             renew_certificate(cert)
         except Exception as e:
             logger.error('Renewal failed for %s: %s', cert.website.domain, e)
+
+def _check_system_alerts():
+    from lkypanel.models import Notification, User
+    from lkypanel.services.monitoring import check_alerts
+    
+    alerts = check_alerts()
+    if not alerts:
+        return
+        
+    # Get all admin users to notify
+    admins = User.objects.filter(role='admin')
+    
+    for alert in alerts:
+        # Check if a similar unread notification already exists to avoid spamming
+        exists = Notification.objects.filter(
+            level=alert['level'], 
+            target=alert['target'], 
+            is_read=False
+        ).exists()
+        
+        if not exists:
+            for admin in admins:
+                Notification.objects.create(
+                    user=admin,
+                    level=alert['level'],
+                    message=alert['message'],
+                    target=alert['target']
+                )
+            logger.info(f"System Alert Created: {alert['message']}")

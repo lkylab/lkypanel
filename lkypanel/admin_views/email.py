@@ -1,9 +1,12 @@
-"""Email management — admin views."""
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
 from lkypanel.admin_views.decorators import admin_required
 from lkypanel.models import Website, MailDomain, MailAccount
 from lkypanel.services.email import sync_email_configs
+from lkypanel.services.mail import install_snappymail, INSTALL_PATH
+import os
 
 @admin_required
 def email_dashboard(request):
@@ -47,3 +50,19 @@ def add_mail_account(request):
         except Exception as e:
             messages.error(request, f"Error: {e}")
     return redirect('admin_email')
+
+@admin_required
+@require_http_methods(['GET'])
+def mail_status(request):
+    import os
+    installed = os.path.exists(os.path.join(INSTALL_PATH, 'index.php'))
+    return JsonResponse({'installed': installed})
+
+@admin_required
+@require_http_methods(['POST'])
+def run_install_snappymail(request):
+    success = install_snappymail()
+    if success:
+        return JsonResponse({'status': 'success'})
+    else:
+        return JsonResponse({'status': 'error', 'error': 'Installation failed. Check server logs.'}, status=500)

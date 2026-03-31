@@ -9,3 +9,4 @@ netifaces
 psutil
 requests
 django-revproxy
+django-vite

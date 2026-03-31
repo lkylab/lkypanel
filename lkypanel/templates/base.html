@@ -1,3 +1,5 @@
+{% load static %}
+{% load django_vite %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,475 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
-    <style>
-        :root {
-            --bg-dark: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.7);
-            --accent-primary: #38bdf8;
-            --accent-secondary: #818cf8;
-            --text-main: #f8fafc;
-            --text-dim: #94a3b8;
-            --border: rgba(255, 255, 255, 0.1);
-            --glass: rgba(255, 255, 255, 0.03);
-            --sidebar-width: 260px;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Inter', sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-main);
-            overflow: hidden;
-            display: flex;
-            height: 100vh;
-        }
-
-        /* ── Sidebar ────────────────────────────────────────────────────────── */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: var(--bg-card);
-            backdrop-filter: blur(12px);
-            border-right: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            padding: 2rem 1.5rem;
-            z-index: 100;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--accent-primary);
-            margin-bottom: 3rem;
-            text-decoration: none;
-        }
-
-        .nav-links {
-            list-style: none;
-            flex-grow: 1;
-        }
-
-        .nav-item {
-            margin-bottom: 0.5rem;
-        }
-
-        .nav-link {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.85rem 1rem;
-            color: var(--text-dim);
-            text-decoration: none;
-            border-radius: 12px;
-            transition: all 0.2s ease;
-            font-weight: 500;
-        }
-
-        .nav-link i {
-            font-size: 1.25rem;
-        }
-
-        .nav-link:hover, .nav-link.active {
-            color: var(--text-main);
-            background: var(--glass);
-        }
-
-        .nav-link.active {
-            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-            color: white;
-            box-shadow: 0 4px 12px rgba(56, 189, 248, 0.2);
-        }
-
-        .sidebar-footer {
-            margin-top: auto;
-            border-top: 1px solid var(--border);
-            padding-top: 1.5rem;
-        }
-
-        /* ── Main Content ────────────────────────────────────────────────────── */
-        .main {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 2.5rem 3rem;
-            position: relative;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 3rem;
-        }
-
-        .welcome h1 {
-            font-size: 1.85rem;
-            font-weight: 700;
-            margin-bottom: 0.25rem;
-        }
-
-        .welcome p {
-            color: var(--text-dim);
-        }
-
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            background: var(--glass);
-            padding: 0.5rem 1.25rem;
-            border-radius: 100px;
-            border: 1px solid var(--border);
-        }
-
-        .user-badge span {
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-        /* ── Grid/Cards ──────────────────────────────────────────────────────── */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
-        }
-
-        .card {
-            background: var(--bg-card);
-            backdrop-filter: blur(8px);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 1.75rem;
-            transition: transform 0.2s ease;
-        }
-
-        .card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(56, 189, 248, 0.3);
-        }
-
-        /* ── Tables ─────────────────────────────────────────────────────────── */
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            margin-top: 2rem;
-            background: var(--bg-card);
-            border-radius: 20px;
-            border: 1px solid var(--border);
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        th {
-            padding: 1.25rem 1.5rem;
-            color: var(--text-dim);
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            font-size: 0.95rem;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        .status-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.25rem 0.75rem;
-            border-radius: 100px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-
-        .status-online { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
-        .status-offline { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.6rem 1.2rem;
-            border-radius: 10px;
-            background: var(--accent-primary);
-            color: white;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .btn:hover {
-            filter: brightness(1.1);
-            transform: translateY(-2px);
-        }
-
-        .btn-ghost {
-            background: transparent;
-            border: 1px solid var(--border);
-            color: var(--text-dim);
-        }
-
-        .btn-ghost:hover {
-            background: var(--glass);
-            color: var(--text-main);
-        }
-
-        .nav-link:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--accent);
-        }
-
-        /* Sidebar Dropdown Styles */
-        .nav-dropdown {
-            margin-bottom: 0.5rem;
-        }
-        .nav-dropdown summary {
-            list-style: none;
-            outline: none;
-        }
-        .nav-dropdown summary::-webkit-details-marker {
-            display: none;
-        }
-        .nav-dropdown .dropdown-caret {
-            margin-left: auto;
-            font-size: 0.8rem;
-            transition: transform 0.3s;
-        }
-        .nav-dropdown[open] .dropdown-caret {
-            transform: rotate(180deg);
-        }
-        .dropdown-content {
-            margin-left: 1.5rem;
-            border-left: 1px solid var(--border);
-            padding-left: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.25rem;
-            margin-top: 0.25rem;
-        }
-        .dropdown-item {
-            padding: 0.6rem 1rem;
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            border-radius: 8px;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .dropdown-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-            color: white;
-        }
-        .dropdown-item.active {
-            color: var(--accent);
-            background: rgba(99, 102, 241, 0.1);
-        }
-
-        /* Sub-dropdowns */
-        .nav-sub-dropdown {
-            margin-left: 0.5rem;
-        }
-        .nav-sub-dropdown summary {
-            padding: 0.5rem 1rem;
-            font-size: 0.85rem;
-            color: var(--text-dim);
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-radius: 8px;
-        }
-        .nav-sub-dropdown summary:hover {
-            color: white;
-            background: rgba(255,255,255,0.03);
-        }
-        .nav-sub-dropdown .sub-content {
-            margin-left: 1rem;
-            border-left: 1px dashed var(--border);
-            padding-left: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 0.2rem;
-            margin-top: 0.2rem;
-            margin-bottom: 0.5rem;
-        }
-        .sub-link {
-            font-size: 0.8rem;
-            color: var(--text-dim);
-            padding: 0.4rem 0.8rem;
-            border-radius: 6px;
-        }
-        .sub-link:hover {
-            color: var(--accent);
-            background: rgba(255,255,255,0.05);
-        }
-        .sub-link.active {
-            color: white;
-            background: var(--accent-primary);
-        }
-
-        .btn-primary {
-            background: var(--accent-primary);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: var(--glass);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-        }
-
-        .btn-sm {
-            padding: 0.4rem 0.85rem;
-            font-size: 0.8rem;
-        }
-
-        .btn-xs {
-            padding: 0.25rem 0.6rem;
-            font-size: 0.75rem;
-        }
-
-        .section-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 1.25rem 1.5rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .dashboard-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 2rem;
-        }
-
-        .header-actions {
-            display: flex;
-            gap: 0.75rem;
-        }
-
-        .stat-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 1.25rem;
-        }
-
-        .stat-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            flex-shrink: 0;
-        }
-
-        .stat-icon.blue { background: rgba(56,189,248,0.12); color: #38bdf8; }
-        .stat-icon.purple { background: rgba(129,140,248,0.12); color: #818cf8; }
-        .stat-icon.green { background: rgba(34,197,94,0.12); color: #22c55e; }
-        .stat-icon.orange { background: rgba(251,146,60,0.12); color: #fb923c; }
-        .stat-icon.red { background: rgba(239,68,68,0.12); color: #ef4444; }
-
-        .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1; }
-        .stat-label { font-size: 0.8rem; color: var(--text-dim); margin-top: 0.25rem; }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.3rem;
-            padding: 0.2rem 0.6rem;
-            border-radius: 6px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        .glass-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-        }
-
-        .text-muted { color: var(--text-dim); }
-
-        /* Gauge ring */
-        .gauge-ring {
-            position: relative;
-            width: 100px;
-            height: 100px;
-        }
-        .gauge-ring svg { transform: rotate(-90deg); }
-        .gauge-ring .gauge-label {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-            font-weight: 700;
-        }
-        .gauge-ring .gauge-sub {
-            font-size: 0.65rem;
-            color: var(--text-dim);
-            margin-top: 2px;
-        }
-
-        /* ── UTILS ─────────────────────────────────────────────────────────── */
-        .glass-bg {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at 20% 30%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
-                        radial-gradient(circle at 80% 70%, rgba(129, 140, 248, 0.05) 0%, transparent 40%);
-            z-index: -1;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .animate-fade {
-            animation: fadeIn 0.4s ease forwards;
-        }
-    </style>
+    {% vite_asset 'main.js' %}
     {% block head %}{% endblock %}
 </head>
 <body>
@@ -495,8 +29,12 @@
                 <span>Dashboard</span>
             </a>
             <a href="/admin/websites/" class="nav-link {% if active_page == 'websites' %}active{% endif %}">
-                <i class="ph ph-globe"></i>
+                <i class="ph ph-browser"></i>
                 <span>Websites</span>
+            </a>
+            <a href="/webmail/" target="_blank" class="nav-link">
+                <i class="ph ph-envelope"></i>
+                <span>Webmail</span>
             </a>
             <a href="/admin/users/" class="nav-link {% if active_page == 'users' %}active{% endif %}">
                 <i class="ph ph-users"></i>
@@ -604,6 +142,13 @@
                 <i class="ph ph-gear"></i>
                 <span>Settings</span>
             </a>
+            <a href="/admin/notifications/" class="nav-link {% if active_page == 'notifications' %}active{% endif %}">
+                <i class="ph ph-bell"></i>
+                <span>Notifications</span>
+                {% if unread_notifications_count > 0 %}
+                <span class="badge" style="background:#ef4444; color:white; margin-left:auto; border-radius:100px; padding:2px 6px; font-size:0.65rem;">{{ unread_notifications_count }}</span>
+                {% endif %}
+            </a>
             {% else %}
             <a href="/user/dashboard/" class="nav-link {% if active_page == 'websites' %}active{% endif %}">
                 <i class="ph ph-house"></i>
@@ -636,9 +181,20 @@
                 {% block header %}{% endblock %}
             </div>
             
-            <div class="user-badge">
-                <i class="ph ph-user-circle"></i>
-                <span>{{ panel_user.role|capfirst }}: {{ panel_user.username }}</span>
+            <div style="display:flex; align-items:center; gap:1.25rem;">
+                {% if panel_user.role == 'admin' %}
+                <a href="/admin/notifications/" class="notif-bell" title="Notifications">
+                    <i class="ph ph-bell"></i>
+                    {% if unread_notifications_count > 0 %}
+                    <div class="notif-dot"></div>
+                    {% endif %}
+                </a>
+                {% endif %}
+                
+                <div class="user-badge">
+                    <i class="ph ph-user-circle"></i>
+                    <span>{{ panel_user.role|capfirst }}: {{ panel_user.username }}</span>
+                </div>
             </div>
         </header>
 

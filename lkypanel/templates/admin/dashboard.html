@@ -3,66 +3,8 @@
 {% block title %}Dashboard — LKYPanel{% endblock %}
 
 {% block head %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<style>
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 1.25rem;
-        margin-bottom: 2rem;
-    }
-    .gauge-row {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-        gap: 1.25rem;
-        margin-bottom: 2rem;
-    }
-    .gauge-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.5rem;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 0.75rem;
-    }
-    .gauge-title { font-size: 0.85rem; color: var(--text-dim); font-weight: 500; }
-    .gauge-ok { font-size: 0.7rem; background: rgba(34,197,94,0.12); color: #22c55e; padding: 2px 8px; border-radius: 20px; margin-top: 4px; }
-    .charts-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.25rem;
-        margin-bottom: 2rem;
-    }
-    .chart-card {
-        background: var(--bg-card);
-        border: 1px solid var(--border);
-        border-radius: 16px;
-        padding: 1.25rem 1.5rem;
-    }
-    .chart-title { font-size: 0.8rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
-    .chart-wrap { position: relative; height: 140px; }
-    .recent-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.25rem;
-    }
-    .site-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0.75rem 0;
-        border-bottom: 1px solid var(--border);
-        font-size: 0.9rem;
-    }
-    .site-row:last-child { border-bottom: none; }
-    .site-domain { font-weight: 600; }
-    .site-meta { font-size: 0.78rem; color: var(--text-dim); margin-top: 2px; }
-    @media (max-width: 900px) {
-        .charts-grid, .recent-grid { grid-template-columns: 1fr; }
-    }
-</style>
+    {% vite_asset 'dashboard.js' %}
+    {% vite_asset 'notifications.js' %}
 {% endblock %}
 
 {% block header %}
@@ -249,69 +191,53 @@
             <p style="color:var(--text-dim); font-size:0.9rem; padding: 1rem 0;">No recent activity.</p>
             {% endfor %}
         </div>
+
+        <div class="glass-card" style="padding: 1.5rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                <span style="font-weight:600;">In-house Alerts</span>
+                <a href="/admin/notifications/" class="btn btn-ghost btn-sm">View All</a>
+            </div>
+            <div id="dashboard-notifications">
+                {% for n in notifications_list %}
+                <div class="site-row" id="n-{{ n.id }}" style="border-left: 3px solid {% if n.level == 'danger' %}#ef4444{% elif n.level == 'warning' %}#fb923c{% else %}#38bdf8{% endif %}; padding-left: 0.75rem;">
+                    <div style="flex: 1;">
+                        <div style="font-weight:600; font-size:0.85rem;">{{ n.target }}</div>
+                        <div style="font-size:0.8rem; color:var(--text-dim);">{{ n.message|truncatechars:60 }}</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.25rem;">
+                        <div style="font-size:0.75rem; color:var(--text-dim);">{{ n.created_at|timesince }} ago</div>
+                        <button onclick="markRead({{ n.id }})" class="btn btn-ghost btn-xs" title="Dismiss" style="padding: 2px 4px;">
+                            <i class="ph ph-check"></i>
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <p style="color:var(--text-dim); font-size:0.9rem; padding: 1rem 0;">No active alerts.</p>
+                {% endfor %}
+            </div>
+        </div>
     </div>
 
 </div>
 {% endblock %}
 
 {% block scripts %}
-<script>
-const chartDefaults = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-        x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 10 } } },
-        y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: '#64748b', font: { size: 10 } }, min: 0, max: 100 }
-    }
-};
+    {{ cpu_history|json_script:"cpu-history" }}
+    {{ ram_history|json_script:"ram-history" }}
+    {{ php_labels|json_script:"php-labels" }}
+    {{ php_counts|json_script:"php-counts" }}
 
-const labels = Array.from({length: 10}, (_, i) => `-${9-i}m`);
-const cpuData = {{ cpu_history|safe }};
-const ramData = {{ ram_history|safe }};
-
-new Chart(document.getElementById('cpuChart'), {
-    type: 'line',
-    data: {
-        labels,
-        datasets: [{ data: cpuData, borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.08)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 }]
-    },
-    options: chartDefaults
-});
-
-new Chart(document.getElementById('ramChart'), {
-    type: 'line',
-    data: {
-        labels,
-        datasets: [{ data: ramData, borderColor: '#22c55e', backgroundColor: 'rgba(34,197,94,0.08)', fill: true, tension: 0.4, pointRadius: 0, borderWidth: 2 }]
-    },
-    options: chartDefaults
-});
-
-// Disk bar chart
-const diskOpts = JSON.parse(JSON.stringify(chartDefaults));
-diskOpts.scales.y.max = 100;
-new Chart(document.getElementById('diskChart'), {
-    type: 'bar',
-    data: {
-        labels: ['Used', 'Free'],
-        datasets: [{ data: [{{ disk_percent }}, {{ disk_free_percent }}], backgroundColor: ['rgba(129,140,248,0.7)', 'rgba(255,255,255,0.06)'], borderRadius: 6 }]
-    },
-    options: { ...diskOpts, scales: { x: diskOpts.scales.x, y: { ...diskOpts.scales.y } } }
-});
-
-// PHP version doughnut
-new Chart(document.getElementById('phpChart'), {
-    type: 'doughnut',
-    data: {
-        labels: {{ php_labels|safe }},
-        datasets: [{ data: {{ php_counts|safe }}, backgroundColor: ['#38bdf8','#818cf8','#22c55e','#fb923c'], borderWidth: 0 }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 }, boxWidth: 12 } } }
-    }
-});
-</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const data = {
+                cpuHistory: JSON.parse(document.getElementById('cpu-history').textContent),
+                ramHistory: JSON.parse(document.getElementById('ram-history').textContent),
+                phpLabels: JSON.parse(document.getElementById('php-labels').textContent),
+                phpCounts: JSON.parse(document.getElementById('php-counts').textContent),
+                diskPercent: {{ disk_percent }},
+                diskFreePercent: {{ disk_free_percent }}
+            };
+            window.initDashboard(data);
+        });
+    </script>
 {% endblock %}

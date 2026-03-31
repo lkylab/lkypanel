@@ -30,6 +30,45 @@
         </div>
     </div>
 
+    <!-- SnappyMail Section -->
+    <div class="section-card" style="margin-top: 2rem; border-color: #38bdf8;">
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+            <div style="width:48px; height:48px; border-radius:12px; background:rgba(56,189,248,0.1); display:flex; align-items:center; justify-content:center;">
+                <i class="ph ph-envelope-simple" style="font-size:1.5rem; color:#38bdf8;"></i>
+            </div>
+            <div>
+                <h2 style="margin:0; font-size: 1.1rem; font-weight: 600;">Webmail (SnappyMail)</h2>
+                <p style="margin:0; color:var(--text-dim); font-size:0.9rem;">Modern web interface for your email accounts.</p>
+            </div>
+        </div>
+
+        <div id="snappy-status-container" style="padding:1.5rem; border-radius:15px; background:var(--glass);">
+            <div id="status-checking">
+                <i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Checking SnappyMail status...
+            </div>
+            <div id="status-installed" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color:#22c55e; display:flex; align-items:center; gap:0.5rem;">
+                        <i class="ph ph-check-circle"></i> SnappyMail is installed and ready.
+                    </div>
+                    <a href="/webmail/" target="_blank" class="btn btn-primary btn-sm">
+                        <i class="ph ph-arrow-square-out"></i> Open Webmail
+                    </a>
+                </div>
+            </div>
+            <div id="status-not-installed" style="display:none;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="color:#f59e0b; display:flex; align-items:center; gap:0.5rem;">
+                        <i class="ph ph-warning"></i> SnappyMail is not installed yet.
+                    </div>
+                    <button id="install-btn" class="btn btn-primary btn-sm" onclick="installSnappyMail()">
+                        <i class="ph ph-download"></i> Install Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="section-card" style="margin-top: 2rem;">
         <div class="card-header">
             <h2 style="font-size: 1.1rem; font-weight: 600;">Email Domains</h2>
@@ -153,7 +192,56 @@
             document.getElementById('modal_domain_label').innerText = '@' + domain;
             openModal('accountModal');
         }
+
+        async function checkSnappyStatus() {
+            try {
+                const resp = await fetch('/admin/email/status/');
+                const data = await resp.json();
+                document.getElementById('status-checking').style.display = 'none';
+                if (data.installed) {
+                    document.getElementById('status-installed').style.display = 'block';
+                    document.getElementById('status-not-installed').style.display = 'none';
+                } else {
+                    document.getElementById('status-installed').style.display = 'none';
+                    document.getElementById('status-not-installed').style.display = 'block';
+                }
+            } catch (e) {
+                console.error('Failed to check SnappyMail status', e);
+            }
+        }
+
+        async function installSnappyMail() {
+            const btn = document.getElementById('install-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Installing...';
+            
+            try {
+                const resp = await fetch('/admin/email/install/', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+                });
+                const data = await resp.json();
+                if (data.status === 'success') {
+                    checkSnappyStatus();
+                } else {
+                    alert('Installation failed: ' + (data.error || 'Unknown error'));
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            } catch (e) {
+                alert('An error occurred during installation.');
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
+        checkSnappyStatus();
     </script>
+
+    <style>
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
 
     <div class="card" style="margin-top: 2rem; border-color: var(--accent-secondary);">
         <h3 style="margin-bottom: 1rem; color: var(--accent-secondary);">

@@ -12,3 +12,15 @@ def plugin_states(request):
         'restic_installed': is_plugin_installed('restic'),
         'phpmyadmin_installed': is_plugin_installed('phpmyadmin'),
     }
+
+
+def notification_stats(request):
+    """Inject unread notification count for the logged-in user."""
+    if not request.user.is_authenticated:
+        return {}
+    
+    from lkypanel.models import Notification
+    unread_count = Notification.objects.filter(user=request.user, is_read=False).count()
+    return {
+        'unread_notifications_count': unread_count,
+    }

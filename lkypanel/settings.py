@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_vite',
     'lkypanel.apps.LkypanelConfig',
 ]
 
@@ -77,6 +78,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'lkypanel.context_processors.plugin_states',
+                'lkypanel.context_processors.notification_stats',
             ],
         },
     },
@@ -170,7 +172,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ---------------------------------------------------------------------------
 import os as _os
 _LOG_DIR = '/var/log/lkypanel'
-_os.makedirs(_LOG_DIR, exist_ok=True)
+try:
+    _os.makedirs(_LOG_DIR, exist_ok=True)
+except PermissionError:
+    _LOG_DIR = INSTALL_DIR / 'logs'
+    _os.makedirs(_LOG_DIR, exist_ok=True)
 
 LOGGING = {
     'version': 1,
@@ -185,7 +191,7 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.handlers.RotatingFileHandler',
-            'filename': '/var/log/lkypanel/panel.log',
+            'filename': f'{_LOG_DIR}/panel.log',
             'maxBytes': 10 * 1024 * 1024,  # 10 MB
             'backupCount': 10,
             'formatter': 'verbose',
@@ -197,6 +203,21 @@ LOGGING = {
     },
     'root': {
         'handlers': ['file', 'console'],
-        'level': 'INFO',
     },
 }
+
+# ---------------------------------------------------------------------------
+# Vite Integration (django-vite)
+# ---------------------------------------------------------------------------
+DJANGO_VITE = {
+    "default": {
+        "dev_mode": DEBUG,
+        "manifest_path": BASE_DIR / "lkypanel" / "static" / "dist" / ".vite" / "manifest.json",
+        "dev_server_host": "0.0.0.0",
+        "dev_server_port": 5173,
+    }
+}
+
+STATICFILES_DIRS = [
+    BASE_DIR / "lkypanel" / "static",
+]

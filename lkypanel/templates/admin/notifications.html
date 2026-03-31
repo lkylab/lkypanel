@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Notifications — LKYPanel{% endblock %}
+
+{% block head %}
+    {% vite_asset 'notifications.js' %}
+{% endblock %}
+
+{% block header %}
+    <h1>Notifications</h1>
+    <p>System alerts and administrative messages.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div class="glass-card" style="padding: 1.5rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.5rem;">
+            <span style="font-weight:600;">System Alerts</span>
+            <button onclick="readAll()" class="btn btn-ghost btn-sm">Mark all as read</button>
+        </div>
+
+        <div id="notification-list">
+            {% for n in notifications %}
+            <div class="notification-item {% if not n.is_read %}unread{% endif %}" id="n-{{ n.id }}">
+                <div style="display:flex; gap:1rem; align-items:flex-start;">
+                    <div class="notif-icon {{ n.level }}">
+                        {% if n.level == 'danger' %}<i class="ph-bold ph-warning"></i>
+                        {% elif n.level == 'warning' %}<i class="ph-bold ph-warning-circle"></i>
+                        {% else %}<i class="ph-bold ph-info"></i>{% endif %}
+                    </div>
+                    <div style="flex:1;">
+                        <div style="display:flex; justify-content:space-between;">
+                            <span class="notif-target">{{ n.target }}</span>
+                            <span class="notif-time">{{ n.created_at|timesince }} ago</span>
+                        </div>
+                        <div class="notif-message">{{ n.message }}</div>
+                    </div>
+                    {% if not n.is_read %}
+                    <button onclick="markRead({{ n.id }})" class="btn btn-ghost btn-sm" title="Mark as read">
+                        <i class="ph ph-check"></i>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align:center; padding:3rem; color:var(--text-dim);">
+                <i class="ph ph-bell-slash" style="font-size:2rem; margin-bottom:1rem; display:block;"></i>
+                No notifications yet.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+    {% csrf_token %}
+{% endblock %}

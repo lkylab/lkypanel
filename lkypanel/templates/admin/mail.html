@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Mail Management — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>Mail Management</h1>
+    <p>Configure and manage email accounts and webmail access.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div class="grid grid-2">
+        <!-- Webmail Section -->
+        <div class="section-card">
+            <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+                <div style="width:48px; height:48px; border-radius:12px; background:rgba(56,189,248,0.1); display:flex; align-items:center; justify-content:center;">
+                    <i class="ph ph-envelope" style="font-size:1.5rem; color:#38bdf8;"></i>
+                </div>
+                <div>
+                    <h2 style="margin:0;">Webmail (SnappyMail)</h2>
+                    <p style="margin:0; color:var(--text-dim); font-size:0.9rem;">Access your emails through a modern web interface.</p>
+                </div>
+            </div>
+
+            <div id="snappy-status" style="margin-bottom:1.5rem; padding:1.5rem; border-radius:15px; background:var(--glass);">
+                <div id="status-checking">
+                    <i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Checking SnappyMail status...
+                </div>
+                <div id="status-installed" style="display:none;">
+                    <div style="color:#22c55e; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i class="ph ph-check-circle"></i> SnappyMail is installed and ready.
+                    </div>
+                    <a href="/webmail/" target="_blank" class="btn btn-primary" style="width:100%;">
+                        <i class="ph ph-arrow-square-out"></i> Open Webmail
+                    </a>
+                </div>
+                <div id="status-not-installed" style="display:none;">
+                    <div style="color:#f59e0b; margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
+                        <i class="ph ph-warning"></i> SnappyMail is not installed yet.
+                    </div>
+                    <button id="install-btn" class="btn btn-primary" style="width:100%;" onclick="installSnappyMail()">
+                        <i class="ph ph-download"></i> Install SnappyMail Now
+                    </button>
+                </div>
+            </div>
+
+            <p style="font-size:0.85rem; color:var(--text-dim);">
+                SnappyMail is a fast and lightweight webmail client. 
+                <br><br>
+                <strong>Admin Login:</strong> /webmail/?admin<br>
+                <em>(Default password is set during first run)</em>
+            </p>
+        </div>
+
+        <!-- Mail Accounts (Coming Soon) -->
+        <div class="section-card" style="opacity:0.7;">
+            <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+                <div style="width:48px; height:48px; border-radius:12px; background:rgba(168,85,247,0.1); display:flex; align-items:center; justify-content:center;">
+                    <i class="ph ph-users" style="font-size:1.5rem; color:#a855f7;"></i>
+                </div>
+                <div>
+                    <h2 style="margin:0;">Email Accounts</h2>
+                    <p style="margin:0; color:var(--text-dim); font-size:0.9rem;">Manage mailboxes and aliases.</p>
+                </div>
+            </div>
+            <p style="text-align:center; padding:2rem; color:var(--text-dim);">
+                Email account management is currently being integrated with Postfix/Dovecot.
+                <br><br>
+                <span class="badge">Coming Soon</span>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    async function checkStatus() {
+        const resp = await fetch('/admin/mail/status/');
+        const data = await resp.json();
+        
+        document.getElementById('status-checking').style.display = 'none';
+        if (data.installed) {
+            document.getElementById('status-installed').style.display = 'block';
+            document.getElementById('status-not-installed').style.display = 'none';
+        } else {
+            document.getElementById('status-installed').style.display = 'none';
+            document.getElementById('status-not-installed').style.display = 'block';
+        }
+    }
+
+    async function installSnappyMail() {
+        const btn = document.getElementById('install-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Installing...';
+        
+        const resp = await fetch('/admin/mail/install/', {
+            method: 'POST',
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+        });
+        
+        const data = await resp.json();
+        if (data.status === 'success') {
+            checkStatus();
+        } else {
+            alert('Installation failed: ' + (data.error || 'Unknown error'));
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ph ph-download"></i> Install SnappyMail Now';
+        }
+    }
+
+    checkStatus();
+</script>
+<style>
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+</style>
+{% endblock %}

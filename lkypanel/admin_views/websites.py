@@ -5,7 +5,7 @@ from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 
-from lkypanel.models import Website, User
+from lkypanel.models import Website, User, Notification
 from lkypanel.admin_views.decorators import admin_required
 from lkypanel.audit import log_action
 from lkypanel.services import ols
@@ -117,6 +117,7 @@ def admin_dashboard(request):
         'php_counts':       php_counts,
         'recent_sites':     sites[:6],
         'audit_logs':       AuditLog.objects.select_related('user').order_by('-timestamp')[:8],
+        'notifications_list': Notification.objects.filter(user=request.user, is_read=False).order_by('-created_at')[:5],
         'active_page':      'dashboard',
         'panel_user':       request.panel_user,
     })
@@ -126,10 +127,13 @@ def admin_dashboard(request):
 @csrf_protect
 @require_http_methods(['POST'])
 def create_website(request):
+    from lkypanel.services.frameworks import install_framework
+    
     data = json.loads(request.body)
     domain = data.get('domain', '').strip().lower()
     owner_id = data.get('owner_id')
     php_version = data.get('php_version', '8.1')
+    framework = data.get('framework', Website.FRAMEWORK_NONE)
 
     try:
         owner = User.objects.get(pk=owner_id)
@@ -141,17 +145,23 @@ def create_website(request):
 
     try:
         doc_root = f'/home/{domain}/public_html'
-        site = Website(owner=owner, domain=domain, php_version=php_version, doc_root=doc_root)
+        site = Website(owner=owner, domain=domain, php_version=php_version, doc_root=doc_root, framework=framework)
         site.full_clean()
         site.save()
+        
         ols.create_docroot(domain)
-        ols.write_vhost_config(domain, php_version)
+        ols.write_vhost_config(domain, php_version, framework=framework)
+        
+        # Trigger framework installation
+        if framework != Website.FRAMEWORK_NONE:
+            install_framework(site, framework)
+            
         ols.reload_ols()
+        log_action(request.user, 'Website Created', f'Domain: {domain}, Framework: {framework}')
+        return JsonResponse({'status': 'success', 'site_id': site.id})
     except Exception as e:
-        return JsonResponse({'error': str(e), 'code': 'CREATE_FAILED', 'details': {}}, status=400)
-
-    log_action(request.panel_user, 'website_create', domain, request.META.get('REMOTE_ADDR', '0.0.0.0'))
-    return JsonResponse({'id': site.pk, 'domain': site.domain, 'doc_root': site.doc_root}, status=201)
+        logger.error('Failed to create website: %s', e)
+        return JsonResponse({'error': str(e), 'code': 'INTERNAL_ERROR', 'details': {}}, status=500)
 
 
 @admin_required

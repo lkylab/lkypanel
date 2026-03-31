@@ -88,10 +88,24 @@ class User(AbstractBaseUser):
 # ---------------------------------------------------------------------------
 
 class Website(models.Model):
+    FRAMEWORK_NONE = 'none'
+    FRAMEWORK_WORDPRESS = 'wordpress'
+    FRAMEWORK_LARAVEL = 'laravel'
+    FRAMEWORK_NODEJS = 'nodejs'
+    FRAMEWORK_STATIC = 'static'
+    FRAMEWORK_CHOICES = [
+        (FRAMEWORK_NONE, 'None'),
+        (FRAMEWORK_WORDPRESS, 'WordPress'),
+        (FRAMEWORK_LARAVEL, 'Laravel'),
+        (FRAMEWORK_NODEJS, 'Node.js'),
+        (FRAMEWORK_STATIC, 'Static Template'),
+    ]
+
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='websites')
     domain = models.CharField(max_length=253, unique=True)
     doc_root = models.CharField(max_length=512)
     php_version = models.CharField(max_length=10, default='8.1')
+    framework = models.CharField(max_length=20, choices=FRAMEWORK_CHOICES, default=FRAMEWORK_NONE)
     ssl_enabled = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -328,3 +342,32 @@ class AuditLog(models.Model):
 
     def __str__(self):
         return f'{self.timestamp} {self.action} {self.target}'
+
+
+# ---------------------------------------------------------------------------
+# Notifications
+# ---------------------------------------------------------------------------
+
+class Notification(models.Model):
+    LEVEL_INFO = 'info'
+    LEVEL_WARNING = 'warning'
+    LEVEL_DANGER = 'danger'
+    LEVEL_CHOICES = [
+        (LEVEL_INFO, 'info'),
+        (LEVEL_WARNING, 'warning'),
+        (LEVEL_DANGER, 'danger'),
+    ]
+
+    user = models.ForeignKey(User, null=True, blank=True, on_delete=models.CASCADE, related_name='notifications')
+    level = models.CharField(max_length=10, choices=LEVEL_CHOICES, default=LEVEL_INFO)
+    message = models.TextField()
+    target = models.CharField(max_length=255, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'lkypanel'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f'[{self.level.upper()}] {self.message[:50]}'

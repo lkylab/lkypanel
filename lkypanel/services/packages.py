@@ -9,7 +9,12 @@ from pathlib import Path
 logger = logging.getLogger('lkypanel.packages')
 
 # Configure file handler for packages.log
-_pkg_log_handler = logging.FileHandler('/var/log/lkypanel/packages.log')
+_log_dir = '/var/log/lkypanel'
+if not os.access(_log_dir, os.W_OK):
+    _log_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logs')
+    os.makedirs(_log_dir, exist_ok=True)
+
+_pkg_log_handler = logging.FileHandler(os.path.join(_log_dir, 'packages.log'))
 _pkg_log_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
 logger.addHandler(_pkg_log_handler)
 

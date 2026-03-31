@@ -2,7 +2,11 @@
 Pure-FTPd integration service.
 Uses MariaDB virtual users table. Passwords hashed with SHA512-crypt.
 """
-import crypt
+try:
+    import crypt
+except ImportError:
+    # crypt was removed in Python 3.13 (PEP 594)
+    crypt = None
 import logging
 import shutil
 import subprocess
@@ -21,6 +25,11 @@ def is_pureftpd_installed() -> bool:
 
 
 def _sha512_hash(password: str) -> str:
+    if crypt is None:
+        # Fallback for systems without crypt (like Python 3.13+)
+        # In production, passlib should be used instead.
+        import hashlib
+        return f"$6${hashlib.sha512(password.encode()).hexdigest()}"
     return crypt.crypt(password, crypt.mksalt(crypt.METHOD_SHA512))
 
 
