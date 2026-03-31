@@ -116,42 +116,59 @@ def check_alerts():
     """
     Check system health and return a list of alerts.
     """
+    from lkypanel.models import SystemSetting
     alerts = []
+    
+    # Load thresholds (fallback to 90 if not set)
+    t_cpu = int(SystemSetting.get_val('threshold_cpu', '90'))
+    t_ram = int(SystemSetting.get_val('threshold_ram', '90'))
+    t_disk = int(SystemSetting.get_val('threshold_disk', '90'))
     
     # 1. Check Resource Usage
     disk = psutil.disk_usage('/')
-    if disk.percent > 90:
+    if disk.percent > t_disk:
         alerts.append({
             'level': 'danger',
-            'message': f"Critical: Disk usage is at {disk.percent}%!",
+            'message': f"Critical: Disk usage is at {disk.percent}% (Threshold: {t_disk}%)!",
             'target': 'Storage'
         })
-    elif disk.percent > 80:
+    elif disk.percent > (t_disk - 10):
         alerts.append({
             'level': 'warning',
-            'message': f"Warning: Disk usage is reaching {disk.percent}%.",
+            'message': f"Warning: Disk usage is reaching {disk.percent}% (Threshold: {t_disk}%).",
             'target': 'Storage'
         })
         
     mem = psutil.virtual_memory()
-    if mem.percent > 90:
+    if mem.percent > t_ram:
         alerts.append({
             'level': 'danger',
-            'message': f"Critical: Memory usage is at {mem.percent}%!",
+            'message': f"Critical: Memory usage is at {mem.percent}% (Threshold: {t_ram}%)!",
             'target': 'RAM'
         })
         
     load = psutil.getloadavg()[0]
     cpu_count = psutil.cpu_count()
-    if load > cpu_count * 2:
+    # High load if avg load > threshold (as percentage of total cores)
+    # E.g. if t_cpu is 90, and we have 4 cores, load > 3.6 is an alert
+    cpu_usage_avg = (load / cpu_count) * 100
+    if cpu_usage_avg > t_cpu:
         alerts.append({
             'level': 'danger',
-            'message': f"Critical: System load is very high ({load})!",
+            'message': f"Critical: System load is very high ({cpu_usage_avg:.1f}%) (Threshold: {t_cpu}%)!",
             'target': 'CPU'
         })
     
     # 2. Check Services
-    alerts.extend(check_services())
+    # check_services now returns a list of results, but we need to convert to alerts if not active
+    svc_results = check_services()
+    for svc in svc_results:
+        if not svc['is_active']:
+            alerts.append({
+                'level': 'danger',
+                'message': f"Critical: Service {svc['name']} is {svc['status']}!",
+                'target': svc['name']
+            })
     
     # 3. Check Backup Status
     alerts.extend(check_backup_status())

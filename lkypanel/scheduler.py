@@ -71,6 +71,7 @@ def _check_system_alerts():
         ).exists()
         
         if not exists:
+            # 1. Create DB Notifications
             for admin in admins:
                 Notification.objects.create(
                     user=admin,
@@ -78,4 +79,10 @@ def _check_system_alerts():
                     message=alert['message'],
                     target=alert['target']
                 )
-            logger.info(f"System Alert Created: {alert['message']}")
+            
+            # 2. Send email alert
+            from lkypanel.utils.email_utils import send_system_email
+            subject = f"[{alert['level'].upper()}] LKYPanel System Alert: {alert['target']}"
+            send_system_email(subject, alert['message'])
+            
+            logger.info(f"System Alert Created & Email Sent: {alert['message']}")

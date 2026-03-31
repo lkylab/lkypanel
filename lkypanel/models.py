@@ -406,3 +406,34 @@ class Notification(models.Model):
 
     def __str__(self):
         return f'[{self.level.upper()}] {self.message[:50]}'
+# ---------------------------------------------------------------------------
+# System Settings (Global Config)
+# ---------------------------------------------------------------------------
+
+class SystemSetting(models.Model):
+    """Global configuration for the panel (SMTP, Alert Thresholds, etc.)."""
+    key = models.CharField(max_length=100, unique=True)
+    value = models.TextField(blank=True)
+    description = models.TextField(blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = 'lkypanel'
+
+    def __str__(self):
+        return self.key
+
+    @classmethod
+    def get_val(cls, key, default=None):
+        try:
+            return cls.objects.get(key=key).value
+        except cls.DoesNotExist:
+            return default
+
+    @classmethod
+    def set_val(cls, key, value, description=""):
+        obj, _ = cls.objects.update_or_create(
+            key=key,
+            defaults={'value': str(value), 'description': description}
+        )
+        return obj
