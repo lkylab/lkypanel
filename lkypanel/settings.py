@@ -220,4 +220,5 @@ DJANGO_VITE = {
 
 STATICFILES_DIRS = [
     BASE_DIR / "lkypanel" / "static",
+    BASE_DIR / "lkypanel" / "static" / "dist",
 ]
