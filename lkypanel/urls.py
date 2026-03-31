@@ -6,7 +6,7 @@ from lkypanel.admin_views import (
     firewall as af, security as as_, databases as adb, monitoring as am,
     ftp as af_admin
 )
-from lkypanel.admin_views import settings as aset, email as ae
+from lkypanel.admin_views import settings as aset, email as ae, services as aserv
 from lkypanel.admin_views import logs as al
 from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw
 from lkypanel.api import views as av
@@ -101,4 +101,8 @@ urlpatterns = [
     # ── Tools Proxy ──────────────────────────────────────────────────────
     path('admin/phpmyadmin/',                   phpMyAdminProxyView.as_view(), name='pma_index'),
     path('admin/phpmyadmin/<path:path>',        phpMyAdminProxyView.as_view(), name='pma_proxy'),
+
+    # ── Services ──────────────────────────────────────────────────────────
+    path('admin/services/',                 aserv.list_services,    name='admin_list_services'),
+    path('admin/services/<str:service_name>/restart/', aserv.restart_service, name='admin_restart_service'),
 ]

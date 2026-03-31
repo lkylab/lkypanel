@@ -51,30 +51,43 @@ def get_system_stats():
 
 def check_services():
     """
-    Check if critical services are running.
+    Check if critical services are running using systemctl.
+    Returns a list of service statuses.
     """
     services = [
-        {'name': 'OpenLiteSpeed', 'process': 'lsws'},
-        {'name': 'MariaDB', 'process': 'mariadbd'},
-        {'name': 'Pure-FTPd', 'process': 'pure-ftpd'},
+        {'name': 'Admin Panel', 'service': 'lky-admin'},
+        {'name': 'User Panel', 'service': 'lky-user'},
+        {'name': 'OpenLiteSpeed', 'service': 'lshttpd'},
+        {'name': 'MariaDB', 'service': 'mariadb'},
+        {'name': 'Pure-FTPd', 'service': 'pure-ftpd'},
+        {'name': 'Postfix', 'service': 'postfix'},
+        {'name': 'Dovecot', 'service': 'dovecot'},
     ]
     
-    alerts = []
+    results = []
     for svc in services:
-        is_running = False
-        # Check by process name using psutil
-        for proc in psutil.process_iter(['name']):
-            if svc['process'] in proc.info['name'].lower():
-                is_running = True
-                break
-        
-        if not is_running:
-            alerts.append({
-                'level': 'danger',
-                'message': f"Critical: Service {svc['name']} is NOT running!",
-                'target': svc['name']
+        try:
+            # Check status via systemctl
+            proc = subprocess.run(['systemctl', 'is-active', svc['service']], 
+                                 capture_output=True, text=True)
+            status = proc.stdout.strip()
+            is_active = (status == 'active')
+            
+            results.append({
+                'name': svc['name'],
+                'service': svc['service'],
+                'status': status,
+                'is_active': is_active
             })
-    return alerts
+        except Exception as e:
+            results.append({
+                'name': svc['name'],
+                'service': svc['service'],
+                'status': 'unknown',
+                'is_active': False,
+                'error': str(e)
+            })
+    return results
 
 def check_backup_status():
     """

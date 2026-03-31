@@ -11,6 +11,9 @@ from lkypanel.utils.two_factor import (
     verify_otp_code
 )
 
+from lkypanel.admin_views.decorators import panel_login_required
+
+@panel_login_required
 @csrf_protect
 @require_http_methods(['GET', 'POST'])
 def two_factor_setup(request):
