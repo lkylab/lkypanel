@@ -14,11 +14,15 @@ logger = logging.getLogger(__name__)
 
 
 @admin_required
-@require_http_methods(['GET'])
 def list_websites(request):
     from django.shortcuts import render
-    sites = Website.objects.select_related('owner').all().order_by('-created_at')
-    users = User.objects.all().order_by('username')
+    if request.panel_user.role == 'reseller':
+        sites = Website.objects.filter(owner__parent_reseller=request.panel_user).select_related('owner').order_by('-created_at')
+        users = User.objects.filter(parent_reseller=request.panel_user).order_by('username')
+    else:
+        sites = Website.objects.select_related('owner').all().order_by('-created_at')
+        users = User.objects.all().order_by('username')
+    
     return render(request, 'admin/websites.html', {
         'websites': sites,
         'users': users,
@@ -28,12 +32,15 @@ def list_websites(request):
 
 
 @admin_required
-@require_http_methods(['GET'])
 def website_detail(request, site_id):
     from django.shortcuts import render, get_object_or_404
     from lkypanel.models import FTPAccount, Database, GitRepo
     from lkypanel.services.packages import is_plugin_installed
-    site = get_object_or_404(Website, pk=site_id)
+    
+    if request.panel_user.role == 'reseller':
+        site = get_object_or_404(Website, pk=site_id, owner__parent_reseller=request.panel_user)
+    else:
+        site = get_object_or_404(Website, pk=site_id)
     return render(request, 'admin/website_detail.html', {
         'site': site,
         'ftp_count': FTPAccount.objects.filter(website=site).count(),

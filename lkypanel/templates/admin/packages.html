@@ -4,55 +4,177 @@
 {% block content %}
 <div class="dashboard-header">
   <div class="header-main">
-    <h1>Packages</h1>
-    <p>Install or remove optional server components.</p>
+    <h1>Management Center</h1>
+    <p>Manage system plugins and resource packages.</p>
   </div>
 </div>
 
-<div id="packages-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;margin-top:2rem;">
-  {% for plugin in plugins %}
-  <div class="package-card glass-card" id="card-{{ plugin.id }}" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
-    <div style="display:flex;align-items:center;justify-content:space-between;">
-      <span style="font-size:0.8rem;font-weight:600;color:var(--text-dim);">v{{ plugin.version }}</span>
-      {% if plugin.state == 'installed' %}
-      <span class="badge" style="background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);">
-        <i class="ph-bold ph-check-circle"></i> Installed
-      </span>
-      {% else %}
-      <span class="badge" style="background:rgba(100,116,139,0.1);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);">
-        Not Installed
-      </span>
-      {% endif %}
+<!-- Tabs -->
+<div class="tabs-container" style="margin-bottom: 2rem;">
+    <div style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1px;">
+        <button class="tab-btn active" onclick="switchTab('plugins-tab')">System Plugins</button>
+        <button class="tab-btn" onclick="switchTab('packages-tab')">Resource Packages</button>
     </div>
+</div>
 
-    <div>
-      <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.25rem;">{{ plugin.name }}</h3>
-      <p style="color:var(--text-dim);font-size:0.875rem;line-height:1.5;">{{ plugin.description }}</p>
+<!-- Plugins Tab -->
+<div id="plugins-tab" class="tab-content">
+    <div class="table-container" style="background: transparent; border: none;">
+        <div id="packages-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;">
+          {% for plugin in plugins %}
+          <div class="package-card glass-card" id="card-{{ plugin.id }}" style="padding:1.5rem;display:flex;flex-direction:column;gap:1.1rem;">
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+              <span style="font-size:0.75rem;font-weight:600;color:var(--text-dim);background:var(--glass);padding:2px 8px;border-radius:100px;">v{{ plugin.version }}</span>
+              {% if plugin.state == 'installed' %}
+              <span class="badge" style="background:rgba(34,197,94,0.1);color:#22c55e;border:1px solid rgba(34,197,94,0.2);">
+                <i class="ph-bold ph-check-circle"></i> Installed
+              </span>
+              {% else %}
+              <span class="badge" style="background:rgba(100,116,139,0.1);color:#94a3b8;border:1px solid rgba(100,116,139,0.2);">
+                Not Installed
+              </span>
+              {% endif %}
+            </div>
+        
+            <div>
+              <h3 style="font-size:1.1rem;font-weight:600;margin-bottom:0.4rem;">{{ plugin.name }}</h3>
+              <p style="color:var(--text-dim);font-size:0.875rem;line-height:1.5;">{{ plugin.description }}</p>
+            </div>
+        
+            <div style="margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.05);">
+              {% if plugin.state == 'installed' %}
+              <button class="btn btn-secondary plugin-btn" style="width:100%;"
+                      data-plugin="{{ plugin.id }}" data-op="remove">
+                <i class="ph-bold ph-trash"></i> Remove
+              </button>
+              {% elif plugin.id == 'phpmyadmin' and not mariadb_installed %}
+              <button class="btn btn-primary" style="width:100%;opacity:0.5;cursor:not-allowed;" disabled
+                      title="Requires MariaDB to be installed first.">
+                <i class="ph-bold ph-download-simple"></i> Install
+              </button>
+              <p style="font-size:0.75rem;color:#fb923c;margin-top:0.5rem;">
+                <i class="ph ph-warning"></i> Requires MariaDB to be installed first.
+              </p>
+              {% else %}
+              <button class="btn btn-primary plugin-btn" style="width:100%;"
+                      data-plugin="{{ plugin.id }}" data-op="install">
+                <i class="ph-bold ph-download-simple"></i> Install
+              </button>
+              {% endif %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
     </div>
+</div>
 
-    <div style="margin-top:auto;padding-top:1rem;border-top:1px solid rgba(255,255,255,0.05);">
-      {% if plugin.state == 'installed' %}
-      <button class="btn btn-secondary plugin-btn" style="width:100%;"
-              data-plugin="{{ plugin.id }}" data-op="remove">
-        <i class="ph-bold ph-trash"></i> Remove
-      </button>
-      {% elif plugin.id == 'phpmyadmin' and not mariadb_installed %}
-      <button class="btn btn-primary" style="width:100%;opacity:0.5;cursor:not-allowed;" disabled
-              title="Requires MariaDB to be installed first.">
-        <i class="ph-bold ph-download-simple"></i> Install
-      </button>
-      <p style="font-size:0.75rem;color:#fb923c;margin-top:0.5rem;">
-        <i class="ph ph-warning"></i> Requires MariaDB to be installed first.
-      </p>
-      {% else %}
-      <button class="btn btn-primary plugin-btn" style="width:100%;"
-              data-plugin="{{ plugin.id }}" data-op="install">
-        <i class="ph-bold ph-download-simple"></i> Install
-      </button>
-      {% endif %}
+<!-- Resource Packages Tab -->
+<div id="packages-tab" class="tab-content" style="display: none;">
+    <div style="display: grid; grid-template-columns: 350px 1fr; gap: 2rem;">
+        <!-- Create Package Form -->
+        <div class="glass-card" style="padding: 2rem; height: fit-content;">
+            <h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-plus-circle" style="color: var(--accent-primary);"></i>
+                Create Package
+            </h3>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-group" style="margin-bottom: 1.25rem;">
+                    <label style="display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Package Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Basic Plan"
+                           style="width: 100%; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: white;">
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Disk (MB)</label>
+                        <input type="number" name="disk_limit_mb" value="1024" step="256" required
+                               style="width: 100%; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: white;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Bandwidth (GB)</label>
+                        <input type="number" name="bandwidth_limit_gb" value="10" required
+                               style="width: 100%; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: white;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.25rem;">
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Sites</label>
+                        <input type="number" name="websites_limit" value="1" required
+                               style="width: 100%; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: white;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Databases</label>
+                        <input type="number" name="databases_limit" value="1" required
+                               style="width: 100%; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: white;">
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">FTP Accounts</label>
+                        <input type="number" name="ftp_limit" value="1" required
+                               style="width: 100%; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: white;">
+                    </div>
+                    <div class="form-group">
+                        <label style="display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 0.5rem;">Email Accounts</label>
+                        <input type="number" name="email_limit" value="1" required
+                               style="width: 100%; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; color: white;">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="ph ph-plus"></i> Create Package
+                </button>
+            </form>
+        </div>
+
+        <!-- List Packages Table -->
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Package Name</th>
+                        <th>Disk/BW</th>
+                        <th>Limits (Sites/DB/FTP/Mail)</th>
+                        <th>Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pkg in packages %}
+                    <tr>
+                        <td style="font-weight: 600;">{{ pkg.name }}</td>
+                        <td>
+                            <div style="font-size: 0.85rem;">{{ pkg.disk_limit_mb }} MB Disk</div>
+                            <div style="font-size: 0.75rem; color: var(--text-dim);">{{ pkg.bandwidth_limit_gb }} GB BW</div>
+                        </td>
+                        <td>
+                            <div class="limits-summary">
+                                <span>{{ pkg.websites_limit }}</span>
+                                <span>{{ pkg.databases_limit }}</span>
+                                <span>{{ pkg.ftp_limit }}</span>
+                                <span>{{ pkg.email_limit }}</span>
+                            </div>
+                        </td>
+                        <td style="font-size: 0.8rem; color: var(--text-dim);">{{ pkg.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <form action="{% url 'admin_delete_package' pkg.id %}" method="POST" onsubmit="return confirm('Delete package {{ pkg.name }}?');">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-xs" style="background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.2);">
+                                    <i class="ph ph-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-dim);">
+                            No resource packages created yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-  </div>
-  {% endfor %}
 </div>
 
 <div id="op-error" style="display:none;margin-top:1rem;padding:1rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#ef4444;max-height:300px;overflow-y:auto;"><pre id="op-error-text" style="white-space:pre-wrap;word-break:break-word;margin:0;font-size:0.8rem;font-family:monospace;"></pre></div>
@@ -62,6 +184,15 @@
 <script>
 const CSRF = '{{ csrf_token }}';
 
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    
+    document.getElementById(tabId).style.display = 'block';
+    event.currentTarget.classList.add('active');
+}
+
+// Plugin Logic (Original)
 document.querySelectorAll('.plugin-btn').forEach(btn => {
   btn.addEventListener('click', () => triggerOp(btn.dataset.plugin, btn.dataset.op));
 });
@@ -128,7 +259,37 @@ function showError(msg) {
   setTimeout(() => { el.style.display = 'none'; }, 30000);
 }
 </script>
+
 <style>
 @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+
+.tab-btn {
+    padding: 1rem 1.5rem;
+    background: transparent;
+    border: none;
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-bottom: 2px solid transparent;
+}
+.tab-btn:hover { color: var(--text-main); }
+.tab-btn.active {
+    color: var(--accent-primary);
+    border-bottom-color: var(--accent-primary);
+}
+
+.limits-summary {
+    display: flex;
+    gap: 0.5rem;
+}
+.limits-summary span {
+    background: var(--glass);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
 </style>
 {% endblock %}

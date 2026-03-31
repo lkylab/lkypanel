@@ -11,11 +11,13 @@ from lkypanel.admin_views import logs as al
 from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw
 from lkypanel.api import views as av
 from lkypanel.views.tools import phpMyAdminProxyView
+from lkypanel.views import security as s_user
 
 urlpatterns = [
     # ── Login / logout ────────────────────────────────────────────────────
     path('',          login_index,  name='login_index'),
     path('login/',    user_login,   name='user_login'),
+    path('login/2fa/', verify_2fa,  name='verify_2fa'),
     path('admin/login/', admin_login, name='admin_login'),
     path('logout/',   logout_view,  name='logout'),
 
@@ -23,6 +25,7 @@ urlpatterns = [
     path('admin/dashboard/',                aw.admin_dashboard,  name='admin_dashboard'),
     path('admin/users/',                    au.list_users,      name='admin_list_users'),
     path('admin/packages/',                 ap.list_packages,    name='admin_list_packages'),
+    path('admin/packages/<int:package_id>/delete/', ap.delete_package, name='admin_delete_package'),
     path('admin/packages/trigger/',         ap.trigger_plugin,   name='admin_trigger_plugin'),
     path('admin/packages/status/',          ap.poll_status,      name='admin_poll_status'),
     path('admin/backup/',                   ab.list_backups,      name='admin_list_backups'),
@@ -91,6 +94,9 @@ urlpatterns = [
     path('api/v1/git/',                   av.git_repos,      name='api_git'),
     path('api/v1/databases/',             av.databases,      name='api_databases'),
     path('api/v1/tokens/create/',         av.create_token,   name='api_create_token'),
+
+    # ── Security ────────────────────────────────────────────────────────
+    path('user/security/2fa/', s_user.two_factor_setup, name='security_2fa_setup'),
 
     # ── Tools Proxy ──────────────────────────────────────────────────────
     path('admin/phpmyadmin/',                   phpMyAdminProxyView.as_view(), name='pma_index'),

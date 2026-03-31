@@ -4,15 +4,15 @@
 
 {% block header %}
     <h1>User Management</h1>
-    <p>Control access and roles for the hosting panel.</p>
+    <p>Control access, roles, and resource packages.</p>
 {% endblock %}
 
 {% block content %}
     <div class="animate-fade">
         <div style="display: flex; justify-content: flex-end; margin-bottom: 2rem;">
-            <button class="btn" onclick="openCreateUserModal()">
-                <i class="ph ph-user-plus"></i>
-                Create User
+            <button class="btn btn-primary" onclick="openCreateUserModal()">
+                <i class="ph-bold ph-plus-circle"></i>
+                Create New Account
             </button>
         </div>
 
@@ -24,7 +24,8 @@
                             <th>Username</th>
                             <th>Email</th>
                             <th>Role</th>
-                            <th>Status</th>
+                            <th>Package</th>
+                            <th>Reseller</th>
                             <th>Joined</th>
                             <th>Actions</th>
                         </tr>
@@ -32,28 +33,38 @@
                     <tbody>
                         {% for u in users %}
                         <tr>
-                            <td style="font-weight: 600;">{{ u.username }}</td>
-                            <td style="color: var(--text-dim);">{{ u.email }}</td>
+                            <td style="font-weight: 600;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    {{ u.username }}
+                                    {% if u.is_2fa_enabled %}
+                                    <i class="ph-fill ph-shield-check" style="color: #22c55e; font-size: 0.8rem;" title="2FA Enabled"></i>
+                                    {% endif %}
+                                </div>
+                            </td>
+                            <td style="color: var(--text-dim); font-size: 0.9rem;">{{ u.email }}</td>
                             <td>
-                                <span class="status-pill {% if u.role == 'admin' %}status-online{% else %}btn-ghost{% endif %}">
+                                <span class="status-pill {% if u.role == 'admin' %}status-online{% elif u.role == 'reseller' %}status-warning{% else %}btn-ghost{% endif %}">
                                     {{ u.role|capfirst }}
                                 </span>
                             </td>
                             <td>
-                                {% if u.is_active %}
-                                <span style="color: #22c55e;">Active</span>
+                                {% if u.package %}
+                                <span style="font-weight: 500; font-size: 0.85rem;">{{ u.package.name }}</span>
                                 {% else %}
-                                <span style="color: #ef4444;">Inactive</span>
+                                <span style="color: var(--text-dim); font-size: 0.85rem;">No Limit</span>
                                 {% endif %}
                             </td>
-                            <td style="color: var(--text-dim); font-size: 0.85rem;">{{ u.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span style="color: var(--text-dim); font-size: 0.85rem;">{{ u.parent_reseller.username|default:"System" }}</span>
+                            </td>
+                            <td style="color: var(--text-dim); font-size: 0.8rem;">{{ u.created_at|date:"M d, Y" }}</td>
                             <td>
                                 <div style="display: flex; gap: 0.5rem;">
-                                    <button class="btn btn-ghost" onclick="resetPw({{ u.id }}, '{{ u.username }}')" title="Reset Password">
+                                    <button class="btn btn-xs btn-ghost" onclick="resetPw({{ u.id }}, '{{ u.username }}')" title="Reset Password">
                                         <i class="ph ph-key"></i>
                                     </button>
                                     {% if u.username != 'admin' %}
-                                    <button class="btn btn-ghost" style="color: #ef4444;" onclick="deleteUser({{ u.id }}, '{{ u.username }}')" title="Delete">
+                                    <button class="btn btn-xs btn-ghost" style="color: #ef4444;" onclick="deleteUser({{ u.id }}, '{{ u.username }}')" title="Delete">
                                         <i class="ph ph-user-minus"></i>
                                     </button>
                                     {% endif %}
@@ -68,24 +79,55 @@
     </div>
 
     <!-- Create User Modal -->
-    <div id="createUserModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div class="card animate-fade" style="width: 450px; border-color: var(--accent-primary);">
-            <h2 style="margin-bottom: 1.5rem;">Create User</h2>
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.9rem;">Username</label>
-                <input type="text" id="new_username" style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none;">
+    <div id="createUserModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div class="card animate-fade" style="width: 500px; border-color: var(--accent-primary); padding: 2.5rem;">
+            <h2 style="margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <i class="ph-bold ph-user-plus" style="color: var(--accent-primary);"></i>
+                Create Account
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem;">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.85rem;">Username</label>
+                    <input type="text" id="new_username" required
+                           style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white;">
+                </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.85rem;">Email</label>
+                    <input type="email" id="new_email" required
+                           style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white;">
+                </div>
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.9rem;">Email</label>
-                <input type="email" id="new_email" style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none;">
+
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.85rem;">Password</label>
+                <input type="password" id="new_password" required
+                       style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white;">
             </div>
-            <div style="margin-bottom: 1rem;">
-                <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.9rem;">Password</label>
-                <input type="password" id="new_password" style="width: 100%; padding: 0.85rem; background: var(--glass); border: 1px solid var(--border); border-radius: 10px; color: white; outline: none;">
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2.5rem;">
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.85rem;">Role</label>
+                    <select id="new_role" style="width: 100%; padding: 0.85rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; color: white;">
+                        <option value="user">Standard User</option>
+                        <option value="reseller">Reseller</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label style="display: block; margin-bottom: 0.5rem; color: var(--text-dim); font-size: 0.85rem;">Package</label>
+                    <select id="new_package" style="width: 100%; padding: 0.85rem; background: var(--bg-dark); border: 1px solid var(--border); border-radius: 10px; color: white;">
+                        <option value="">No Package (Unlimited)</option>
+                        {% for pkg in packages %}
+                        <option value="{{ pkg.id }}">{{ pkg.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
             </div>
-            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+
+            <div style="display: flex; justify-content: flex-end; gap: 1rem;">
                 <button class="btn btn-ghost" onclick="closeCreateUserModal()">Cancel</button>
-                <button class="btn" onclick="submitCreateUser()">Create User</button>
+                <button class="btn btn-primary" onclick="submitCreateUser()">Create Account</button>
             </div>
         </div>
     </div>
@@ -100,12 +142,15 @@
         const username = document.getElementById('new_username').value.trim();
         const email = document.getElementById('new_email').value.trim();
         const password = document.getElementById('new_password').value;
+        const role = document.getElementById('new_role').value;
+        const package_id = document.getElementById('new_package').value;
+
         if (!username || !password) return alert('Username and password are required');
 
         const resp = await fetch('/admin/users/create/', {
             method: 'POST',
             headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, email, password, role: 'user' })
+            body: JSON.stringify({ username, email, password, role, package_id })
         });
         if (resp.ok) window.location.reload();
         else {
@@ -137,4 +182,15 @@
         else alert('Failed to reset password');
     }
 </script>
+<style>
+.status-pill.status-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+.btn-xs {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.8rem;
+}
+</style>
 {% endblock %}

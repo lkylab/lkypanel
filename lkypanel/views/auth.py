@@ -30,9 +30,13 @@ def admin_login(request):
     error = None
 
     try:
-        user = authenticate_user(username, password, ip)
+        user, is_2fa_required = authenticate_user(username, password, ip)
         if user is None or user.role != 'admin':
             error = 'Invalid credentials or insufficient privileges.'
+        elif is_2fa_required:
+            request.session['pre_auth_user_id'] = user.pk
+            request.session['pre_auth_device_ip'] = ip
+            return redirect('/login/2fa/')
         else:
             request.session.cycle_key()
             request.session['user_id'] = user.pk
@@ -58,9 +62,13 @@ def user_login(request):
     error = None
 
     try:
-        user = authenticate_user(username, password, ip)
+        user, is_2fa_required = authenticate_user(username, password, ip)
         if user is None or user.role != 'user':
             error = 'Invalid credentials or insufficient privileges.'
+        elif is_2fa_required:
+            request.session['pre_auth_user_id'] = user.pk
+            request.session['pre_auth_device_ip'] = ip
+            return redirect('/login/2fa/')
         else:
             request.session.cycle_key()
             request.session['user_id'] = user.pk
@@ -72,6 +80,48 @@ def user_login(request):
         error = 'Invalid username or password.'
 
     return render(request, 'user_login.html', {'error': error, 'panel_version': '1.0.0'})
+
+
+
+@csrf_protect
+@require_http_methods(['GET', 'POST'])
+def verify_2fa(request):
+    """Verify TOTP code after primary authentication."""
+    user_id = request.session.get('pre_auth_user_id')
+    if not user_id:
+        return redirect('/')
+
+    from lkypanel.models import User
+    from lkypanel.utils.two_factor import verify_otp_code
+    from lkypanel.audit import log_action
+
+    try:
+        user = User.objects.get(pk=user_id)
+    except User.DoesNotExist:
+        request.session.flush()
+        return redirect('/')
+
+    if request.method == 'GET':
+        return render(request, 'login_2fa.html')
+
+    code = request.POST.get('code', '').strip()
+    if verify_otp_code(user.otp_secret, code):
+        # Success!
+        request.session.cycle_key()
+        request.session['user_id'] = user.pk
+        request.session['port_role'] = user.role
+        
+        # Cleanup pre-auth
+        del request.session['pre_auth_user_id']
+        if 'pre_auth_device_ip' in request.session:
+            ip = request.session.pop('pre_auth_device_ip')
+            log_action(user, 'login_success', user.username, ip)
+
+        if user.role == 'admin' or user.role == 'reseller':
+            return redirect('/admin/dashboard/')
+        return redirect('/user/dashboard/')
+
+    return render(request, 'login_2fa.html', {'error': 'Invalid verification code.'})
 
 
 def logout_view(request):

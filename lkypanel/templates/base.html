@@ -22,8 +22,8 @@
             <span>LKYPanel</span>
         </a>
 
-        <nav class="nav-links">
-            {% if panel_user.role == 'admin' %}
+        <nav class="nav-links" style="overflow-y: auto; max-height: calc(100vh - 160px); padding-bottom: 2rem;">
+            {% if panel_user.role == 'admin' or panel_user.role == 'reseller' %}
             <!-- Dashboard -->
             <a href="/admin/dashboard/" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
                 <i class="ph ph-squares-four"></i>
@@ -32,7 +32,8 @@
 
             <div class="section-header" style="padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1rem;">Main</div>
 
-            <!-- Users -->
+            <!-- Users (Admin only) -->
+            {% if panel_user.role == 'admin' %}
             <details class="nav-dropdown" {% if active_page == 'users' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
                     <i class="ph ph-users"></i>
@@ -43,11 +44,9 @@
                     <a href="/admin/users/" class="dropdown-item {% if active_page == 'users' and not active_subpage %}active{% endif %}">
                         <i class="ph ph-list-dashes"></i> List Users
                     </a>
-                    <a href="/admin/users/create/" class="dropdown-item">
-                        <i class="ph ph-user-plus"></i> Create New User
-                    </a>
                 </div>
             </details>
+            {% endif %}
 
             <!-- Websites -->
             <details class="nav-dropdown" {% if active_page == 'websites' %}open{% endif %}>
@@ -57,7 +56,7 @@
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
-                    <a href="/admin/websites/" class="dropdown-item {% if active_page == 'websites' and not active_subpage %}active{% endif %}">
+                    <a href="/admin/websites/" class="dropdown-item {% if active_page == 'websites' %}active{% endif %}">
                         <i class="ph ph-list-dashes"></i> List Websites
                     </a>
                     <a href="/admin/websites/create/" class="dropdown-item">
@@ -66,7 +65,8 @@
                 </div>
             </details>
 
-            <!-- Packages -->
+            <!-- Packages (Admin only) -->
+            {% if panel_user.role == 'admin' %}
             <details class="nav-dropdown" {% if active_page == 'packages' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
                     <i class="ph ph-package"></i>
@@ -75,13 +75,11 @@
                 </summary>
                 <div class="dropdown-content">
                     <a href="/admin/packages/" class="dropdown-item {% if active_page == 'packages' %}active{% endif %}">
-                        <i class="ph ph-list-dashes"></i> Manage Plugins
-                    </a>
-                    <a href="/admin/packages/" class="dropdown-item">
-                        <i class="ph ph-cube"></i> List Packages
+                        <i class="ph ph-list-dashes"></i> Manage Packages
                     </a>
                 </div>
             </details>
+            {% endif %}
 
             <div class="section-header" style="padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1rem;">Services</div>
 
@@ -95,10 +93,10 @@
                 </summary>
                 <div class="dropdown-content">
                     <a href="/admin/databases/" class="dropdown-item {% if active_page == 'databases' and not active_subpage %}active{% endif %}">
-                        <i class="ph ph-list-dashes"></i> List Databases
+                        <i class="ph ph-list-dashes"></i> List DBs
                     </a>
                     {% if phpmyadmin_installed %}
-                    <a href="/admin/phpmyadmin/" class="dropdown-item {% if active_subpage == 'phpmyadmin' %}active{% endif %}">
+                    <a href="/admin/phpmyadmin/" class="dropdown-item">
                         <i class="ph ph-table"></i> phpMyAdmin
                     </a>
                     {% endif %}
@@ -111,18 +109,18 @@
             <details class="nav-dropdown" {% if active_page == 'email' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
                     <i class="ph ph-envelope"></i>
-                    <span>Email Server</span>
+                    <span>Email</span>
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
                     <a href="/admin/email/" class="dropdown-item {% if active_page == 'email' %}active{% endif %}">
-                        <i class="ph ph-at"></i> Mail Domains
+                        <i class="ph ph-at"></i> List Accounts
                     </a>
                     <a href="/admin/email/account/add/" class="dropdown-item">
                         <i class="ph ph-plus-circle"></i> Create Email
                     </a>
                     <a href="/webmail/" target="_blank" class="dropdown-item">
-                        <i class="ph ph-envelope-open"></i> Access Webmail
+                        <i class="ph ph-envelope-open"></i> Webmail
                     </a>
                 </div>
             </details>
@@ -133,12 +131,12 @@
             <details class="nav-dropdown" {% if active_page == 'ftp' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">
                     <i class="ph ph-folder-open"></i>
-                    <span>FTP Accounts</span>
+                    <span>FTP</span>
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
                     <a href="/admin/ftp/" class="dropdown-item {% if active_page == 'ftp' %}active{% endif %}">
-                        <i class="ph ph-list-dashes"></i> List FTP Accounts
+                        <i class="ph ph-list-dashes"></i> List Accounts
                     </a>
                 </div>
             </details>
@@ -154,98 +152,42 @@
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
+                    <a href="/user/security/2fa/" class="dropdown-item {% if active_page == 'security' and active_subpage == '2fa' %}active{% endif %}">
+                        <i class="ph ph-fingerprint"></i> Two-Factor Auth
+                    </a>
+                    {% if panel_user.role == 'admin' %}
                     <a href="/admin/firewall/" class="dropdown-item {% if active_page == 'firewall' %}active{% endif %}">
                         <i class="ph ph-wall"></i> Firewall
                     </a>
                     {% if fail2ban_installed %}
-                    <a href="/admin/security/" class="dropdown-item {% if active_page == 'security' %}active{% endif %}">
-                        <i class="ph ph-shield-warning"></i> Fail2Ban Logs
+                    <a href="/admin/security/" class="dropdown-item {% if active_page == 'security' and not active_subpage %}active{% endif %}">
+                        <i class="ph ph-shield-warning"></i> Fail2Ban
                     </a>
+                    {% endif %}
                     {% endif %}
                 </div>
             </details>
 
-            <details class="nav-dropdown" {% if active_page == 'logs' %}open{% endif %}>
-                <summary class="nav-link" style="cursor: pointer;">
-                    <i class="ph ph-scroll"></i>
-                    <span>Logs</span>
-                    <i class="ph ph-caret-down dropdown-caret"></i>
-                </summary>
-                <div class="dropdown-content">
-                    <!-- Server -->
-                    <details class="nav-sub-dropdown" {% if request.GET.id == 'ols_error' or request.GET.id == 'ols_access' %}open{% endif %}>
-                        <summary>Server <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
-                        <div class="sub-content">
-                            <a href="/admin/logs/?id=ols_error" class="sub-link {% if request.GET.id == 'ols_error' %}active{% endif %}">OLS Error Log</a>
-                            <a href="/admin/logs/?id=ols_access" class="sub-link {% if request.GET.id == 'ols_access' %}active{% endif %}">OLS Access Log</a>
-                        </div>
-                    </details>
-                    
-                    <!-- Panel -->
-                    <details class="nav-sub-dropdown" {% if request.GET.id == 'panel' %}open{% endif %}>
-                        <summary>Panel <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
-                        <div class="sub-content">
-                            <a href="/admin/logs/?id=panel" class="sub-link {% if request.GET.id == 'panel' %}active{% endif %}">Panel Log</a>
-                        </div>
-                    </details>
-
-                    <!-- Security -->
-                    <details class="nav-sub-dropdown" {% if request.GET.id == 'fail2ban' or request.GET.id == 'auth' %}open{% endif %}>
-                        <summary>Security <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
-                        <div class="sub-content">
-                            <a href="/admin/logs/?id=fail2ban" class="sub-link {% if request.GET.id == 'fail2ban' %}active{% endif %}">Fail2Ban</a>
-                            <a href="/admin/logs/?id=auth" class="sub-link {% if request.GET.id == 'auth' %}active{% endif %}">Auth Log</a>
-                        </div>
-                    </details>
-
-                    <!-- System -->
-                    <details class="nav-sub-dropdown" {% if request.GET.id == 'syslog' %}open{% endif %}>
-                        <summary>System <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
-                        <div class="sub-content">
-                            <a href="/admin/logs/?id=syslog" class="sub-link {% if request.GET.id == 'syslog' %}active{% endif %}">Syslog</a>
-                        </div>
-                    </details>
-
-                    <!-- Website Logs -->
-                    <details class="nav-sub-dropdown" {% if request.GET.id == 'site_access' or request.GET.id == 'site_error' %}open{% endif %}>
-                        <summary>Website Logs <i class="ph ph-caret-down" style="font-size: 0.7rem;"></i></summary>
-                        <div class="sub-content">
-                            <a href="/admin/logs/?id=site_access" class="sub-link {% if request.GET.id == 'site_access' %}active{% endif %}">Site Access Log</a>
-                            <a href="/admin/logs/?id=site_error" class="sub-link {% if request.GET.id == 'site_error' %}active{% endif %}">Site Error Log</a>
-                        </div>
-                    </details>
-                </div>
-            </details>
-
-            <a href="/admin/packages/" class="nav-link {% if active_page == 'packages' %}active{% endif %}">
-                <i class="ph ph-package"></i>
-                <span>Packages</span>
-            </a>
+            {% if panel_user.role == 'admin' %}
             <a href="/admin/settings/" class="nav-link {% if active_page == 'settings' %}active{% endif %}">
                 <i class="ph ph-gear"></i>
                 <span>Settings</span>
             </a>
-            <a href="/admin/notifications/" class="nav-link {% if active_page == 'notifications' %}active{% endif %}">
-                <i class="ph ph-bell"></i>
-                <span>Notifications</span>
-                {% if unread_notifications_count > 0 %}
-                <span class="badge" style="background:#ef4444; color:white; margin-left:auto; border-radius:100px; padding:2px 6px; font-size:0.65rem;">{{ unread_notifications_count }}</span>
-                {% endif %}
-            </a>
+            {% endif %}
+
             {% else %}
+            <!-- Standard User Menu -->
             <a href="/user/dashboard/" class="nav-link {% if active_page == 'websites' %}active{% endif %}">
                 <i class="ph ph-house"></i>
-                <span>My Dashboard</span>
+                <span>Dashboard</span>
             </a>
-            {% if mariadb_installed %}
-            <a href="/user/databases/" class="nav-link {% if active_page == 'databases' %}active{% endif %}">
-                <i class="ph ph-database"></i>
-                <span>My Databases</span>
+            <a href="/user/security/2fa/" class="nav-link {% if active_page == 'security' %}active{% endif %}">
+                <i class="ph ph-fingerprint"></i>
+                <span>2FA Security</span>
             </a>
-            {% endif %}
             <a href="/user/profile/" class="nav-link">
                 <i class="ph ph-user"></i>
-                <span>Account Profile</span>
+                <span>My Profile</span>
             </a>
             {% endif %}
         </nav>
@@ -265,21 +207,27 @@
             </div>
             
             <div style="display:flex; align-items:center; gap:1.25rem;">
-                {% if panel_user.role == 'admin' %}
-                <a href="/admin/notifications/" class="notif-bell" title="Notifications">
-                    <i class="ph ph-bell"></i>
-                    {% if unread_notifications_count > 0 %}
-                    <div class="notif-dot"></div>
-                    {% endif %}
-                </a>
-                {% endif %}
-                
-                <div class="user-badge">
-                    <i class="ph ph-user-circle"></i>
-                    <span>{{ panel_user.role|capfirst }}: {{ panel_user.username }}</span>
+                <div class="user-badge" style="background: var(--glass); border: 1px solid var(--border); padding: 0.5rem 1rem; border-radius: 12px; display: flex; align-items: center; gap: 0.75rem;">
+                    <i class="ph ph-user-circle" style="font-size: 1.25rem; color: var(--accent-primary);"></i>
+                    <div style="display: flex; flex-direction: column; line-height: 1;">
+                        <span style="font-size: 0.85rem; font-weight: 600;">{{ panel_user.username }}</span>
+                        <span style="font-size: 0.65rem; color: var(--text-dim); text-transform: uppercase; margin-top: 2px;">{{ panel_user.role }}</span>
+                    </div>
                 </div>
             </div>
         </header>
+
+        {% if messages %}
+        <div class="messages" style="margin-bottom: 2rem;">
+            {% for message in messages %}
+            <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}" 
+                 style="padding: 1rem; border-radius: 12px; margin-bottom: 1rem; 
+                        {% if message.tags == 'success' %}background:rgba(34,197,94,0.1); color:#22c55e; border:1px solid rgba(34,197,94,0.2);{% elif message.tags == 'error' %}background:rgba(239,68,68,0.1); color:#ef4444; border:1px solid rgba(239,68,68,0.2);{% else %}background:var(--glass); color:white; border:1px solid var(--border);{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 
         {% block content %}{% endblock %}
     </main>

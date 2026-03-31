@@ -28,20 +28,18 @@ class InvalidCredentials(Exception):
     """Raised when the supplied password does not match the stored hash."""
 
 
-def authenticate_user(username: str, password: str, ip_address: str) -> User:
+def authenticate_user(username: str, password: str, ip_address: str) -> tuple[User, bool]:
     """
     Authenticate a user by username and password.
 
-    - Returns the User on success (resets failed_logins and locked_until).
-    - Raises AccountLocked if the account is currently locked.
-    - Raises InvalidCredentials if the password is wrong (increments failed_logins,
-      locks after MAX_ATTEMPTS failures, writes AuditLog).
-    - Returns None silently if the username does not exist (no username enumeration).
+    - Returns (User, is_2fa_required) on success.
+    - If is_2fa_required is True, the caller MUST verify the OTP code before 
+      fully logging the user in.
     """
     try:
         user = User.objects.get(username=username)
     except User.DoesNotExist:
-        return None
+        return None, False
 
     # Check lockout before verifying password
     if user.locked_until and user.locked_until > now():
@@ -59,24 +57,19 @@ def authenticate_user(username: str, password: str, ip_address: str) -> User:
             user.locked_until = now() + timedelta(minutes=LOCKOUT_MINUTES)
         user.save(update_fields=['failed_logins', 'locked_until'])
 
-        AuditLog.objects.create(
-            user=user,
-            action='login_fail',
-            target=username,
-            ip_address=ip_address,
-        )
+        from lkypanel.audit import log_action
+        log_action(user, 'login_fail', username, ip_address)
         raise InvalidCredentials('Invalid username or password.')
 
-    # Successful login — reset counters
+    # Successful primary auth — reset counters
     user.failed_logins = 0
     user.locked_until = None
     user.save(update_fields=['failed_logins', 'locked_until'])
 
-    AuditLog.objects.create(
-        user=user,
-        action='login_success',
-        target=username,
-        ip_address=ip_address,
-    )
+    is_2fa_required = user.is_2fa_enabled and bool(user.otp_secret)
 
-    return user
+    if not is_2fa_required:
+        from lkypanel.audit import log_action
+        log_action(user, 'login_success', username, ip_address)
+
+    return user, is_2fa_required

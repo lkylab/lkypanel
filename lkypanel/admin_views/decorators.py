@@ -15,8 +15,8 @@ def admin_required(view_func):
             user = User.objects.get(pk=uid, is_active=True)
         except User.DoesNotExist:
             return HttpResponseForbidden('Access denied.')
-        if user.role != 'admin':
-            return HttpResponseForbidden('Admin access required.')
+        if user.role not in ('admin', 'reseller'):
+            return HttpResponseForbidden('Management access required.')
         request.panel_user = user
         return view_func(request, *args, **kwargs)
     return wrapper

@@ -11,3 +11,5 @@ requests
 django-revproxy
 django-vite
 whitenoise
+pyotp
+qrcode

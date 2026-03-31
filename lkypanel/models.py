@@ -37,6 +37,27 @@ def _validate_domain(domain: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Package (Resource Limits)
+# ---------------------------------------------------------------------------
+
+class Package(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    disk_limit_mb = models.PositiveIntegerField(default=1024)
+    bandwidth_limit_gb = models.PositiveIntegerField(default=10)
+    websites_limit = models.PositiveIntegerField(default=1)
+    databases_limit = models.PositiveIntegerField(default=1)
+    ftp_limit = models.PositiveIntegerField(default=1)
+    email_limit = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'lkypanel'
+
+    def __str__(self):
+        return self.name
+
+
+# ---------------------------------------------------------------------------
 # User
 # ---------------------------------------------------------------------------
 
@@ -60,12 +81,26 @@ class UserManager(BaseUserManager):
 
 class User(AbstractBaseUser):
     ROLE_ADMIN = 'admin'
+    ROLE_RESELLER = 'reseller'
     ROLE_USER = 'user'
-    ROLE_CHOICES = [(ROLE_ADMIN, 'admin'), (ROLE_USER, 'user')]
+    ROLE_CHOICES = [
+        (ROLE_ADMIN, 'admin'),
+        (ROLE_RESELLER, 'reseller'),
+        (ROLE_USER, 'user')
+    ]
 
     username = models.CharField(max_length=150, unique=True)
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=ROLE_USER)
+    
+    # Reseller & Packages
+    package = models.ForeignKey('Package', on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
+    parent_reseller = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='sub_users')
+    
+    # 2FA Security
+    otp_secret = models.CharField(max_length=32, blank=True)
+    is_2fa_enabled = models.BooleanField(default=False)
+    
     is_active = models.BooleanField(default=True)
     failed_logins = models.PositiveSmallIntegerField(default=0)
     locked_until = models.DateTimeField(null=True, blank=True)
