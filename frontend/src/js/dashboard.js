@@ -58,9 +58,14 @@ export function initDashboard(data) {
 
     // Real-time polling
     function updateStats() {
-        fetch('/admin/api/stats/')
-            .then(r => r.json())
+        console.log('Fetching dashboard stats...');
+        fetch('/admin/api/stats/', { credentials: 'same-origin' })
+            .then(r => {
+                if (!r.ok) throw new Error(`HTTP error! status: ${r.status}`);
+                return r.json();
+            })
             .then(stats => {
+                console.log('Stats received:', stats);
                 const cpuPct = stats.cpu.percent.reduce((a, b) => a + b, 0) / stats.cpu.count;
                 updateGauge('CPU', cpuPct);
                 updateGauge('RAM', stats.memory.percent);
@@ -68,6 +73,9 @@ export function initDashboard(data) {
                 
                 pushChartData(cpuChart, cpuPct);
                 pushChartData(ramChart, stats.memory.percent);
+            })
+            .catch(err => {
+                console.error('Failed to update stats:', err);
             });
     }
 
