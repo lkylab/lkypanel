@@ -10,6 +10,7 @@ import threading
 from collections import deque
 
 from django.http import HttpResponseForbidden, JsonResponse
+from lkypanel.utils.ip import get_client_ip
 
 ADMIN_PORT = 2087
 USER_PORT = 2083
@@ -67,7 +68,7 @@ def _log_unauthorized(user, request):
     try:
         from lkypanel.audit import log_action
         log_action(user, 'unauthorized_port_access', request.path_info,
-                   request.META.get('REMOTE_ADDR', '0.0.0.0'))
+                   get_client_ip(request))
     except Exception:
         pass
 

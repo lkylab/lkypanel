@@ -19,5 +19,5 @@ def log_action(user, action: str, target: str, ip_address: str) -> AuditLog:
         user=user if isinstance(user, User) else None,
         action=action,
         target=str(target)[:512],
-        ip_address=ip_address or '0.0.0.0',
+        ip_address=(ip_address or '0.0.0.0')[:45],
     )

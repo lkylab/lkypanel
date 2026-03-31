@@ -7,6 +7,7 @@ from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 
 from lkypanel.auth import authenticate_user, AccountLocked, InvalidCredentials
+from lkypanel.utils.ip import get_client_ip
 
 
 def login_index(request):
@@ -25,7 +26,7 @@ def admin_login(request):
 
     username = request.POST.get('username', '').strip()
     password = request.POST.get('password', '')
-    ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
+    ip = get_client_ip(request)
     error = None
 
     try:
@@ -53,7 +54,7 @@ def user_login(request):
 
     username = request.POST.get('username', '').strip()
     password = request.POST.get('password', '')
-    ip = request.META.get('REMOTE_ADDR', '0.0.0.0')
+    ip = get_client_ip(request)
     error = None
 
     try:
