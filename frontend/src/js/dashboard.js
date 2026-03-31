@@ -68,14 +68,12 @@ export function initDashboard(data) {
 
     // Real-time polling
     function updateStats() {
-        console.log('Update interval triggered');
         fetch('/admin/api/stats/', { credentials: 'same-origin' })
             .then(r => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
                 return r.json();
             })
             .then(stats => {
-                console.log('Stats update:', stats);
                 const cpuPct = stats.cpu.percent.reduce((a, b) => a + b, 0) / stats.cpu.count;
                 updateGauge('CPU', cpuPct);
                 updateGauge('RAM', stats.memory.percent);
@@ -84,7 +82,7 @@ export function initDashboard(data) {
                 if (cpuChart) pushChartData(cpuChart, cpuPct);
                 if (ramChart) pushChartData(ramChart, stats.memory.percent);
             })
-            .catch(err => console.error('Poll failed:', err));
+            .catch(err => console.error('Dashboard poll failed:', err));
     }
 
     function updateGauge(label, pct) {
@@ -111,7 +109,6 @@ export function initDashboard(data) {
         } catch(e) {}
     }
 
-    console.log('Setting interval for 5s...');
     setInterval(updateStats, 5000);
 }
 
