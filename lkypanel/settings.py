@@ -143,6 +143,7 @@ USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
 CSRF_TRUSTED_ORIGINS = [
+    'https://65.0.86.106:2087',
     'https://13.235.27.87:2087',
     'https://localhost:2087',
     'https://127.0.0.1:2087',
@@ -218,6 +219,7 @@ DJANGO_VITE = {
     "default": {
         "dev_mode": DEBUG,
         "manifest_path": BASE_DIR / "lkypanel" / "static" / "dist" / ".vite" / "manifest.json",
+        "static_url_prefix": "dist/",
         "dev_server_host": "0.0.0.0",
         "dev_server_port": 5173,
     }
@@ -227,6 +229,3 @@ STATICFILES_DIRS = []
 _static_dir = BASE_DIR / "lkypanel" / "static"
 if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
-_dist_dir = _static_dir / "dist"
-if _dist_dir.exists():
-    STATICFILES_DIRS.append(_dist_dir)
