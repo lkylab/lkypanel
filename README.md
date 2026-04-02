@@ -7,7 +7,6 @@ A lightweight, security-focused web hosting control panel built with Django. Ins
 ## Quick Install
 
 ```bash
-# Adding ?v=1 at the end to bypass GitHub's cache
 curl -fsSL "https://raw.githubusercontent.com/lkylab/lkypanel/refs/heads/main/install.sh?v=$(date +%s)" -o install.sh && sudo bash install.sh
 
 ```

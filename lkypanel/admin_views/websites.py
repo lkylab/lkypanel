@@ -157,7 +157,8 @@ def create_website(request):
 
     try:
         doc_root = f'/home/{domain}/public_html'
-        site = Website(owner=owner, domain=domain, php_version=php_version, doc_root=doc_root, framework=framework)        site.full_clean()
+        site = Website(owner=owner, domain=domain, php_version=php_version, doc_root=doc_root, framework=framework)
+        site.full_clean()
         site.save()
         
         ols.create_docroot(domain)
