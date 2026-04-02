@@ -9,6 +9,7 @@ from django.shortcuts import render
 
 from lkypanel.admin_views.decorators import admin_required
 from lkypanel.audit import log_action
+from lkypanel.utils.ip import get_client_ip
 from lkypanel.services.mail import install_snappymail, INSTALL_PATH
 
 logger = logging.getLogger(__name__)
@@ -33,7 +34,7 @@ def mail_status(request):
 def run_install_snappymail(request):
     success = install_snappymail()
     if success:
-        log_action(request.panel_user, 'SnappyMail Installed', 'Admin triggered SnappyMail installation')
+        log_action(request.panel_user, 'SnappyMail Installed', 'Admin triggered SnappyMail installation', get_client_ip(request))
         return JsonResponse({'status': 'success'})
     else:
         return JsonResponse({'status': 'error', 'error': 'Installation failed. Check server logs.'}, status=500)

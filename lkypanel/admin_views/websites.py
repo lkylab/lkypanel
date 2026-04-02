@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_protect
 from lkypanel.models import Website, User, Notification
 from lkypanel.admin_views.decorators import admin_required
 from lkypanel.audit import log_action
+from lkypanel.utils.ip import get_client_ip
 from lkypanel.services import ols
 
 logger = logging.getLogger(__name__)
@@ -169,7 +170,7 @@ def create_website(request):
             install_framework(site, framework)
             
         ols.reload_ols()
-        log_action(request.panel_user, 'Website Created', f'Domain: {domain}, Framework: {framework}')
+        log_action(request.panel_user, 'Website Created', f'Domain: {domain}, Framework: {framework}', get_client_ip(request))
         return JsonResponse({'status': 'success', 'site_id': site.id})
     except Exception as e:
         logger.error('Failed to create website: %s', e)
@@ -211,7 +212,7 @@ def delete_website(request, site_id):
                 logger.warning('Failed to delete files for %s: %s', domain, e)
 
     site.delete()
-    log_action(request.panel_user, 'website_delete', domain, request.META.get('REMOTE_ADDR', '0.0.0.0'))
+    log_action(request.panel_user, 'website_delete', domain, get_client_ip(request))
     return JsonResponse({'deleted': domain})
 
 
@@ -235,7 +236,7 @@ def configure_website(request, site_id):
     except Exception as e:
         return JsonResponse({'error': str(e), 'code': 'CONFIG_FAILED', 'details': {}}, status=500)
 
-    log_action(request.panel_user, 'website_config', site.domain, request.META.get('REMOTE_ADDR', '0.0.0.0'))
+    log_action(request.panel_user, 'website_config', site.domain, get_client_ip(request))
     return JsonResponse({'domain': site.domain, 'php_version': php_version})
 
 
@@ -256,5 +257,5 @@ def request_ssl_admin(request, site_id):
         return JsonResponse({'error': str(e), 'code': 'DNS_CHECK_FAILED', 'details': {}}, status=400)
     except RuntimeError as e:
         return JsonResponse({'error': str(e), 'code': 'CERTBOT_FAILED', 'details': {}}, status=500)
-    log_action(request.panel_user, 'ssl_request', site.domain, request.META.get('REMOTE_ADDR', '0.0.0.0'))
+    log_action(request.panel_user, 'ssl_request', site.domain, get_client_ip(request))
     return JsonResponse({'cert_path': cert.cert_path, 'expires_at': cert.expires_at.isoformat()}, status=201)
