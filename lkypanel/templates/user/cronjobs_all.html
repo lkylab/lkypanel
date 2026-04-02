@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %}My Cronjobs — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>My Cronjobs</h1>
+    <p>All scheduled tasks across your websites.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div class="section-card">
+        <div class="table-container" style="margin-top:0; border-radius:20px; border:none;">
+            <table>
+                <thead>
+                    <tr><th>Schedule</th><th>Command</th><th>Website</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for job in cronjobs %}
+                    <tr>
+                        <td><code style="font-size:0.8rem; color:var(--accent-primary);">{{ job.schedule }}</code></td>
+                        <td style="font-family:monospace; font-size:0.8rem; max-width:260px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ job.command }}</td>
+                        <td>
+                            <a href="/user/sites/{{ job.website.id }}/cronjobs/" style="color:var(--text-dim); font-size:0.85rem;">{{ job.website.domain }}</a>
+                        </td>
+                        <td>
+                            {% if job.is_active %}
+                            <span class="status-pill status-online">Active</span>
+                            {% else %}
+                            <span class="status-pill" style="background:rgba(100,100,100,0.2); color:#94a3b8;">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="/user/sites/{{ job.website.id }}/cronjobs/" class="btn btn-ghost btn-sm" title="Manage">
+                                <i class="ph ph-arrow-square-out"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:3rem; color:var(--text-dim);">
+                            <i class="ph ph-clock" style="font-size:2.5rem; display:block; margin-bottom:0.75rem; opacity:0.5;"></i>
+                            No cronjobs yet. Go to a site to add one.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

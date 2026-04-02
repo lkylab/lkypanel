@@ -71,6 +71,10 @@
                     <span style="color:var(--text-dim);">Git Repos</span>
                     <span>{{ git_count }}</span>
                 </div>
+                <div style="display:flex; justify-content:space-between;">
+                    <span style="color:var(--text-dim);">Cronjobs</span>
+                    <span>{{ cronjob_count }}</span>
+                </div>
             </div>
         </div>
 
@@ -108,6 +112,9 @@
                     <i class="ph ph-database"></i> Databases <span style="font-size:0.75rem;color:#fb923c;">(Install MariaDB)</span>
                 </a>
                 {% endif %}
+                <a href="/user/sites/{{ site.id }}/cronjobs/" class="btn btn-ghost">
+                    <i class="ph ph-clock-countdown"></i> Manage Cronjobs
+                </a>
                 <button class="btn btn-ghost" style="color:#ef4444;" onclick="deleteSite({{ site.id }}, '{{ site.domain }}')">
                     <i class="ph ph-trash"></i> Delete Website
                 </button>

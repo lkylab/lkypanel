@@ -4,12 +4,12 @@ from lkypanel.views.auth import login_index, admin_login, user_login, logout_vie
 from lkypanel.admin_views import (
     users as au, websites as aw, backup as ab, packages as ap,
     firewall as af, security as as_, databases as adb, monitoring as am,
-    ftp as af_admin
+    ftp as af_admin, cronjobs as acj
 )
 from lkypanel.admin_views import settings as aset, email as ae, services as aserv
 from lkypanel.admin_views import logs as al
 from lkypanel.admin_views import mail as amail
-from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw
+from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw, cronjobs as ucj
 from lkypanel.api import views as av
 from lkypanel.views.tools import phpMyAdminProxyView
 from lkypanel.views import security as s_user
@@ -51,6 +51,9 @@ urlpatterns = [
     path('admin/databases/create/',         adb.create_database,    name='admin_create_database'),
     path('admin/databases/<int:db_id>/delete/', adb.delete_database, name='admin_delete_database'),
     path('admin/ftp/',                      af_admin.list_ftp_accounts, name='admin_list_ftp'),
+    path('admin/ftp/create/',               af_admin.admin_create_ftp,  name='admin_create_ftp'),
+    path('admin/ftp/<int:account_id>/delete/', af_admin.admin_delete_ftp, name='admin_delete_ftp'),
+    path('admin/cronjobs/',                 acj.list_cronjobs,          name='admin_list_cronjobs'),
     path('admin/users/create/',             au.create_user,     name='admin_create_user'),
     path('admin/users/<int:user_id>/delete/', au.delete_user,   name='admin_delete_user'),
     path('admin/users/<int:user_id>/reset-password/', au.reset_password, name='admin_reset_password'),
@@ -88,6 +91,11 @@ urlpatterns = [
     path('user/sites/<int:site_id>/databases/',                    ud.list_databases, name='user_list_db'),
     path('user/sites/<int:site_id>/databases/create/',             ud.create_db,      name='user_create_db'),
     path('user/sites/<int:site_id>/databases/<int:db_id>/delete/', ud.delete_db,      name='user_delete_db'),
+
+    path('user/sites/<int:site_id>/cronjobs/',                          ucj.list_cronjobs,   name='user_list_cronjobs'),
+    path('user/sites/<int:site_id>/cronjobs/create/',                   ucj.create_cronjob,  name='user_create_cronjob'),
+    path('user/sites/<int:site_id>/cronjobs/<int:job_id>/delete/',      ucj.delete_cronjob,  name='user_delete_cronjob'),
+    path('user/cronjobs/',                                              ucj.all_user_cronjobs, name='user_all_cronjobs'),
 
     # ── REST API ──────────────────────────────────────────────────────────
     path('api/v1/websites/',              av.websites,       name='api_websites'),

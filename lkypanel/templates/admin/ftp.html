@@ -12,6 +12,9 @@
             <h2 style="margin:0; font-size:1.25rem;">Global FTP Accounts</h2>
             <p style="margin:0.25rem 0 0; color:var(--text-dim); font-size:0.875rem;">Showing all FTP accounts across the server.</p>
         </div>
+        <button class="btn btn-primary" onclick="document.getElementById('createModal').style.display='flex'">
+            <i class="ph ph-plus"></i> Create Account
+        </button>
     </div>
 
     <div style="overflow-x: auto;">
@@ -23,6 +26,7 @@
                     <th style="padding:0.75rem 1rem;">Owner</th>
                     <th style="padding:0.75rem 1rem;">Quota</th>
                     <th style="padding:0.75rem 1rem;">Status</th>
+                    <th style="padding:0.75rem 1rem;">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -44,10 +48,15 @@
                             {{ account.status|capfirst }}
                         </span>
                     </td>
+                    <td style="padding:1rem;">
+                        <button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="confirmDelete({{ account.id }}, '{{ account.username }}')">
+                            <i class="ph ph-trash"></i>
+                        </button>
+                    </td>
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="padding:3rem; text-align:center; color:var(--text-dim);">
+                    <td colspan="6" style="padding:3rem; text-align:center; color:var(--text-dim);">
                         <i class="ph ph-prohibit" style="font-size:2rem; display:block; margin-bottom:0.5rem;"></i>
                         No FTP accounts found.
                     </td>
@@ -57,4 +66,101 @@
         </table>
     </div>
 </div>
+
+<!-- Create Account Modal -->
+<div id="createModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:440px; border-color:var(--accent-primary); position:relative;">
+        <button onclick="document.getElementById('createModal').style.display='none'" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.25rem;"><i class="ph ph-x"></i></button>
+        <h2 style="margin-bottom:1.5rem;">Create FTP Account</h2>
+        <div id="createError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem; margin-bottom:1rem; color:#ef4444; font-size:0.9rem;"></div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Website</label>
+            <select id="create_site" style="width:100%; padding:0.85rem; background:#1e293b; border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+                <option value="">— Select website —</option>
+                {% for site in websites %}
+                <option value="{{ site.id }}">{{ site.domain }} ({{ site.owner.username }})</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Username</label>
+            <input type="text" id="create_username" placeholder="ftpuser" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Password</label>
+            <input type="password" id="create_password" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Quota (MB)</label>
+            <input type="number" id="create_quota" value="1024" min="1" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="document.getElementById('createModal').style.display='none'">Cancel</button>
+            <button class="btn btn-primary" id="createBtn" onclick="submitCreate()"><i class="ph ph-plus"></i> Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div id="deleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:380px; border-color:#ef4444; position:relative;">
+        <h2 style="margin-bottom:1rem;">Delete FTP Account</h2>
+        <p style="color:var(--text-dim); margin-bottom:1.5rem;">Delete account <strong id="deleteUsername" style="color:white;"></strong>? This cannot be undone.</p>
+        <input type="hidden" id="deleteAccountId">
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="document.getElementById('deleteModal').style.display='none'">Cancel</button>
+            <button class="btn btn-primary" style="background:#ef4444; border-color:#ef4444;" onclick="submitDelete()"><i class="ph ph-trash"></i> Delete</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function confirmDelete(id, username) {
+    document.getElementById('deleteAccountId').value = id;
+    document.getElementById('deleteUsername').textContent = username;
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+async function submitCreate() {
+    const site_id = document.getElementById('create_site').value;
+    const username = document.getElementById('create_username').value.trim();
+    const password = document.getElementById('create_password').value;
+    const quota_mb = parseInt(document.getElementById('create_quota').value);
+    const errBox = document.getElementById('createError');
+    const btn = document.getElementById('createBtn');
+    if (!site_id || !username || !password) {
+        errBox.textContent = 'All fields are required.';
+        errBox.style.display = 'block';
+        return;
+    }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i>';
+    const resp = await fetch('/admin/ftp/create/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_id, username, password, quota_mb })
+    });
+    if (resp.ok) { window.location.reload(); }
+    else {
+        const d = await resp.json().catch(() => ({}));
+        errBox.textContent = d.error || 'Failed to create account.';
+        errBox.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph ph-plus"></i> Create';
+    }
+}
+
+async function submitDelete() {
+    const id = document.getElementById('deleteAccountId').value;
+    const resp = await fetch(`/admin/ftp/${id}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    });
+    if (resp.ok) window.location.reload();
+    else alert('Failed to delete account.');
+}
+</script>
+<style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
 {% endblock %}

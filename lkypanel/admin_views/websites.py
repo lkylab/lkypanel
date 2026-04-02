@@ -35,7 +35,7 @@ def list_websites(request):
 @admin_required
 def website_detail(request, site_id):
     from django.shortcuts import render, get_object_or_404
-    from lkypanel.models import FTPAccount, Database, GitRepo
+    from lkypanel.models import FTPAccount, Database, GitRepo, Cronjob
     from lkypanel.services.packages import is_plugin_installed
     
     if request.panel_user.role == 'reseller':
@@ -47,6 +47,7 @@ def website_detail(request, site_id):
         'ftp_count': FTPAccount.objects.filter(website=site).count(),
         'db_count': Database.objects.filter(website=site).count(),
         'git_count': GitRepo.objects.filter(website=site).count(),
+        'cronjob_count': Cronjob.objects.filter(website=site).count(),
         'mariadb_installed': is_plugin_installed('mariadb'),
         'pureftpd_installed': is_plugin_installed('pureftpd'),
         'active_page': 'websites',

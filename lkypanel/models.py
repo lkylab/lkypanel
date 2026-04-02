@@ -437,3 +437,22 @@ class SystemSetting(models.Model):
             defaults={'value': str(value), 'description': description}
         )
         return obj
+
+
+# ---------------------------------------------------------------------------
+# Cronjob
+# ---------------------------------------------------------------------------
+
+class Cronjob(models.Model):
+    website = models.ForeignKey(Website, on_delete=models.CASCADE, related_name='cronjobs')
+    command = models.CharField(max_length=1024)
+    schedule = models.CharField(max_length=100)  # cron expression e.g. "*/5 * * * *"
+    description = models.CharField(max_length=255, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'lkypanel'
+
+    def __str__(self):
+        return f'{self.website.domain}: {self.schedule} {self.command[:40]}'

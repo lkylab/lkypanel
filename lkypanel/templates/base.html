@@ -127,12 +127,32 @@
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
-                    <a href="/admin/ftp/" class="dropdown-item {% if active_page == 'ftp' %}active{% endif %}">
+                    <a href="/admin/ftp/" class="dropdown-item {% if active_page == 'ftp' and not active_subpage %}active{% endif %}">
                         <i class="ph ph-list-dashes"></i> List Accounts
+                    </a>
+                    <a href="/admin/ftp/create/" class="dropdown-item {% if active_page == 'ftp' and active_subpage == 'create' %}active{% endif %}">
+                        <i class="ph ph-plus-circle"></i> Create Account
+                    </a>
+                    <a href="/admin/ftp/delete/" class="dropdown-item {% if active_page == 'ftp' and active_subpage == 'delete' %}active{% endif %}">
+                        <i class="ph ph-trash"></i> Delete Account
                     </a>
                 </div>
             </details>
             {% endif %}
+
+            <!-- Cronjobs -->
+            <details class="nav-dropdown" {% if active_page == 'cronjobs' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-clock-countdown"></i>
+                    <span>Cronjobs</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/cronjobs/" class="dropdown-item {% if active_page == 'cronjobs' %}active{% endif %}">
+                        <i class="ph ph-list-dashes"></i> All Cronjobs
+                    </a>
+                </div>
+            </details>
 
             <div class="section-header" style="padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1rem;">System</div>
 
@@ -198,8 +218,19 @@
                 <i class="ph ph-user"></i>
                 <span>My Profile</span>
             </a>
+            <details class="nav-dropdown" {% if active_page == 'cronjobs' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-clock-countdown"></i>
+                    <span>Cronjobs</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/user/cronjobs/" class="dropdown-item {% if active_page == 'cronjobs' %}active{% endif %}">
+                        <i class="ph ph-list-dashes"></i> My Cronjobs
+                    </a>
+                </div>
+            </details>
             {% endif %}
-        </nav>
 
         <div class="sidebar-footer">
             <a href="/logout/" class="nav-link">
