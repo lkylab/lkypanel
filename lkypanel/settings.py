@@ -35,7 +35,7 @@ if _env_path.exists():
 SECRET_KEY = os.environ['SECRET_KEY']
 FERNET_KEY = os.environ['FERNET_KEY']
 
-DEBUG = False
+DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = ['*']
 
 # ---------------------------------------------------------------------------
