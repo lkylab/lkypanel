@@ -1,25 +1,153 @@
 {% extends "base.html" %}
 
-{% block title %}Databases - LKYPanel{% endblock %}
+{% block title %}Databases — LKYPanel{% endblock %}
 
 {% block header %}
     <h1>Database Management</h1>
-    <p>Manage MariaDB databases and users.</p>
+    <p>Manage MariaDB databases and users across all websites.</p>
 {% endblock %}
 
 {% block content %}
 <div class="animate-fade">
-    <div class="card" style="border-color: var(--accent-primary);">
-        <h3 style="margin-bottom: 1rem;"><i class="ph ph-database"></i> MariaDB Status</h3>
-        <p style="color: var(--text-dim); line-height: 1.6;">
-            MariaDB is installed and running. Full management interface (database creation, user permissions) is being integrated.
-        </p>
-        <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
-            <button class="btn btn-sm" onclick="alert('Database creation feature coming soon!')">
-                <i class="ph ph-plus"></i> Create Database
+
+{% if not mariadb_installed %}
+<div style="margin-bottom:1.5rem;padding:1rem 1.25rem;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:12px;display:flex;align-items:center;gap:0.75rem;color:#fb923c;">
+  <i class="ph-bold ph-warning" style="font-size:1.25rem;flex-shrink:0;"></i>
+  <span>MariaDB is not installed. Databases are disabled.
+    <a href="/admin/packages/" style="color:#fb923c;font-weight:600;text-decoration:underline;">Install it from the Packages page.</a>
+  </span>
+</div>
+{% endif %}
+
+<div style="display:flex; justify-content:flex-end; margin-bottom:2rem; gap:1rem;">
+    {% if phpmyadmin_installed %}
+    <a href="/admin/phpmyadmin/" class="btn btn-ghost" target="_blank">
+        <i class="ph ph-table"></i> phpMyAdmin
+    </a>
+    {% endif %}
+    {% if mariadb_installed %}
+    <button class="btn btn-primary" onclick="openCreateModal()">
+        <i class="ph ph-plus"></i> Create Database
+    </button>
+    {% endif %}
+</div>
+
+<div class="section-card">
+    <div class="table-container" style="margin-top:0; border-radius:20px; border:none;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Database Name</th>
+                    <th>DB User</th>
+                    <th>Website</th>
+                    <th>Owner</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for db in databases %}
+                <tr>
+                    <td style="font-weight:600; font-family:monospace;">{{ db.db_name }}</td>
+                    <td style="color:var(--text-dim); font-family:monospace; font-size:0.85rem;">{{ db.db_user }}</td>
+                    <td>
+                        <a href="/admin/websites/{{ db.website.id }}/detail/" style="color:var(--accent-primary); text-decoration:none;">
+                            {{ db.website.domain }}
+                        </a>
+                    </td>
+                    <td style="color:var(--text-dim);">{{ db.website.owner.username }}</td>
+                    <td style="color:var(--text-dim); font-size:0.85rem;">{{ db.created_at|date:"M d, Y" }}</td>
+                    <td>
+                        <button class="btn btn-ghost btn-sm" style="color:#ef4444;"
+                                onclick="deleteDb({{ db.id }}, '{{ db.db_name }}')" title="Delete">
+                            <i class="ph ph-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align:center; padding:4rem; color:var(--text-dim);">
+                        <i class="ph ph-database" style="font-size:3rem; display:block; margin-bottom:1rem; opacity:0.5;"></i>
+                        No databases yet.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+
+<!-- Create Database Modal -->
+<div id="createModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:440px; border-color:var(--accent-primary); position:relative;">
+        <button onclick="closeCreateModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.25rem;"><i class="ph ph-x"></i></button>
+        <h2 style="margin-bottom:1.5rem;"><i class="ph ph-database" style="color:var(--accent-primary);"></i> Create Database</h2>
+        <div id="createError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1rem; color:#ef4444; font-size:0.9rem;"></div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Website</label>
+            <select id="db_site_id" style="width:100%; padding:0.85rem; background:#1e293b; border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+                {% for site in websites %}
+                <option value="{{ site.id }}">{{ site.domain }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Database Name</label>
+            <input type="text" id="db_name" placeholder="e.g. mysite_db"
+                   style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="closeCreateModal()">Cancel</button>
+            <button class="btn btn-primary" id="createBtn" onclick="submitCreate()">
+                <i class="ph ph-plus"></i> Create
             </button>
-            <a href="/admin/packages/" class="btn btn-sm btn-ghost">Manage Plugin</a>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function openCreateModal() { document.getElementById('createModal').style.display = 'flex'; }
+function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
+
+async function submitCreate() {
+    const site_id = document.getElementById('db_site_id').value;
+    const db_name = document.getElementById('db_name').value.trim();
+    const errBox = document.getElementById('createError');
+    const btn = document.getElementById('createBtn');
+    if (!db_name) { errBox.textContent = 'Database name is required.'; errBox.style.display = 'block'; return; }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Creating...';
+    const resp = await fetch('/admin/databases/create/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_id: parseInt(site_id), db_name })
+    });
+    if (resp.ok) { closeCreateModal(); window.location.reload(); }
+    else {
+        const data = await resp.json().catch(() => ({}));
+        errBox.textContent = data.error || 'Failed to create database.';
+        errBox.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph ph-plus"></i> Create';
+    }
+}
+
+async function deleteDb(id, name) {
+    if (!confirm(`Delete database "${name}" and its user? This cannot be undone.`)) return;
+    const resp = await fetch(`/admin/databases/${id}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    });
+    if (resp.ok) window.location.reload();
+    else { const d = await resp.json().catch(() => ({})); alert(d.error || 'Failed to delete.'); }
+}
+
+document.getElementById('createModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCreateModal();
+});
+</script>
+<style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
 {% endblock %}

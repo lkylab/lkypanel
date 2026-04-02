@@ -1,5 +1,7 @@
 """SSL certificate management — user views."""
+from datetime import datetime, timezone
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 
@@ -12,17 +14,25 @@ from lkypanel.services.ssl import request_certificate
 @require_http_methods(['GET'])
 def ssl_status(request, site_id):
     site = request.panel_website
+    ctx = {
+        'site': site,
+        'ssl_enabled': site.ssl_enabled,
+        'active_page': 'websites',
+        'panel_user': request.panel_user,
+    }
     try:
         cert = site.ssl_certificate
-        return JsonResponse({
-            'ssl_enabled': site.ssl_enabled,
+        now = datetime.now(timezone.utc)
+        ctx.update({
             'cert_path': cert.cert_path,
-            'issued_at': cert.issued_at.isoformat(),
-            'expires_at': cert.expires_at.isoformat(),
+            'issued_at': cert.issued_at,
+            'expires_at': cert.expires_at,
             'auto_renew': cert.auto_renew,
+            'days_left': (cert.expires_at - now).days,
         })
     except Exception:
-        return JsonResponse({'ssl_enabled': False})
+        pass
+    return render(request, 'user/site_ssl.html', ctx)
 
 
 @login_required

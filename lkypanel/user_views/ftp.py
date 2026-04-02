@@ -1,10 +1,11 @@
 """FTP account management — user views."""
 import json
 from django.http import JsonResponse
+from django.shortcuts import render, get_object_or_404
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 
-from lkypanel.models import FTPAccount
+from lkypanel.models import FTPAccount, Website
 from lkypanel.user_views.decorators import login_required, owns_website
 from lkypanel.services.ftp import (
     create_ftp_account, delete_ftp_account, change_ftp_password, is_pureftpd_installed
@@ -16,9 +17,15 @@ from lkypanel.audit import log_action
 @owns_website
 @require_http_methods(['GET'])
 def list_ftp(request, site_id):
-    accounts = list(request.panel_website.ftp_accounts.values(
-        'id', 'username', 'quota_mb', 'home_dir', 'status'))
-    return JsonResponse({'ftp_accounts': accounts})
+    site = request.panel_website
+    accounts = site.ftp_accounts.all()
+    return render(request, 'user/site_ftp.html', {
+        'site': site,
+        'ftp_accounts': accounts,
+        'ftp_installed': is_pureftpd_installed(),
+        'active_page': 'websites',
+        'panel_user': request.panel_user,
+    })
 
 
 @login_required
@@ -33,6 +40,11 @@ def create_ftp(request, site_id):
     username = data.get('username', '').strip()
     password = data.get('password', '')
     quota_mb = int(data.get('quota_mb', 1024))
+
+    from lkypanel.utils.limits import check_limit
+    allowed, msg = check_limit(request.panel_user, 'ftp')
+    if not allowed:
+        return JsonResponse({'error': msg, 'code': 'LIMIT_EXCEEDED', 'details': {}}, status=400)
 
     try:
         account = create_ftp_account(request.panel_website, username, password, quota_mb)

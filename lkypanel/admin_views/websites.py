@@ -150,10 +150,14 @@ def create_website(request):
     if Website.objects.filter(domain=domain).exists():
         return JsonResponse({'error': 'Domain already exists', 'code': 'DUPLICATE_DOMAIN', 'details': {}}, status=400)
 
+    from lkypanel.utils.limits import check_limit
+    allowed, msg = check_limit(owner, 'website')
+    if not allowed:
+        return JsonResponse({'error': msg, 'code': 'LIMIT_EXCEEDED', 'details': {}}, status=400)
+
     try:
         doc_root = f'/home/{domain}/public_html'
-        site = Website(owner=owner, domain=domain, php_version=php_version, doc_root=doc_root, framework=framework)
-        site.full_clean()
+        site = Website(owner=owner, domain=domain, php_version=php_version, doc_root=doc_root, framework=framework)        site.full_clean()
         site.save()
         
         ols.create_docroot(domain)

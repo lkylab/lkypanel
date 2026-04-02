@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+
+{% block title %}SSL Certificate — {{ site.domain }} — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>SSL Certificate</h1>
+    <p>{{ site.domain }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div style="margin-bottom:2rem;">
+        <a href="/user/dashboard/" class="btn btn-ghost"><i class="ph ph-arrow-left"></i> Back</a>
+    </div>
+
+    <div class="card" style="max-width:600px;">
+        {% if ssl_enabled %}
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:2rem;">
+            <i class="ph-fill ph-shield-check" style="font-size:3rem; color:#22c55e;"></i>
+            <div>
+                <h2 style="margin:0; color:#22c55e;">SSL Active</h2>
+                <p style="margin:0; color:var(--text-dim); font-size:0.9rem;">Your site is secured with HTTPS.</p>
+            </div>
+        </div>
+        <div style="display:grid; gap:0.75rem; margin-bottom:2rem;">
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--glass); border-radius:10px;">
+                <span style="color:var(--text-dim);">Certificate Path</span>
+                <code style="font-size:0.8rem;">{{ cert_path }}</code>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--glass); border-radius:10px;">
+                <span style="color:var(--text-dim);">Issued</span>
+                <span>{{ issued_at|date:"M d, Y" }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--glass); border-radius:10px;">
+                <span style="color:var(--text-dim);">Expires</span>
+                <span style="{% if days_left < 14 %}color:#ef4444;{% elif days_left < 30 %}color:#f59e0b;{% else %}color:#22c55e;{% endif %}">
+                    {{ expires_at|date:"M d, Y" }} ({{ days_left }} days)
+                </span>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--glass); border-radius:10px;">
+                <span style="color:var(--text-dim);">Auto-Renew</span>
+                <span>{% if auto_renew %}<i class="ph-fill ph-check-circle" style="color:#22c55e;"></i> Enabled{% else %}<i class="ph ph-x-circle" style="color:#ef4444;"></i> Disabled{% endif %}</span>
+            </div>
+        </div>
+        {% else %}
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:2rem;">
+            <i class="ph ph-shield-slash" style="font-size:3rem; color:var(--text-dim);"></i>
+            <div>
+                <h2 style="margin:0;">No SSL Certificate</h2>
+                <p style="margin:0; color:var(--text-dim); font-size:0.9rem;">Your site is not secured with HTTPS.</p>
+            </div>
+        </div>
+        <p style="color:var(--text-dim); margin-bottom:1.5rem; font-size:0.9rem; line-height:1.6;">
+            Request a free Let's Encrypt certificate. Make sure your domain's DNS A record points to this server before proceeding.
+        </p>
+        {% endif %}
+
+        <div id="sslError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem; margin-bottom:1rem; color:#ef4444; font-size:0.9rem;"></div>
+        <button class="btn btn-primary" id="sslBtn" onclick="requestSSL()">
+            <i class="ph ph-shield-check"></i>
+            {% if ssl_enabled %}Renew Certificate{% else %}Request SSL Certificate{% endif %}
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SITE_ID = {{ site.id }};
+async function requestSSL() {
+    const btn = document.getElementById('sslBtn');
+    const errBox = document.getElementById('sslError');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Requesting...';
+    const resp = await fetch(`/user/sites/${SITE_ID}/ssl/request/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    });
+    if (resp.ok) {
+        window.location.reload();
+    } else {
+        const d = await resp.json().catch(() => ({}));
+        errBox.textContent = d.error || 'SSL request failed.';
+        errBox.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph ph-shield-check"></i> {% if ssl_enabled %}Renew Certificate{% else %}Request SSL Certificate{% endif %}';
+    }
+}
+</script>
+<style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+{% endblock %}

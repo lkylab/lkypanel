@@ -104,9 +104,57 @@ def restore_backup(request):
         return JsonResponse({'error': str(e)}, status=500)
 
 @admin_required
+@require_http_methods(['GET'])
 def export_websites(request):
-    return JsonResponse({'status': 'stub'})
+    from lkypanel.models import Website
+    from django.utils import timezone
+    sites = Website.objects.select_related('owner').all()
+    data = {
+        'exported_at': timezone.now().isoformat(),
+        'panel_version': '1.0.0',
+        'websites': [
+            {
+                'id': s.id,
+                'domain': s.domain,
+                'doc_root': s.doc_root,
+                'php_version': s.php_version,
+                'framework': s.framework,
+                'ssl_enabled': s.ssl_enabled,
+                'owner': s.owner.username,
+                'created_at': s.created_at.isoformat(),
+            }
+            for s in sites
+        ],
+    }
+    response = JsonResponse(data, json_dumps_params={'indent': 2})
+    response['Content-Disposition'] = 'attachment; filename="lkypanel_websites_export.json"'
+    return response
+
 
 @admin_required
+@require_http_methods(['GET'])
 def export_users(request):
-    return JsonResponse({'status': 'stub'})
+    """Export all user accounts to JSON (no password hashes)."""
+    from lkypanel.models import User
+    from django.utils import timezone
+    users = User.objects.select_related('package', 'parent_reseller').all()
+    data = {
+        'exported_at': timezone.now().isoformat(),
+        'panel_version': '1.0.0',
+        'users': [
+            {
+                'id': u.id,
+                'username': u.username,
+                'email': u.email,
+                'role': u.role,
+                'is_active': u.is_active,
+                'package': u.package.name if u.package else None,
+                'parent_reseller': u.parent_reseller.username if u.parent_reseller else None,
+                'created_at': u.created_at.isoformat(),
+            }
+            for u in users
+        ],
+    }
+    response = JsonResponse(data, json_dumps_params={'indent': 2})
+    response['Content-Disposition'] = 'attachment; filename="lkypanel_users_export.json"'
+    return response

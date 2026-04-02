@@ -1,20 +1,29 @@
 """Database management — user views."""
 import json
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 
 from lkypanel.models import Database
 from lkypanel.user_views.decorators import login_required, owns_website
 from lkypanel.services.db_manager import create_database, delete_database
+from lkypanel.services.packages import is_plugin_installed
 
 
 @login_required
 @owns_website
 @require_http_methods(['GET'])
 def list_databases(request, site_id):
-    dbs = list(request.panel_website.databases.values('id', 'db_name', 'db_user', 'created_at'))
-    return JsonResponse({'databases': dbs})
+    site = request.panel_website
+    databases = site.databases.all().order_by('-created_at')
+    return render(request, 'user/site_databases.html', {
+        'site': site,
+        'databases': databases,
+        'mariadb_installed': is_plugin_installed('mariadb'),
+        'active_page': 'websites',
+        'panel_user': request.panel_user,
+    })
 
 
 @login_required
@@ -24,6 +33,12 @@ def list_databases(request, site_id):
 def create_db(request, site_id):
     data = json.loads(request.body)
     db_name = data.get('db_name', '').strip()
+
+    from lkypanel.utils.limits import check_limit
+    allowed, msg = check_limit(request.panel_user, 'database')
+    if not allowed:
+        return JsonResponse({'error': msg, 'code': 'LIMIT_EXCEEDED', 'details': {}}, status=400)
+
     try:
         db = create_database(request.panel_website, db_name)
     except Exception as e:

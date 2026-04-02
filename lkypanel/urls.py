@@ -8,6 +8,7 @@ from lkypanel.admin_views import (
 )
 from lkypanel.admin_views import settings as aset, email as ae, services as aserv
 from lkypanel.admin_views import logs as al
+from lkypanel.admin_views import mail as amail
 from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw
 from lkypanel.api import views as av
 from lkypanel.views.tools import phpMyAdminProxyView
@@ -45,7 +46,10 @@ urlpatterns = [
     path('admin/email/install/',            ae.run_install_snappymail, name='admin_mail_install'),
     path('admin/email/domain/add/',         ae.add_mail_domain,    name='admin_add_mail_domain'),
     path('admin/email/account/add/',        ae.add_mail_account,   name='admin_add_mail_account'),
+    path('admin/mail/',                     amail.mail_dashboard,  name='admin_mail_dashboard'),
     path('admin/databases/',                adb.database_dashboard, name='admin_databases'),
+    path('admin/databases/create/',         adb.create_database,    name='admin_create_database'),
+    path('admin/databases/<int:db_id>/delete/', adb.delete_database, name='admin_delete_database'),
     path('admin/ftp/',                      af_admin.list_ftp_accounts, name='admin_list_ftp'),
     path('admin/users/create/',             au.create_user,     name='admin_create_user'),
     path('admin/users/<int:user_id>/delete/', au.delete_user,   name='admin_delete_user'),

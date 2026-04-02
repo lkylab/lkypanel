@@ -44,6 +44,11 @@ def add_mail_account(request):
         email_user = request.POST.get('email_user')
         password = request.POST.get('password')
         try:
+            from lkypanel.utils.limits import check_limit
+            allowed, msg = check_limit(request.panel_user, 'email')
+            if not allowed:
+                messages.error(request, msg)
+                return redirect('admin_email')
             from lkypanel.services.email import add_mail_account as svc_add_mail
             svc_add_mail(domain_id, email_user, password)
             messages.success(request, f"Mail account {email_user}@... created.")

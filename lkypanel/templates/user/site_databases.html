@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+
+{% block title %}Databases — {{ site.domain }} — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>Databases</h1>
+    <p>{{ site.domain }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+        <a href="/user/dashboard/" class="btn btn-ghost"><i class="ph ph-arrow-left"></i> Back</a>
+        {% if mariadb_installed %}
+        <button class="btn btn-primary" onclick="openCreateModal()">
+            <i class="ph ph-plus"></i> Create Database
+        </button>
+        {% endif %}
+    </div>
+
+    {% if not mariadb_installed %}
+    <div style="padding:1rem 1.25rem;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:12px;color:#fb923c;margin-bottom:1.5rem;">
+        <i class="ph-bold ph-warning"></i> MariaDB is not installed. Contact your administrator.
+    </div>
+    {% endif %}
+
+    <div class="section-card">
+        <div class="table-container" style="margin-top:0; border-radius:20px; border:none;">
+            <table>
+                <thead>
+                    <tr><th>Database Name</th><th>DB User</th><th>Created</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                    {% for db in databases %}
+                    <tr>
+                        <td style="font-weight:600; font-family:monospace;">{{ db.db_name }}</td>
+                        <td style="color:var(--text-dim); font-family:monospace; font-size:0.85rem;">{{ db.db_user }}</td>
+                        <td style="color:var(--text-dim); font-size:0.85rem;">{{ db.created_at|date:"M d, Y" }}</td>
+                        <td>
+                            <button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="deleteDb({{ db.id }}, '{{ db.db_name }}')" title="Delete">
+                                <i class="ph ph-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" style="text-align:center; padding:3rem; color:var(--text-dim);">
+                            <i class="ph ph-database" style="font-size:2.5rem; display:block; margin-bottom:0.75rem; opacity:0.5;"></i>
+                            No databases yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Modal -->
+<div id="createModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:400px; border-color:var(--accent-primary); position:relative;">
+        <button onclick="closeCreateModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.25rem;"><i class="ph ph-x"></i></button>
+        <h2 style="margin-bottom:1.5rem;"><i class="ph ph-database" style="color:var(--accent-primary);"></i> Create Database</h2>
+        <div id="createError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem; margin-bottom:1rem; color:#ef4444; font-size:0.9rem;"></div>
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Database Name</label>
+            <input type="text" id="db_name" placeholder="e.g. mysite_db"
+                   style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="closeCreateModal()">Cancel</button>
+            <button class="btn btn-primary" id="createBtn" onclick="submitCreate()"><i class="ph ph-plus"></i> Create</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SITE_ID = {{ site.id }};
+function openCreateModal() { document.getElementById('createModal').style.display = 'flex'; }
+function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
+
+async function submitCreate() {
+    const db_name = document.getElementById('db_name').value.trim();
+    const errBox = document.getElementById('createError');
+    const btn = document.getElementById('createBtn');
+    if (!db_name) { errBox.textContent = 'Database name is required.'; errBox.style.display = 'block'; return; }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i>';
+    const resp = await fetch(`/user/sites/${SITE_ID}/databases/create/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ db_name })
+    });
+    if (resp.ok) { closeCreateModal(); window.location.reload(); }
+    else {
+        const d = await resp.json().catch(() => ({}));
+        errBox.textContent = d.error || 'Failed to create database.';
+        errBox.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph ph-plus"></i> Create';
+    }
+}
+
+async function deleteDb(id, name) {
+    if (!confirm(`Delete database "${name}" and its user? This cannot be undone.`)) return;
+    const resp = await fetch(`/user/sites/${SITE_ID}/databases/${id}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    });
+    if (resp.ok) window.location.reload();
+    else { const d = await resp.json().catch(() => ({})); alert(d.error || 'Failed to delete.'); }
+}
+</script>
+<style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+{% endblock %}

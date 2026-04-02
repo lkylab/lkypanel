@@ -1,51 +1,36 @@
-from django.core.exceptions import ValidationError
-from lkypanel.models import Website, Database, FTPAccount, MailAccount
+"""Package limit enforcement utilities."""
+from lkypanel.models import User, Website, Database, FTPAccount, MailAccount
 
-def check_resource_limit(user, resource_type):
+
+def check_limit(user: User, resource: str) -> tuple[bool, str]:
     """
-    Check if a user has exceeded their package limits for a given resource.
-    Raises ValidationError if limit is reached.
+    Check if a user is within their package limits for a given resource.
+    Returns (allowed: bool, message: str).
+    Admins and users without a package are always allowed.
     """
-    if user.role == 'admin':
-        return True  # Admins have no limits
+    if user.role == 'admin' or user.package is None:
+        return True, ''
 
-    package = user.package
-    if not package:
-        return True  # No package Assigned = No limits (or default to something?)
-        # return False # Or strict: No package = No resources. 
-        # Let's assume for now if no package is assigned, they are not limited 
-        # (usually only admins don't have packages).
+    pkg = user.package
 
-    if resource_type == 'websites':
+    if resource == 'website':
         count = Website.objects.filter(owner=user).count()
-        if count >= package.websites_limit:
-            raise ValidationError(f"Website limit reached ({package.websites_limit}). Please upgrade your package.")
+        if count >= pkg.websites_limit:
+            return False, f'Website limit reached ({pkg.websites_limit}). Upgrade your package.'
 
-    elif resource_type == 'databases':
-        # Databases are linked to websites, which are linked to owners
+    elif resource == 'database':
         count = Database.objects.filter(website__owner=user).count()
-        if count >= package.databases_limit:
-            raise ValidationError(f"Database limit reached ({package.databases_limit}). Please upgrade your package.")
+        if count >= pkg.databases_limit:
+            return False, f'Database limit reached ({pkg.databases_limit}). Upgrade your package.'
 
-    elif resource_type == 'ftp_accounts':
+    elif resource == 'ftp':
         count = FTPAccount.objects.filter(website__owner=user).count()
-        if count >= package.ftp_limit:
-            raise ValidationError(f"FTP account limit reached ({package.ftp_limit}). Please upgrade your package.")
+        if count >= pkg.ftp_limit:
+            return False, f'FTP account limit reached ({pkg.ftp_limit}). Upgrade your package.'
 
-    elif resource_type == 'email_accounts':
+    elif resource == 'email':
         count = MailAccount.objects.filter(domain__website__owner=user).count()
-        if count >= package.email_limit:
-            raise ValidationError(f"Email account limit reached ({package.email_limit}). Please upgrade your package.")
+        if count >= pkg.email_limit:
+            return False, f'Email account limit reached ({pkg.email_limit}). Upgrade your package.'
 
-    return True
-
-def get_user_usage(user):
-    """Return a dict of current usage vs limits."""
-    package = user.package
-    usage = {
-        'websites': {'current': Website.objects.filter(owner=user).count(), 'limit': package.websites_limit if package else '∞'},
-        'databases': {'current': Database.objects.filter(website__owner=user).count(), 'limit': package.databases_limit if package else '∞'},
-        'ftp_accounts': {'current': FTPAccount.objects.filter(website__owner=user).count(), 'limit': package.ftp_limit if package else '∞'},
-        'email_accounts': {'current': MailAccount.objects.filter(domain__website__owner=user).count(), 'limit': package.email_limit if package else '∞'},
-    }
-    return usage
+    return True, ''

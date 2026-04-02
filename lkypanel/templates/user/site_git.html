@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+
+{% block title %}Git — {{ site.domain }} — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>Git Integration</h1>
+    <p>{{ site.domain }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div style="margin-bottom:2rem;">
+        <a href="/user/dashboard/" class="btn btn-ghost"><i class="ph ph-arrow-left"></i> Back</a>
+    </div>
+
+    {% if repo %}
+    <!-- Linked repo view -->
+    <div class="card" style="max-width:640px; margin-bottom:1.5rem;">
+        <div style="display:flex; align-items:center; gap:1rem; margin-bottom:1.5rem;">
+            <i class="ph-fill ph-git-branch" style="font-size:2rem; color:var(--accent-primary);"></i>
+            <div>
+                <h2 style="margin:0;">Linked Repository</h2>
+                <p style="margin:0; color:var(--text-dim); font-size:0.85rem;">{{ repo.repo_url }}</p>
+            </div>
+        </div>
+        <div style="display:grid; gap:0.75rem; margin-bottom:2rem;">
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--glass); border-radius:10px;">
+                <span style="color:var(--text-dim);">Branch</span>
+                <code>{{ repo.branch }}</code>
+            </div>
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--glass); border-radius:10px;">
+                <span style="color:var(--text-dim);">Auth Type</span>
+                <span>{{ repo.auth_type|capfirst }}</span>
+            </div>
+            {% if repo.git_user %}
+            <div style="display:flex; justify-content:space-between; padding:0.75rem; background:var(--glass); border-radius:10px;">
+                <span style="color:var(--text-dim);">Git User</span>
+                <span>{{ repo.git_user }} &lt;{{ repo.git_email }}&gt;</span>
+            </div>
+            {% endif %}
+        </div>
+        <div id="gitOutput" style="display:none; background:#0f172a; border:1px solid var(--border); border-radius:10px; padding:1rem; margin-bottom:1.5rem; font-family:monospace; font-size:0.8rem; color:#94a3b8; white-space:pre-wrap; max-height:200px; overflow-y:auto;"></div>
+        <div style="display:flex; gap:1rem;">
+            <button class="btn btn-primary" id="pullBtn" onclick="gitPull()">
+                <i class="ph ph-arrow-circle-down"></i> Pull
+            </button>
+            <button class="btn btn-ghost" id="pushBtn" onclick="gitPush()">
+                <i class="ph ph-arrow-circle-up"></i> Push
+            </button>
+        </div>
+    </div>
+    {% else %}
+    <!-- Link repo form -->
+    <div class="card" style="max-width:560px;">
+        <h2 style="margin-bottom:1.5rem;"><i class="ph ph-git-branch" style="color:var(--accent-primary);"></i> Link Repository</h2>
+        <div id="linkError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem; margin-bottom:1rem; color:#ef4444; font-size:0.9rem;"></div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Repository URL</label>
+            <input type="text" id="repo_url" placeholder="https://github.com/user/repo.git"
+                   style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Branch</label>
+                <input type="text" id="branch" value="main" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Auth Type</label>
+                <select id="auth_type" onchange="toggleAuthFields()" style="width:100%; padding:0.85rem; background:#1e293b; border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+                    <option value="none">None (Public)</option>
+                    <option value="token">Access Token</option>
+                    <option value="ssh">SSH Key</option>
+                </select>
+            </div>
+        </div>
+        <div id="credentials_field" style="display:none; margin-bottom:1rem;">
+            <label id="creds_label" style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Credentials</label>
+            <textarea id="credentials" rows="4" placeholder="Paste token or SSH private key..."
+                      style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none; font-family:monospace; font-size:0.8rem; resize:vertical;"></textarea>
+        </div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Git User (optional)</label>
+                <input type="text" id="git_user" placeholder="Your Name" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Git Email (optional)</label>
+                <input type="email" id="git_email" placeholder="you@example.com" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+            </div>
+        </div>
+        <button class="btn btn-primary" id="linkBtn" onclick="linkRepo()">
+            <i class="ph ph-git-branch"></i> Clone & Link
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SITE_ID = {{ site.id }};
+
+function toggleAuthFields() {
+    const type = document.getElementById('auth_type').value;
+    const field = document.getElementById('credentials_field');
+    const label = document.getElementById('creds_label');
+    if (type === 'none') { field.style.display = 'none'; return; }
+    field.style.display = 'block';
+    label.textContent = type === 'token' ? 'Access Token' : 'SSH Private Key';
+    document.getElementById('credentials').placeholder = type === 'token' ? 'ghp_xxxxxxxxxxxx' : '-----BEGIN OPENSSH PRIVATE KEY-----\n...';
+}
+
+async function linkRepo() {
+    const repo_url = document.getElementById('repo_url').value.trim();
+    const branch = document.getElementById('branch').value.trim() || 'main';
+    const auth_type = document.getElementById('auth_type').value;
+    const credentials = document.getElementById('credentials').value.trim() || null;
+    const git_user = document.getElementById('git_user').value.trim();
+    const git_email = document.getElementById('git_email').value.trim();
+    const errBox = document.getElementById('linkError');
+    const btn = document.getElementById('linkBtn');
+    if (!repo_url) { errBox.textContent = 'Repository URL is required.'; errBox.style.display = 'block'; return; }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Cloning...';
+    const resp = await fetch(`/user/sites/${SITE_ID}/git/link/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repo_url, branch, auth_type, credentials, git_user, git_email })
+    });
+    if (resp.ok) { window.location.reload(); }
+    else {
+        const d = await resp.json().catch(() => ({}));
+        errBox.textContent = d.error || 'Failed to clone repository.';
+        errBox.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph ph-git-branch"></i> Clone & Link';
+    }
+}
+
+async function gitPull() {
+    const btn = document.getElementById('pullBtn');
+    const out = document.getElementById('gitOutput');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Pulling...';
+    const resp = await fetch(`/user/sites/${SITE_ID}/git/pull/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    });
+    const d = await resp.json().catch(() => ({}));
+    out.style.display = 'block';
+    out.textContent = resp.ok ? (d.output || 'Already up to date.') : (d.error || 'Pull failed.');
+    out.style.color = resp.ok ? '#22c55e' : '#ef4444';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-arrow-circle-down"></i> Pull';
+}
+
+async function gitPush() {
+    const btn = document.getElementById('pushBtn');
+    const out = document.getElementById('gitOutput');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i> Pushing...';
+    const resp = await fetch(`/user/sites/${SITE_ID}/git/push/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    });
+    const d = await resp.json().catch(() => ({}));
+    out.style.display = 'block';
+    out.textContent = resp.ok ? (d.output || 'Push complete.') : (d.error || 'Push failed.');
+    out.style.color = resp.ok ? '#22c55e' : '#ef4444';
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ph ph-arrow-circle-up"></i> Push';
+}
+</script>
+<style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+{% endblock %}

@@ -1,0 +1,169 @@
+{% extends 'base.html' %}
+
+{% block title %}FTP Accounts — {{ site.domain }} — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>FTP Accounts</h1>
+    <p>{{ site.domain }}</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+        <a href="/user/dashboard/" class="btn btn-ghost"><i class="ph ph-arrow-left"></i> Back</a>
+        {% if ftp_installed %}
+        <button class="btn btn-primary" onclick="openCreateModal()">
+            <i class="ph ph-plus"></i> Add FTP Account
+        </button>
+        {% endif %}
+    </div>
+
+    {% if not ftp_installed %}
+    <div style="padding:1rem 1.25rem;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:12px;color:#fb923c;margin-bottom:1.5rem;">
+        <i class="ph-bold ph-warning"></i> Pure-FTPd is not installed. Contact your administrator.
+    </div>
+    {% endif %}
+
+    <div class="section-card">
+        <div class="table-container" style="margin-top:0; border-radius:20px; border:none;">
+            <table>
+                <thead>
+                    <tr><th>Username</th><th>Home Directory</th><th>Quota</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody id="ftp-list">
+                    {% for acc in ftp_accounts %}
+                    <tr>
+                        <td style="font-weight:600; font-family:monospace;">{{ acc.username }}</td>
+                        <td style="color:var(--text-dim); font-size:0.8rem; font-family:monospace;">{{ acc.home_dir }}</td>
+                        <td>{{ acc.quota_mb }} MB</td>
+                        <td><span class="status-pill status-online">{{ acc.status }}</span></td>
+                        <td>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="btn btn-ghost btn-sm" onclick="openPasswdModal({{ acc.id }}, '{{ acc.username }}')" title="Change Password">
+                                    <i class="ph ph-key"></i>
+                                </button>
+                                <button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="deleteAccount({{ acc.id }}, '{{ acc.username }}')" title="Delete">
+                                    <i class="ph ph-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align:center; padding:3rem; color:var(--text-dim);">
+                            <i class="ph ph-folder-open" style="font-size:2.5rem; display:block; margin-bottom:0.75rem; opacity:0.5;"></i>
+                            No FTP accounts yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Create Modal -->
+<div id="createModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:420px; border-color:var(--accent-primary); position:relative;">
+        <button onclick="closeCreateModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.25rem;"><i class="ph ph-x"></i></button>
+        <h2 style="margin-bottom:1.5rem;">Add FTP Account</h2>
+        <div id="createError" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:0.75rem; margin-bottom:1rem; color:#ef4444; font-size:0.9rem;"></div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Username</label>
+            <input type="text" id="ftp_username" placeholder="ftpuser" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="margin-bottom:1rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Password</label>
+            <input type="password" id="ftp_password" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Quota (MB)</label>
+            <input type="number" id="ftp_quota" value="1024" min="1" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="closeCreateModal()">Cancel</button>
+            <button class="btn btn-primary" id="createBtn" onclick="submitCreate()"><i class="ph ph-plus"></i> Create</button>
+        </div>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div id="passwdModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; backdrop-filter:blur(6px);">
+    <div class="card animate-fade" style="width:380px; border-color:var(--accent-primary); position:relative;">
+        <button onclick="closePasswdModal()" style="position:absolute; top:1rem; right:1rem; background:none; border:none; color:var(--text-dim); cursor:pointer; font-size:1.25rem;"><i class="ph ph-x"></i></button>
+        <h2 style="margin-bottom:1.5rem;">Change Password</h2>
+        <p id="passwdUser" style="color:var(--text-dim); margin-bottom:1rem; font-size:0.9rem;"></p>
+        <input type="hidden" id="passwd_account_id">
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">New Password</label>
+            <input type="password" id="new_ftp_password" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:1rem;">
+            <button class="btn btn-ghost" onclick="closePasswdModal()">Cancel</button>
+            <button class="btn btn-primary" onclick="submitPasswd()"><i class="ph ph-key"></i> Update</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SITE_ID = {{ site.id }};
+function openCreateModal() { document.getElementById('createModal').style.display = 'flex'; }
+function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
+function openPasswdModal(id, username) {
+    document.getElementById('passwd_account_id').value = id;
+    document.getElementById('passwdUser').textContent = `Account: ${username}`;
+    document.getElementById('passwdModal').style.display = 'flex';
+}
+function closePasswdModal() { document.getElementById('passwdModal').style.display = 'none'; }
+
+async function submitCreate() {
+    const username = document.getElementById('ftp_username').value.trim();
+    const password = document.getElementById('ftp_password').value;
+    const quota_mb = parseInt(document.getElementById('ftp_quota').value);
+    const errBox = document.getElementById('createError');
+    const btn = document.getElementById('createBtn');
+    if (!username || !password) { errBox.textContent = 'Username and password are required.'; errBox.style.display = 'block'; return; }
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-spinner-gap" style="animation:spin 1s linear infinite;"></i>';
+    const resp = await fetch(`/user/sites/${SITE_ID}/ftp/create/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password, quota_mb })
+    });
+    if (resp.ok) { closeCreateModal(); window.location.reload(); }
+    else {
+        const d = await resp.json().catch(() => ({}));
+        errBox.textContent = d.error || 'Failed to create account.';
+        errBox.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ph ph-plus"></i> Create';
+    }
+}
+
+async function submitPasswd() {
+    const id = document.getElementById('passwd_account_id').value;
+    const password = document.getElementById('new_ftp_password').value;
+    if (!password) return;
+    const resp = await fetch(`/user/sites/${SITE_ID}/ftp/${id}/passwd/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+    });
+    if (resp.ok) { closePasswdModal(); alert('Password updated.'); }
+    else alert('Failed to update password.');
+}
+
+async function deleteAccount(id, username) {
+    if (!confirm(`Delete FTP account "${username}"?`)) return;
+    const resp = await fetch(`/user/sites/${SITE_ID}/ftp/${id}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' }
+    });
+    if (resp.ok) window.location.reload();
+    else alert('Failed to delete account.');
+}
+</script>
+<style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
+{% endblock %}

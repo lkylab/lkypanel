@@ -1,6 +1,8 @@
 """Git repository management — user views."""
 import json
+import subprocess
 from django.http import JsonResponse
+from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_protect
 
@@ -13,9 +15,14 @@ from lkypanel.services.git import clone_repo, pull_repo, push_repo
 @owns_website
 @require_http_methods(['GET'])
 def list_repos(request, site_id):
-    repos = list(request.panel_website.git_repos.values(
-        'id', 'repo_url', 'branch', 'auth_type', 'git_user', 'git_email'))
-    return JsonResponse({'repos': repos})
+    site = request.panel_website
+    repo = site.git_repos.first()
+    return render(request, 'user/site_git.html', {
+        'site': site,
+        'repo': repo,
+        'active_page': 'websites',
+        'panel_user': request.panel_user,
+    })
 
 
 @login_required
@@ -27,7 +34,7 @@ def link_repo(request, site_id):
     repo_url = data.get('repo_url', '').strip()
     branch = data.get('branch', 'main').strip()
     auth_type = data.get('auth_type', 'none')
-    credentials = data.get('credentials')  # plaintext, encrypted on save
+    credentials = data.get('credentials')
     git_user = data.get('git_user', '')
     git_email = data.get('git_email', '')
 
