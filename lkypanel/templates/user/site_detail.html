@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ site.domain }} — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>{{ site.domain }}</h1>
+    <p>Site overview and quick access.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+    <div style="margin-bottom:1.5rem;">
+        <a href="/user/dashboard/" class="btn btn-ghost btn-sm"><i class="ph ph-arrow-left"></i> Back to Dashboard</a>
+    </div>
+
+    <!-- Stats -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:1.25rem; margin-bottom:2rem;">
+        <div class="stat-card">
+            <div class="stat-icon blue"><i class="ph-bold ph-globe"></i></div>
+            <div>
+                <div class="stat-value" style="font-size:0.95rem; word-break:break-all;">{{ site.domain }}</div>
+                <div class="stat-label">Domain</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon orange"><i class="ph-bold ph-code"></i></div>
+            <div>
+                <div class="stat-value">PHP {{ site.php_version }}</div>
+                <div class="stat-label">PHP Version</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon {% if site.ssl_enabled %}green{% else %}red{% endif %}">
+                <i class="ph-bold ph-shield-{% if site.ssl_enabled %}check{% else %}slash{% endif %}"></i>
+            </div>
+            <div>
+                <div class="stat-value">{% if site.ssl_enabled %}Active{% else %}Inactive{% endif %}</div>
+                <div class="stat-label">SSL</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon purple"><i class="ph-bold ph-clock-countdown"></i></div>
+            <div>
+                <div class="stat-value">{{ cronjob_count }}</div>
+                <div class="stat-label">Cronjobs</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feature Cards -->
+    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1rem;">
+
+        {% if pureftpd_installed %}
+        <a href="/user/sites/{{ site.id }}/ftp/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
+            <i class="ph ph-folder-open" style="font-size:2rem; color:var(--accent-primary);"></i>
+            <div>
+                <div style="font-weight:600;">FTP Accounts</div>
+                <div style="color:var(--text-dim); font-size:0.85rem;">{{ ftp_count }} account{{ ftp_count|pluralize }}</div>
+            </div>
+        </a>
+        {% endif %}
+
+        {% if mariadb_installed %}
+        <a href="/user/sites/{{ site.id }}/databases/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
+            <i class="ph ph-database" style="font-size:2rem; color:var(--accent-primary);"></i>
+            <div>
+                <div style="font-weight:600;">Databases</div>
+                <div style="color:var(--text-dim); font-size:0.85rem;">{{ db_count }} database{{ db_count|pluralize }}</div>
+            </div>
+        </a>
+        {% endif %}
+
+        <a href="/user/sites/{{ site.id }}/git/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
+            <i class="ph ph-git-branch" style="font-size:2rem; color:var(--accent-primary);"></i>
+            <div>
+                <div style="font-weight:600;">Git Sync</div>
+                <div style="color:var(--text-dim); font-size:0.85rem;">{{ git_count }} repo{{ git_count|pluralize }}</div>
+            </div>
+        </a>
+
+        <a href="/user/sites/{{ site.id }}/ssl/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
+            <i class="ph ph-shield-star" style="font-size:2rem; color:{% if site.ssl_enabled %}#22c55e{% else %}var(--accent-primary){% endif %};"></i>
+            <div>
+                <div style="font-weight:600;">SSL Certificate</div>
+                <div style="color:var(--text-dim); font-size:0.85rem;">{% if site.ssl_enabled %}Active{% else %}Not configured{% endif %}</div>
+            </div>
+        </a>
+
+        <a href="/user/sites/{{ site.id }}/cronjobs/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
+            <i class="ph ph-clock-countdown" style="font-size:2rem; color:var(--accent-primary);"></i>
+            <div>
+                <div style="font-weight:600;">Cronjobs</div>
+                <div style="color:var(--text-dim); font-size:0.85rem;">{{ cronjob_count }} job{{ cronjob_count|pluralize }}</div>
+            </div>
+        </a>
+
+    </div>
+
+    <!-- Site Info -->
+    <div class="glass-card" style="padding:1.5rem; margin-top:1.5rem;">
+        <h3 style="margin-bottom:1.25rem; font-size:1rem;">Site Information</h3>
+        <div style="display:flex; flex-direction:column; gap:0.75rem; font-size:0.9rem;">
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:var(--text-dim);">Document Root</span>
+                <code style="font-size:0.8rem; color:var(--accent-primary);">{{ site.doc_root }}</code>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:var(--text-dim);">Created</span>
+                <span>{{ site.created_at|date:"M d, Y H:i" }}</span>
+            </div>
+            <div style="display:flex; justify-content:space-between;">
+                <span style="color:var(--text-dim);">Framework</span>
+                <span>{{ site.get_framework_display }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

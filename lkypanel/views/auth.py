@@ -12,7 +12,7 @@ from lkypanel.utils.ip import get_client_ip
 
 def login_index(request):
     """Route root / based on port: 2087 -> admin/unified, 2083 -> user."""
-    port = request.get_port()
+    port = int(request.META.get('SERVER_PORT', 2083))
     if port == 2087:
         return admin_login(request)
     return user_login(request)

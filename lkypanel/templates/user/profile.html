@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile — LKYPanel{% endblock %}
+
+{% block header %}
+    <h1>My Profile</h1>
+    <p>Manage your account details.</p>
+{% endblock %}
+
+{% block content %}
+<div class="animate-fade" style="max-width:520px;">
+
+    {% if error %}
+    <div style="padding:1rem 1.25rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:12px; color:#ef4444; margin-bottom:1.5rem;">
+        <i class="ph ph-warning-circle"></i> {{ error }}
+    </div>
+    {% endif %}
+    {% if success %}
+    <div style="padding:1rem 1.25rem; background:rgba(34,197,94,0.1); border:1px solid rgba(34,197,94,0.2); border-radius:12px; color:#22c55e; margin-bottom:1.5rem;">
+        <i class="ph ph-check-circle"></i> {{ success }}
+    </div>
+    {% endif %}
+
+    <form method="post" action="/user/profile/">
+        {% csrf_token %}
+        <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem;">
+            <h3 style="margin-bottom:1.25rem; font-size:1rem;">Account Info</h3>
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Username</label>
+                <input type="text" value="{{ panel_user.username }}" disabled style="width:100%; padding:0.85rem; background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:10px; color:#94a3b8; outline:none;">
+            </div>
+            <div style="margin-bottom:0;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Email</label>
+                <input type="email" name="email" value="{{ panel_user.email }}" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+            </div>
+        </div>
+
+        <div class="glass-card" style="padding:1.5rem; margin-bottom:1.5rem;">
+            <h3 style="margin-bottom:1.25rem; font-size:1rem;">Change Password</h3>
+            <div style="margin-bottom:1rem;">
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">New Password</label>
+                <input type="password" name="new_password" placeholder="Leave blank to keep current" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+            </div>
+            <div>
+                <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Confirm Password</label>
+                <input type="password" name="confirm_password" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;">
+            <i class="ph ph-floppy-disk"></i> Save Changes
+        </button>
+    </form>
+
+    <div class="glass-card" style="padding:1.5rem; margin-top:1.5rem;">
+        <h3 style="margin-bottom:1rem; font-size:1rem;">Two-Factor Authentication</h3>
+        <p style="color:var(--text-dim); font-size:0.9rem; margin-bottom:1rem;">
+            Status: {% if panel_user.is_2fa_enabled %}<span style="color:#22c55e;">Enabled</span>{% else %}<span style="color:#f59e0b;">Disabled</span>{% endif %}
+        </p>
+        <a href="/user/security/2fa/" class="btn btn-ghost">
+            <i class="ph ph-fingerprint"></i> Manage 2FA
+        </a>
+    </div>
+</div>
+{% endblock %}

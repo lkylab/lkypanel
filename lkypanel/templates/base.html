@@ -210,13 +210,13 @@
                 <i class="ph ph-house"></i>
                 <span>Dashboard</span>
             </a>
+            <a href="/user/profile/" class="nav-link {% if active_page == 'profile' %}active{% endif %}">
+                <i class="ph ph-user"></i>
+                <span>My Profile</span>
+            </a>
             <a href="/user/security/2fa/" class="nav-link {% if active_page == 'security' %}active{% endif %}">
                 <i class="ph ph-fingerprint"></i>
                 <span>2FA Security</span>
-            </a>
-            <a href="/user/profile/" class="nav-link">
-                <i class="ph ph-user"></i>
-                <span>My Profile</span>
             </a>
             <details class="nav-dropdown" {% if active_page == 'cronjobs' %}open{% endif %}>
                 <summary class="nav-link" style="cursor: pointer;">

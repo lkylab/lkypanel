@@ -24,7 +24,9 @@
                     <tbody>
                         {% for site in websites %}
                         <tr>
-                            <td style="font-weight: 600;">{{ site.domain }}</td>
+                            <td style="font-weight: 600;">
+                                <a href="/user/sites/{{ site.id }}/" style="color:white; text-decoration:none;">{{ site.domain }}</a>
+                            </td>
                             <td><span class="status-pill btn-ghost">{{ site.php_version }}</span></td>
                             <td>
                                 {% if site.ssl_enabled %}
