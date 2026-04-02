@@ -80,6 +80,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'lkypanel.context_processors.plugin_states',
                 'lkypanel.context_processors.notification_stats',
+                'lkypanel.context_processors.panel_context',
             ],
         },
     },
