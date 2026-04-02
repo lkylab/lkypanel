@@ -127,14 +127,11 @@
                     <i class="ph ph-caret-down dropdown-caret"></i>
                 </summary>
                 <div class="dropdown-content">
-                    <a href="/admin/ftp/" class="dropdown-item {% if active_page == 'ftp' and not active_subpage %}active{% endif %}">
+                    <a href="/admin/ftp/" class="dropdown-item {% if active_page == 'ftp' %}active{% endif %}">
                         <i class="ph ph-list-dashes"></i> List Accounts
                     </a>
-                    <a href="/admin/ftp/create/" class="dropdown-item {% if active_page == 'ftp' and active_subpage == 'create' %}active{% endif %}">
+                    <a href="/admin/ftp/?action=create" class="dropdown-item">
                         <i class="ph ph-plus-circle"></i> Create Account
-                    </a>
-                    <a href="/admin/ftp/delete/" class="dropdown-item {% if active_page == 'ftp' and active_subpage == 'delete' %}active{% endif %}">
-                        <i class="ph ph-trash"></i> Delete Account
                     </a>
                 </div>
             </details>
@@ -201,6 +198,11 @@
             <a href="/admin/settings/" class="nav-link {% if active_page == 'settings' %}active{% endif %}">
                 <i class="ph ph-gear"></i>
                 <span>Settings</span>
+            </a>
+
+            <a href="/admin/logs/" class="nav-link {% if active_page == 'logs' %}active{% endif %}">
+                <i class="ph ph-scroll"></i>
+                <span>Logs</span>
             </a>
             {% endif %}
 

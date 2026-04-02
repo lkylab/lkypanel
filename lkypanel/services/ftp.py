@@ -43,14 +43,14 @@ def _rebuild_db() -> None:
         raise RuntimeError(f'pure-pw mkdb failed: {result.stderr[:512]}')
 
 
-def create_ftp_account(website, username: str, password: str, quota_mb: int = 1024):
+def create_ftp_account(website, username: str, password: str, quota_mb: int = 1024, home_dir: str = None):
     import pwd
     import re
     from lkypanel.models import FTPAccount
     if not is_pureftpd_installed():
         raise RuntimeError('Pure-FTPd is not installed. Install it from the admin panel first.')
 
-    home_dir = website.doc_root
+    home_dir = home_dir or website.doc_root
 
     # Derive the per-domain Linux user (same logic as ols.create_docroot)
     linux_user = re.sub(r'[^a-z0-9_-]', '_', website.domain.lower())[:32]

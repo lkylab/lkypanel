@@ -35,11 +35,12 @@ def admin_create_ftp(request):
     username = data.get('username', '').strip()
     password = data.get('password', '')
     quota_mb = int(data.get('quota_mb', 1024))
+    home_dir = data.get('home_dir', '').strip()
     if not site_id or not username or not password:
         return JsonResponse({'error': 'All fields are required.'}, status=400)
     website = get_object_or_404(Website, pk=site_id)
     try:
-        account = create_ftp_account(website, username, password, quota_mb)
+        account = create_ftp_account(website, username, password, quota_mb, home_dir=home_dir or None)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
     log_action(request.panel_user, 'admin_ftp_create', username, request.META.get('REMOTE_ADDR', '0.0.0.0'))

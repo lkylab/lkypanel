@@ -40,6 +40,7 @@ def create_ftp(request, site_id):
     username = data.get('username', '').strip()
     password = data.get('password', '')
     quota_mb = int(data.get('quota_mb', 1024))
+    home_dir = data.get('home_dir', '').strip()
 
     from lkypanel.utils.limits import check_limit
     allowed, msg = check_limit(request.panel_user, 'ftp')
@@ -47,7 +48,7 @@ def create_ftp(request, site_id):
         return JsonResponse({'error': msg, 'code': 'LIMIT_EXCEEDED', 'details': {}}, status=400)
 
     try:
-        account = create_ftp_account(request.panel_website, username, password, quota_mb)
+        account = create_ftp_account(request.panel_website, username, password, quota_mb, home_dir=home_dir or None)
     except Exception as e:
         return JsonResponse({'error': str(e), 'code': 'FTP_CREATE_FAILED', 'details': {}}, status=400)
 

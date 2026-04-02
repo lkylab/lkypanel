@@ -90,9 +90,13 @@
             <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Password</label>
             <input type="password" id="create_password" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
         </div>
-        <div style="margin-bottom:1.5rem;">
+        <div style="margin-bottom:1rem;">
             <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Quota (MB)</label>
             <input type="number" id="create_quota" value="1024" min="1" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none;">
+        </div>
+        <div style="margin-bottom:1.5rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-dim); font-size:0.9rem;">Home Directory <span style="color:var(--text-dim); font-weight:400;">(optional, defaults to site root)</span></label>
+            <input type="text" id="create_home_dir" placeholder="/home/example.com/public_html" style="width:100%; padding:0.85rem; background:var(--glass); border:1px solid var(--border); border-radius:10px; color:white; outline:none; font-family:monospace; font-size:0.85rem;">
         </div>
         <div style="display:flex; justify-content:flex-end; gap:1rem;">
             <button class="btn btn-ghost" onclick="document.getElementById('createModal').style.display='none'">Cancel</button>
@@ -128,6 +132,7 @@ async function submitCreate() {
     const username = document.getElementById('create_username').value.trim();
     const password = document.getElementById('create_password').value;
     const quota_mb = parseInt(document.getElementById('create_quota').value);
+    const home_dir = document.getElementById('create_home_dir').value.trim();
     const errBox = document.getElementById('createError');
     const btn = document.getElementById('createBtn');
     if (!site_id || !username || !password) {
@@ -140,7 +145,7 @@ async function submitCreate() {
     const resp = await fetch('/admin/ftp/create/', {
         method: 'POST',
         headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ site_id, username, password, quota_mb })
+        body: JSON.stringify({ site_id, username, password, quota_mb, home_dir })
     });
     if (resp.ok) { window.location.reload(); }
     else {
@@ -160,6 +165,11 @@ async function submitDelete() {
     });
     if (resp.ok) window.location.reload();
     else alert('Failed to delete account.');
+}
+
+// Auto-open create modal if ?action=create
+if (new URLSearchParams(window.location.search).get('action') === 'create') {
+    document.getElementById('createModal').style.display = 'flex';
 }
 </script>
 <style>@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }</style>
