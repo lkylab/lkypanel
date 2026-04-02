@@ -50,7 +50,8 @@ def list_packages(request):
         return redirect("admin_list_packages")
 
     # GET: List everything
-    packages = Package.objects.all().order_by("name")
+    from django.db.models import Count
+    packages = Package.objects.annotate(user_count=Count('users')).order_by("name")
     plugins = get_all_plugins()
     active_tab = request.GET.get("tab", "packages") # Default to resources (renamed as Packages in sidebar)
     

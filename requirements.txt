@@ -13,3 +13,4 @@ django-vite
 whitenoise
 pyotp
 qrcode
+Pillow

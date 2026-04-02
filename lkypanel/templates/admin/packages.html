@@ -136,6 +136,7 @@
                         <th>Package Name</th>
                         <th>Disk/BW</th>
                         <th>Limits (Sites/DB/FTP/Mail)</th>
+                        <th>Users</th>
                         <th>Created</th>
                         <th>Actions</th>
                     </tr>
@@ -156,6 +157,11 @@
                                 <span>{{ pkg.email_limit }}</span>
                             </div>
                         </td>
+                        <td style="text-align: center;">
+                            <span class="badge" style="background: var(--glass); color: white; border: 1px solid var(--border);">
+                                {{ pkg.user_count }}
+                            </span>
+                        </td>
                         <td style="font-size: 0.8rem; color: var(--text-dim);">{{ pkg.created_at|date:"M d, Y" }}</td>
                         <td>
                             <form action="{% url 'admin_delete_package' pkg.id %}" method="POST" onsubmit="return confirm('Delete package {{ pkg.name }}?');">
@@ -168,7 +174,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="5" style="text-align: center; padding: 3rem; color: var(--text-dim);">
+                        <td colspan="6" style="text-align: center; padding: 3rem; color: var(--text-dim);">
                             No resource packages created yet.
                         </td>
                     </tr>
