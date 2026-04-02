@@ -14,6 +14,14 @@ def plugin_states(request):
     }
 
 
+def panel_context(request):
+    """Globally inject panel_user and common state into all templates."""
+    return {
+        'panel_user': getattr(request, 'panel_user', None),
+        # Add any other Truly Global variables here
+    }
+
+
 def notification_stats(request):
     """Inject unread notification count for the logged-in user."""
     if not request.user.is_authenticated:

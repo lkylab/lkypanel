@@ -30,12 +30,14 @@ def two_factor_setup(request):
             return render(request, 'security/2fa_setup.html', {
                 'qr_code': qr_code,
                 'secret': temp_secret,
-                'active_page': 'security'
+                'active_page': 'security',
+                'active_subpage': '2fa'
             })
         
         return render(request, 'security/2fa_setup.html', {
             'is_enabled': True,
-            'active_page': 'security'
+            'active_page': 'security',
+            'active_subpage': '2fa'
         })
 
     # POST: Enable or Disable
