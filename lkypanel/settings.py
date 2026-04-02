@@ -142,12 +142,22 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 USE_X_FORWARDED_HOST = True
 USE_X_FORWARDED_PORT = True
 
+# ── CSRF Trusted Origins ──────────────────────────────────────────────────────
+# Automatically include the server's own IP (detected by installer)
+_server_ip = os.environ.get('SERVER_IP')
 CSRF_TRUSTED_ORIGINS = [
-    'https://65.0.86.106:2087',
-    'https://13.235.27.87:2087',
     'https://localhost:2087',
     'https://127.0.0.1:2087',
 ]
+if _server_ip:
+    CSRF_TRUSTED_ORIGINS.append(f'https://{_server_ip}:2087')
+
+# Allow additional origins via .env (comma-separated)
+_extra_origins = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+for _origin in _extra_origins:
+    _origin = _origin.strip()
+    if _origin:
+        CSRF_TRUSTED_ORIGINS.append(_origin)
 
 # ---------------------------------------------------------------------------
 # Internationalisation

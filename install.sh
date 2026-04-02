@@ -265,9 +265,13 @@ else
         "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())" \
         2>/dev/null || openssl rand -base64 32 | tr -d '\n')
 
+    # Detect public IP for dynamic CSRF trust
+    SERVER_IP=$(curl -4 -fsSL https://ifconfig.me 2>/dev/null || hostname -I | awk '{print $1}')
+
     cat > "$ENV_FILE" <<EOF
 SECRET_KEY=${SECRET_KEY}
 FERNET_KEY=${FERNET_KEY}
+SERVER_IP=${SERVER_IP}
 EOF
     chmod 600 "$ENV_FILE"
     chown "$PANEL_USER":"$PANEL_USER" "$ENV_FILE"
