@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_vite',
     'lkypanel.apps.LkypanelConfig',
+    'lkypanel.filemanager',
 ]
 
 MIDDLEWARE = [

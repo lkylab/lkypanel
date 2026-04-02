@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}File Manager — {{ site.domain }}{% endblock %}
+
+{% block head %}
+<style>
+:root { --fm-sidebar-w: 220px; }
+.fm-wrap { display:flex; gap:0; height:calc(100vh - 140px); min-height:500px; border-radius:16px; overflow:hidden; border:1px solid var(--border); background:var(--glass); }
+.fm-sidebar { width:var(--fm-sidebar-w); border-right:1px solid var(--border); display:flex; flex-direction:column; padding:1rem 0; flex-shrink:0; }
+.fm-sidebar-title { font-size:.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.08em; padding:.25rem 1rem .5rem; }
+.fm-tree { flex:1; overflow-y:auto; padding:0 .5rem; }
+.fm-tree-item { display:flex; align-items:center; gap:.5rem; padding:.35rem .6rem; border-radius:8px; cursor:pointer; font-size:.85rem; color:rgba(255,255,255,.75); transition:background .15s; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.fm-tree-item:hover,.fm-tree-item.active { background:rgba(255,255,255,.07); color:#fff; }
+.fm-tree-item i { font-size:1rem; flex-shrink:0; }
+.fm-disk { padding:.75rem 1rem; border-top:1px solid var(--border); font-size:.75rem; color:var(--text-dim); }
+.fm-disk-bar { height:4px; background:rgba(255,255,255,.1); border-radius:4px; margin-top:.4rem; overflow:hidden; }
+.fm-disk-fill { height:100%; background:var(--accent-primary); border-radius:4px; transition:width .4s; }
+.fm-main { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+.fm-toolbar { display:flex; align-items:center; gap:.5rem; padding:.75rem 1rem; border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.fm-btn { display:inline-flex; align-items:center; gap:.35rem; padding:.4rem .75rem; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.05); color:rgba(255,255,255,.85); font-size:.8rem; cursor:pointer; transition:background .15s; white-space:nowrap; }
+.fm-btn:hover { background:rgba(255,255,255,.12); }
+.fm-btn.primary { background:var(--accent-primary); border-color:var(--accent-primary); color:#fff; }
+.fm-btn.primary:hover { opacity:.85; }
+.fm-btn.danger { background:rgba(239,68,68,.15); border-color:rgba(239,68,68,.3); color:#ef4444; }
+.fm-btn.danger:hover { background:rgba(239,68,68,.25); }
+.fm-btn i { font-size:1rem; }
+.fm-search { flex:1; min-width:140px; max-width:260px; position:relative; }
+.fm-search input { width:100%; padding:.4rem .75rem .4rem 2rem; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.05); color:#fff; font-size:.82rem; outline:none; }
+.fm-search i { position:absolute; left:.6rem; top:50%; transform:translateY(-50%); color:var(--text-dim); font-size:.9rem; pointer-events:none; }
+.fm-sep { width:1px; height:24px; background:var(--border); margin:0 .25rem; }
+.fm-breadcrumb { display:flex; align-items:center; gap:.25rem; padding:.5rem 1rem; font-size:.82rem; color:var(--text-dim); border-bottom:1px solid var(--border); flex-wrap:wrap; }
+.fm-breadcrumb span { cursor:pointer; color:rgba(255,255,255,.6); transition:color .15s; }
+.fm-breadcrumb span:hover { color:#fff; }
+.fm-breadcrumb span.current { color:rgba(255,255,255,.9); cursor:default; }
+.fm-breadcrumb i { font-size:.75rem; }
+.fm-bulk { display:none; align-items:center; gap:.5rem; padding:.5rem 1rem; background:rgba(99,102,241,.1); border-bottom:1px solid rgba(99,102,241,.2); font-size:.82rem; }
+.fm-bulk.show { display:flex; }
+.fm-content { flex:1; overflow-y:auto; padding:1rem; }
+/* Grid */
+.fm-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(110px,1fr)); gap:.75rem; }
+.fm-card { display:flex; flex-direction:column; align-items:center; gap:.4rem; padding:.75rem .5rem; border-radius:10px; border:1px solid transparent; cursor:pointer; transition:background .15s,border-color .15s; position:relative; user-select:none; }
+.fm-card:hover { background:rgba(255,255,255,.06); border-color:var(--border); }
+.fm-card.selected { background:rgba(99,102,241,.12); border-color:rgba(99,102,241,.4); }
+.fm-card-icon { font-size:2.2rem; line-height:1; }
+.fm-card-name { font-size:.75rem; text-align:center; word-break:break-all; color:rgba(255,255,255,.85); max-width:100%; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+.fm-card-check { position:absolute; top:.35rem; left:.35rem; width:16px; height:16px; border-radius:4px; border:1.5px solid rgba(255,255,255,.3); background:rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; font-size:.65rem; }
+.fm-card.selected .fm-card-check { background:var(--accent-primary); border-color:var(--accent-primary); color:#fff; }
+/* List */
+.fm-list { width:100%; border-collapse:collapse; font-size:.83rem; }
+.fm-list th { text-align:left; padding:.5rem .75rem; color:var(--text-dim); font-weight:500; border-bottom:1px solid var(--border); cursor:pointer; white-space:nowrap; }
+.fm-list th:hover { color:#fff; }
+.fm-list td { padding:.45rem .75rem; border-bottom:1px solid rgba(255,255,255,.04); color:rgba(255,255,255,.85); white-space:nowrap; }
+.fm-list tr:hover td { background:rgba(255,255,255,.04); }
+.fm-list tr.selected td { background:rgba(99,102,241,.1); }
+.fm-list .fm-name-cell { display:flex; align-items:center; gap:.5rem; cursor:pointer; max-width:300px; overflow:hidden; text-overflow:ellipsis; }
+.fm-list .fm-name-cell i { font-size:1.1rem; flex-shrink:0; }
+.fm-statusbar { padding:.4rem 1rem; border-top:1px solid var(--border); font-size:.75rem; color:var(--text-dim); display:flex; gap:1.5rem; }
+/* Context menu */
+.fm-ctx { position:fixed; z-index:9999; background:#1e1e2e; border:1px solid var(--border); border-radius:10px; padding:.35rem; min-width:170px; box-shadow:0 8px 32px rgba(0,0,0,.5); }
+.fm-ctx-item { display:flex; align-items:center; gap:.6rem; padding:.45rem .75rem; border-radius:7px; cursor:pointer; font-size:.83rem; color:rgba(255,255,255,.8); transition:background .12s; }
+.fm-ctx-item:hover { background:rgba(255,255,255,.08); color:#fff; }
+.fm-ctx-item.danger { color:#ef4444; }
+.fm-ctx-item.danger:hover { background:rgba(239,68,68,.12); }
+.fm-ctx-sep { height:1px; background:var(--border); margin:.25rem 0; }
+.fm-ctx-item i { font-size:1rem; }
+/* Modal */
+.fm-overlay { position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:9000; display:none; align-items:center; justify-content:center; }
+.fm-overlay.show { display:flex; }
+.fm-modal { background:#1a1a2e; border:1px solid var(--border); border-radius:16px; padding:1.5rem; min-width:340px; max-width:520px; width:90%; max-height:90vh; overflow-y:auto; }
+.fm-modal h3 { margin:0 0 1rem; font-size:1rem; font-weight:600; }
+.fm-modal label { display:block; font-size:.8rem; color:var(--text-dim); margin-bottom:.35rem; }
+.fm-modal input[type=text],.fm-modal select,.fm-modal textarea { width:100%; padding:.5rem .75rem; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.05); color:#fff; font-size:.85rem; outline:none; box-sizing:border-box; }
+.fm-modal textarea { min-height:300px; font-family:monospace; font-size:.82rem; resize:vertical; }
+.fm-modal .fm-modal-footer { display:flex; gap:.5rem; justify-content:flex-end; margin-top:1.25rem; }
+/* Upload */
+.fm-drop-zone { border:2px dashed var(--border); border-radius:12px; padding:2rem; text-align:center; color:var(--text-dim); font-size:.85rem; transition:border-color .2s,background .2s; cursor:pointer; }
+.fm-drop-zone.drag-over { border-color:var(--accent-primary); background:rgba(99,102,241,.08); }
+.fm-upload-list { margin-top:.75rem; display:flex; flex-direction:column; gap:.4rem; max-height:200px; overflow-y:auto; }
+.fm-upload-item { display:flex; align-items:center; gap:.5rem; font-size:.8rem; }
+.fm-upload-bar { flex:1; height:4px; background:rgba(255,255,255,.1); border-radius:4px; overflow:hidden; }
+.fm-upload-fill { height:100%; background:var(--accent-primary); border-radius:4px; transition:width .2s; }
+/* Perm grid */
+.perm-grid { display:grid; grid-template-columns:auto repeat(3,1fr); gap:.4rem .75rem; align-items:center; font-size:.82rem; margin:.75rem 0; }
+.perm-grid .ph { color:var(--text-dim); text-align:center; font-size:.75rem; }
+/* Toast */
+.fm-toast-wrap { position:fixed; bottom:1.5rem; right:1.5rem; z-index:99999; display:flex; flex-direction:column; gap:.5rem; }
+.fm-toast { padding:.6rem 1rem; border-radius:10px; font-size:.82rem; color:#fff; animation:slideIn .2s ease; max-width:320px; }
+.fm-toast.success { background:rgba(34,197,94,.9); }
+.fm-toast.error { background:rgba(239,68,68,.9); }
+.fm-toast.info { background:rgba(99,102,241,.9); }
+@keyframes slideIn { from{transform:translateX(60px);opacity:0} to{transform:translateX(0);opacity:1} }
+/* Editor */
+#fm-editor-wrap { width:100%; height:400px; border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+#fm-editor-wrap .cm-editor { height:100%; font-size:.85rem; }
+.fm-empty { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.75rem; padding:3rem; color:var(--text-dim); }
+.fm-empty i { font-size:3rem; opacity:.3; }
+</style>
+{% endblock %}
+
+{% block header %}File Manager — <span style="color:var(--accent-primary)">{{ site.domain }}</span>{% endblock %}
+
+{% block content %}
+<div class="fm-wrap">
+  <!-- Sidebar -->
+  <div class="fm-sidebar">
+    <div class="fm-sidebar-title">Location</div>
+    <div class="fm-tree" id="fm-tree"></div>
+    <div class="fm-disk" id="fm-disk">
+      <div>Storage</div>
+      <div class="fm-disk-bar"><div class="fm-disk-fill" id="fm-disk-fill" style="width:0%"></div></div>
+      <div id="fm-disk-label" style="margin-top:.3rem">—</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="fm-main">
+    <div class="fm-toolbar">
+      <button class="fm-btn primary" onclick="FM.showNewFile()"><i class="ph ph-file-plus"></i>New File</button>
+      <button class="fm-btn" onclick="FM.showNewFolder()"><i class="ph ph-folder-plus"></i>New Folder</button>
+      <button class="fm-btn" onclick="FM.showUpload()"><i class="ph ph-upload-simple"></i>Upload</button>
+      <div class="fm-sep"></div>
+      <button class="fm-btn" id="btn-view-grid" onclick="FM.setView('grid')"><i class="ph ph-squares-four"></i></button>
+      <button class="fm-btn" id="btn-view-list" onclick="FM.setView('list')"><i class="ph ph-list-dashes"></i></button>
+      <div class="fm-sep"></div>
+      <select class="fm-btn" style="padding:.4rem .5rem" onchange="FM.setSort(this.value)">
+        <option value="name">Name</option>
+        <option value="size">Size</option>
+        <option value="mtime">Date</option>
+      </select>
+      <button class="fm-btn" id="btn-sort-dir" onclick="FM.toggleSortDir()" title="Toggle sort direction"><i class="ph ph-sort-ascending" id="sort-dir-icon"></i></button>
+      <div class="fm-sep"></div>
+      <div class="fm-search"><i class="ph ph-magnifying-glass"></i><input type="text" placeholder="Search…" id="fm-search" oninput="FM.onSearch(this.value)"></div>
+      <button class="fm-btn" onclick="FM.showTrash()" title="Trash"><i class="ph ph-trash"></i></button>
+    </div>
+
+    <div class="fm-breadcrumb" id="fm-breadcrumb"></div>
+
+    <div class="fm-bulk" id="fm-bulk">
+      <span id="fm-sel-count">0 selected</span>
+      <div class="fm-sep"></div>
+      <button class="fm-btn" onclick="FM.copySelected()"><i class="ph ph-copy"></i>Copy</button>
+      <button class="fm-btn" onclick="FM.cutSelected()"><i class="ph ph-scissors"></i>Cut</button>
+      <button class="fm-btn" onclick="FM.pasteHere()" id="btn-paste"><i class="ph ph-clipboard"></i>Paste</button>
+      <button class="fm-btn" onclick="FM.compressSelected()"><i class="ph ph-file-archive"></i>Compress</button>
+      <button class="fm-btn danger" onclick="FM.trashSelected()"><i class="ph ph-trash"></i>Trash</button>
+      <button class="fm-btn danger" onclick="FM.deleteSelected()"><i class="ph ph-x-circle"></i>Delete</button>
+      <button class="fm-btn" style="margin-left:auto" onclick="FM.clearSelection()"><i class="ph ph-x"></i></button>
+    </div>
+
+    <div class="fm-content" id="fm-content"></div>
+    <div class="fm-statusbar" id="fm-statusbar"><span id="sb-path">/</span><span id="sb-count">0 items</span><span id="sb-sel"></span></div>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div class="fm-ctx" id="fm-ctx" style="display:none">
+  <div class="fm-ctx-item" id="ctx-open" onclick="FM.ctxOpen()"><i class="ph ph-folder-open"></i>Open</div>
+  <div class="fm-ctx-item" id="ctx-edit" onclick="FM.ctxEdit()"><i class="ph ph-pencil-simple"></i>Edit</div>
+  <div class="fm-ctx-item" onclick="FM.ctxDownload()"><i class="ph ph-download-simple"></i>Download</div>
+  <div class="fm-ctx-sep"></div>
+  <div class="fm-ctx-item" onclick="FM.ctxRename()"><i class="ph ph-pencil"></i>Rename</div>
+  <div class="fm-ctx-item" onclick="FM.copySelected()"><i class="ph ph-copy"></i>Copy</div>
+  <div class="fm-ctx-item" onclick="FM.cutSelected()"><i class="ph ph-scissors"></i>Cut</div>
+  <div class="fm-ctx-item" onclick="FM.pasteHere()" id="ctx-paste"><i class="ph ph-clipboard"></i>Paste</div>
+  <div class="fm-ctx-sep"></div>
+  <div class="fm-ctx-item" id="ctx-extract" onclick="FM.ctxExtract()"><i class="ph ph-file-archive"></i>Extract</div>
+  <div class="fm-ctx-item" onclick="FM.compressSelected()"><i class="ph ph-file-zip"></i>Compress</div>
+  <div class="fm-ctx-item" onclick="FM.ctxChmod()"><i class="ph ph-lock-key"></i>Permissions</div>
+  <div class="fm-ctx-sep"></div>
+  <div class="fm-ctx-item danger" onclick="FM.trashSelected()"><i class="ph ph-trash"></i>Move to Trash</div>
+  <div class="fm-ctx-item danger" onclick="FM.deleteSelected()"><i class="ph ph-x-circle"></i>Delete</div>
+</div>
+
+<!-- Modals -->
+<!-- Confirm -->
+<div class="fm-overlay" id="modal-confirm">
+  <div class="fm-modal" style="max-width:380px">
+    <h3 id="confirm-title">Confirm</h3>
+    <p id="confirm-msg" style="color:var(--text-dim);font-size:.85rem;margin:0 0 1rem"></p>
+    <div class="fm-modal-footer">
+      <button class="fm-btn" onclick="FM.closeModal('modal-confirm')">Cancel</button>
+      <button class="fm-btn danger" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- New File/Folder -->
+<div class="fm-overlay" id="modal-new">
+  <div class="fm-modal" style="max-width:380px">
+    <h3 id="new-title">New File</h3>
+    <label>Name</label>
+    <input type="text" id="new-name" placeholder="filename.txt" onkeydown="if(event.key==='Enter')FM.confirmNew()">
+    <div class="fm-modal-footer">
+      <button class="fm-btn" onclick="FM.closeModal('modal-new')">Cancel</button>
+      <button class="fm-btn primary" onclick="FM.confirmNew()">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Rename -->
+<div class="fm-overlay" id="modal-rename">
+  <div class="fm-modal" style="max-width:380px">
+    <h3>Rename</h3>
+    <label>New name</label>
+    <input type="text" id="rename-input" onkeydown="if(event.key==='Enter')FM.confirmRename()">
+    <div class="fm-modal-footer">
+      <button class="fm-btn" onclick="FM.closeModal('modal-rename')">Cancel</button>
+      <button class="fm-btn primary" onclick="FM.confirmRename()">Rename</button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload -->
+<div class="fm-overlay" id="modal-upload">
+  <div class="fm-modal">
+    <h3>Upload Files</h3>
+    <div class="fm-drop-zone" id="fm-drop-zone" onclick="document.getElementById('fm-file-input').click()">
+      <i class="ph ph-upload-simple" style="font-size:2rem;display:block;margin-bottom:.5rem"></i>
+      Drop files here or click to browse
+    </div>
+    <input type="file" id="fm-file-input" multiple style="display:none" onchange="FM.handleFileSelect(this.files)">
+    <div class="fm-upload-list" id="fm-upload-list"></div>
+    <div class="fm-modal-footer">
+      <button class="fm-btn" onclick="FM.closeModal('modal-upload')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Editor -->
+<div class="fm-overlay" id="modal-editor">
+  <div class="fm-modal" style="max-width:800px;width:95vw">
+    <h3 id="editor-title">Edit File</h3>
+    <div id="fm-editor-wrap"><textarea id="fm-editor-ta" style="width:100%;height:400px;background:#0d0d1a;color:#e2e8f0;border:1px solid var(--border);border-radius:8px;padding:.75rem;font-family:monospace;font-size:.83rem;resize:vertical;outline:none;box-sizing:border-box"></textarea></div>
+    <div class="fm-modal-footer">
+      <button class="fm-btn" onclick="FM.closeModal('modal-editor')">Cancel</button>
+      <button class="fm-btn primary" onclick="FM.saveFile()"><i class="ph ph-floppy-disk"></i>Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Compress -->
+<div class="fm-overlay" id="modal-compress">
+  <div class="fm-modal" style="max-width:380px">
+    <h3>Compress</h3>
+    <label>Archive name</label>
+    <input type="text" id="compress-name" placeholder="archive">
+    <label style="margin-top:.75rem">Format</label>
+    <select id="compress-fmt">
+      <option value="zip">ZIP</option>
+      <option value="tar.gz">TAR.GZ</option>
+    </select>
+    <div class="fm-modal-footer">
+      <button class="fm-btn" onclick="FM.closeModal('modal-compress')">Cancel</button>
+      <button class="fm-btn primary" onclick="FM.confirmCompress()">Compress</button>
+    </div>
+  </div>
+</div>
+
+<!-- Permissions -->
+<div class="fm-overlay" id="modal-chmod">
+  <div class="fm-modal" style="max-width:380px">
+    <h3>Permissions</h3>
+    <div class="perm-grid">
+      <div></div><div class="ph">Read</div><div class="ph">Write</div><div class="ph">Exec</div>
+      <div style="color:var(--text-dim)">Owner</div>
+      <input type="checkbox" id="p-or"><input type="checkbox" id="p-ow"><input type="checkbox" id="p-ox">
+      <div style="color:var(--text-dim)">Group</div>
+      <input type="checkbox" id="p-gr"><input type="checkbox" id="p-gw"><input type="checkbox" id="p-gx">
+      <div style="color:var(--text-dim)">Other</div>
+      <input type="checkbox" id="p-wr"><input type="checkbox" id="p-ww"><input type="checkbox" id="p-wx">
+    </div>
+    <label>Octal: <input type="text" id="p-octal" style="width:80px;display:inline-block;margin-left:.5rem" maxlength="3" oninput="FM.octalToChecks(this.value)"></label>
+    <label style="margin-top:.75rem;display:flex;align-items:center;gap:.5rem"><input type="checkbox" id="p-recursive"> Apply recursively</label>
+    <div class="fm-modal-footer">
+      <button class="fm-btn" onclick="FM.closeModal('modal-chmod')">Cancel</button>
+      <button class="fm-btn primary" onclick="FM.confirmChmod()">Apply</button>
+    </div>
+  </div>
+</div>
+
+<!-- Trash -->
+<div class="fm-overlay" id="modal-trash">
+  <div class="fm-modal" style="max-width:560px;width:95vw">
+    <h3>Trash</h3>
+    <div id="fm-trash-list" style="max-height:320px;overflow-y:auto"></div>
+    <div class="fm-modal-footer">
+      <button class="fm-btn danger" onclick="FM.emptyTrash()"><i class="ph ph-trash"></i>Empty Trash</button>
+      <button class="fm-btn" onclick="FM.closeModal('modal-trash')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Move/Copy destination picker -->
+<div class="fm-overlay" id="modal-dest">
+  <div class="fm-modal" style="max-width:420px">
+    <h3 id="dest-title">Select Destination</h3>
+    <div id="dest-breadcrumb" style="font-size:.8rem;color:var(--text-dim);margin-bottom:.5rem"></div>
+    <div id="dest-list" style="max-height:280px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:.5rem"></div>
+    <div class="fm-modal-footer">
+      <button class="fm-btn" onclick="FM.closeModal('modal-dest')">Cancel</button>
+      <button class="fm-btn primary" onclick="FM.confirmDest()">Select This Folder</button>
+    </div>
+  </div>
+</div>
+
+<div class="fm-toast-wrap" id="fm-toasts"></div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{% static 'filemanager/fm_core.js' %}"></script>
+<script src="{% static 'filemanager/fm_actions.js' %}"></script>
+{% endblock %}

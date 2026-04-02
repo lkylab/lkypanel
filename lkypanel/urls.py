@@ -1,5 +1,5 @@
 """URL configuration for Lite Hosting Panel."""
-from django.urls import path
+from django.urls import path, include
 from lkypanel.views.auth import login_index, admin_login, user_login, logout_view, verify_2fa
 from lkypanel.admin_views import (
     users as au, websites as aw, backup as ab, packages as ap,
@@ -115,6 +115,9 @@ urlpatterns = [
     # ── Tools Proxy ──────────────────────────────────────────────────────
     path('admin/phpmyadmin/',                   phpMyAdminProxyView.as_view(), name='pma_index'),
     path('admin/phpmyadmin/<path:path>',        phpMyAdminProxyView.as_view(), name='pma_proxy'),
+
+    # ── File Manager ─────────────────────────────────────────────────────
+    path('filemanager/', include('lkypanel.filemanager.urls')),
 
     # ── Services ──────────────────────────────────────────────────────────
     path('admin/services/',                 aserv.list_services,    name='admin_list_services'),
