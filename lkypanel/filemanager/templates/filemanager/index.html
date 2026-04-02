@@ -101,6 +101,7 @@
 
 {% block content %}
 <input type="hidden" id="fm-site-id" value="{{ site.id }}">
+{% csrf_token %}
 <div class="fm-wrap">
   <!-- Sidebar -->
   <div class="fm-sidebar">
