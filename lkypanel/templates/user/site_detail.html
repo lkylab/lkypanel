@@ -19,7 +19,7 @@
 </div>
 
 <!-- Tabs -->
-<div style="display:flex; gap:0.25rem; flex-wrap:wrap; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:0;">
+<div style="display:flex; gap:0.25rem; flex-wrap:wrap; margin-bottom:1.5rem; border-bottom:1px solid var(--border);">
     {% for tid, tlabel, ticon in tabs %}
     <button onclick="switchTab('{{ tid }}')" id="tab-btn-{{ tid }}"
         class="btn btn-sm {% if forloop.first %}btn-primary{% else %}btn-ghost{% endif %}"
@@ -44,61 +44,10 @@
         <div class="glass-card" style="padding:1.5rem;">
             <h3 style="margin-bottom:1rem; font-size:1rem;">Quick Actions</h3>
             <div style="display:flex; flex-direction:column; gap:0.75rem;">
-                <button class="btn btn-ghost" onclick="switchTab('filemanager')"><i class="ph ph-files"></i> File Manager</button>
                 <button class="btn btn-ghost" onclick="switchTab('logs')"><i class="ph ph-scroll"></i> View Logs</button>
                 <a href="/user/sites/{{ site.id }}/ssl/" class="btn btn-ghost"><i class="ph ph-shield-star"></i> SSL Certificate</a>
                 <a href="/user/sites/{{ site.id }}/git/" class="btn btn-ghost"><i class="ph ph-git-branch"></i> Git Sync</a>
             </div>
-        </div>
-    </div>
-</div>
-
-<!-- ── FILE MANAGER ── -->
-<div id="tab-filemanager" class="tab-panel" style="display:none;">
-    <div class="glass-card" style="padding:1.25rem;">
-        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap;">
-            <button class="btn btn-ghost btn-sm" onclick="fmUp()"><i class="ph ph-arrow-up"></i> Up</button>
-            <code id="fm-path" style="flex:1; font-size:0.85rem; color:var(--accent-primary); background:rgba(0,0,0,0.2); padding:0.4rem 0.75rem; border-radius:8px;">/</code>
-            <button class="btn btn-ghost btn-sm" onclick="fmNewFile()"><i class="ph ph-file-plus"></i> New File</button>
-            <button class="btn btn-ghost btn-sm" onclick="fmNewDir()"><i class="ph ph-folder-plus"></i> New Folder</button>
-            <button class="btn btn-ghost btn-sm" onclick="fmLoad(fmCurrentPath)"><i class="ph ph-arrows-clockwise"></i></button>
-        </div>
-        <div id="fm-list" style="min-height:300px;">
-            <div style="color:var(--text-dim); padding:2rem; text-align:center;">Loading...</div>
-        </div>
-    </div>
-    <!-- Editor panel -->
-    <div id="fm-editor" style="display:none; margin-top:1rem;">
-        <div class="glass-card" style="padding:1.25rem;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                <code id="fm-editor-path" style="font-size:0.85rem; color:var(--accent-primary);"></code>
-                <div style="display:flex; gap:0.5rem;">
-                    <button class="btn btn-primary btn-sm" onclick="fmSave()"><i class="ph ph-floppy-disk"></i> Save</button>
-                    <button class="btn btn-ghost btn-sm" onclick="fmCloseEditor()"><i class="ph ph-x"></i></button>
-                </div>
-            </div>
-            <textarea id="fm-editor-content" style="width:100%; height:400px; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:8px; padding:1rem; font-family:monospace; font-size:0.82rem; line-height:1.6; resize:vertical; outline:none;"></textarea>
-        </div>
-    </div>
-</div>
-
-<!-- ── CONFIG EDITOR ── -->
-<div id="tab-config" class="tab-panel" style="display:none;">
-    <div class="glass-card" style="padding:1.25rem;">
-        <h3 style="margin-bottom:1rem; font-size:1rem;">Configuration Files</h3>
-        <div id="config-list" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
-            <div style="color:var(--text-dim); font-size:0.9rem;">Loading...</div>
-        </div>
-        <div id="config-editor-wrap" style="display:none;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                <code id="config-editor-path" style="font-size:0.85rem; color:var(--accent-primary);"></code>
-                <button class="btn btn-primary btn-sm" onclick="configSave()"><i class="ph ph-floppy-disk"></i> Save</button>
-            </div>
-            <textarea id="config-editor-content" style="width:100%; height:450px; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:8px; padding:1rem; font-family:monospace; font-size:0.82rem; line-height:1.6; resize:vertical; outline:none;"></textarea>
-        </div>
-        <div id="config-empty" style="display:none; color:var(--text-dim); padding:2rem; text-align:center;">
-            <i class="ph ph-file-x" style="font-size:2rem; display:block; margin-bottom:0.5rem; opacity:0.5;"></i>
-            No editable config files found in site root (.htaccess, php.ini, .env, wp-config.php, etc.)
         </div>
     </div>
 </div>
@@ -136,7 +85,7 @@
             <div style="margin-bottom:0.75rem;"><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Description (optional)</label><input type="text" id="cron-desc" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none;"></div>
             <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
                 <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cron-form').style.display='none'">Cancel</button>
-                <button class="btn btn-primary btn-sm" onclick="cronAdd()"><i class="ph ph-plus"></i> Add Cronjob</button>
+                <button class="btn btn-primary btn-sm" onclick="cronAdd()"><i class="ph ph-plus"></i> Add</button>
             </div>
         </div>
         <div id="cron-list"></div>
@@ -200,7 +149,7 @@
     </div>
 </div>
 
-</div><!-- end animate-fade -->
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -208,138 +157,26 @@
 const SITE_ID = {{ site.id }};
 const CSRF = '{{ csrf_token }}';
 
-// ── Tab switching ──────────────────────────────────────────────────────────
-const TAB_IDS = ['overview','filemanager','config','logs','cronjobs','ftp','databases'];
+// ── Tabs ───────────────────────────────────────────────────────────────────
+const TAB_IDS = ['overview','logs','cronjobs','ftp','databases'];
 function switchTab(id) {
     TAB_IDS.forEach(t => {
         document.getElementById('tab-'+t).style.display = t===id ? '' : 'none';
         const btn = document.getElementById('tab-btn-'+t);
-        if (btn) { btn.className = btn.className.replace('btn-primary','btn-ghost'); }
+        if (btn) btn.className = btn.className.replace('btn-primary','btn-ghost');
     });
     const active = document.getElementById('tab-btn-'+id);
     if (active) active.className = active.className.replace('btn-ghost','btn-primary');
-    if (id==='filemanager' && !fmLoaded) { fmLoad('/'); fmLoaded=true; }
     if (id==='logs') loadLog('access', document.getElementById('log-btn-access'));
-    if (id==='cronjobs') cronLoad();
-    if (id==='ftp') ftpLoad();
-    if (id==='databases') dbLoad();
-    if (id==='config') configLoad();
+    if (id==='cronjobs') cronRender(cronJobs);
+    if (id==='ftp') ftpRender(ftpAccounts);
+    if (id==='databases') dbRender(dbList);
     location.hash = id;
 }
 window.addEventListener('load', () => {
     const hash = location.hash.replace('#','');
-    if (TAB_IDS.includes(hash)) switchTab(hash); else switchTab('overview');
+    switchTab(TAB_IDS.includes(hash) ? hash : 'overview');
 });
-
-// ── File Manager ───────────────────────────────────────────────────────────
-let fmCurrentPath = '/';
-let fmLoaded = false;
-let fmEditingPath = null;
-
-async function fmLoad(path) {
-    fmCurrentPath = path;
-    document.getElementById('fm-path').textContent = path;
-    document.getElementById('fm-list').innerHTML = '<div style="color:var(--text-dim);padding:2rem;text-align:center;">Loading...</div>';
-    const resp = await fetch(`/user/sites/${SITE_ID}/files/?path=${encodeURIComponent(path)}`);
-    const data = await resp.json();
-    if (!resp.ok) { document.getElementById('fm-list').innerHTML = `<div style="color:#ef4444;padding:1rem;">${data.error}</div>`; return; }
-    if (!data.entries.length) { document.getElementById('fm-list').innerHTML = '<div style="color:var(--text-dim);padding:2rem;text-align:center;">Empty directory</div>'; return; }
-    const rows = data.entries.map(e => `
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
-            <td style="padding:0.6rem 0.75rem;">
-                <i class="ph ph-${e.type==='dir'?'folder-open':'file-text'}" style="color:${e.type==='dir'?'#f59e0b':'var(--text-dim)'};margin-right:0.4rem;"></i>
-                ${e.type==='dir'
-                    ? `<a href="#" onclick="fmLoad('${path==='/'?'':path}/${e.name}');return false;" style="color:white;text-decoration:none;">${e.name}</a>`
-                    : `<span>${e.name}</span>`}
-            </td>
-            <td style="padding:0.6rem 0.75rem;color:var(--text-dim);font-size:0.8rem;">${e.size!=null?fmSize(e.size):''}</td>
-            <td style="padding:0.6rem 0.75rem;">
-                <div style="display:flex;gap:0.4rem;">
-                    ${e.type==='file'&&e.editable?`<button class="btn btn-ghost btn-sm" onclick="fmEdit('${path==='/'?'':path}/${e.name}')"><i class="ph ph-pencil"></i></button>`:''}
-                    <button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="fmDelete('${path==='/'?'':path}/${e.name}','${e.type}')"><i class="ph ph-trash"></i></button>
-                </div>
-            </td>
-        </tr>`).join('');
-    document.getElementById('fm-list').innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.88rem;"><thead><tr style="color:var(--text-dim);border-bottom:1px solid var(--border);"><th style="padding:0.5rem 0.75rem;text-align:left;">Name</th><th style="padding:0.5rem 0.75rem;text-align:left;">Size</th><th style="padding:0.5rem 0.75rem;"></th></tr></thead><tbody>${rows}</tbody></table>`;
-}
-function fmSize(b) { if(b<1024)return b+'B'; if(b<1048576)return (b/1024).toFixed(1)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
-function fmUp() { const p=fmCurrentPath; if(p==='/'||p==='')return; const parts=p.split('/').filter(Boolean); parts.pop(); fmLoad('/'+parts.join('/')||'/'); }
-async function fmEdit(path) {
-    const resp = await fetch(`/user/sites/${SITE_ID}/files/read/?path=${encodeURIComponent(path)}`);
-    const data = await resp.json();
-    if (!resp.ok) { alert(data.error); return; }
-    fmEditingPath = path;
-    document.getElementById('fm-editor-path').textContent = path;
-    document.getElementById('fm-editor-content').value = data.content;
-    document.getElementById('fm-editor').style.display = '';
-    document.getElementById('fm-editor-content').focus();
-}
-async function fmSave() {
-    const content = document.getElementById('fm-editor-content').value;
-    const resp = await fetch(`/user/sites/${SITE_ID}/files/write/`, {
-        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
-        body: JSON.stringify({path:fmEditingPath, content})
-    });
-    if (resp.ok) { alert('Saved.'); } else { const d=await resp.json(); alert(d.error||'Save failed.'); }
-}
-function fmCloseEditor() { document.getElementById('fm-editor').style.display='none'; fmEditingPath=null; }
-async function fmDelete(path, type) {
-    if (!confirm(`Delete ${type} "${path}"?`)) return;
-    const resp = await fetch(`/user/sites/${SITE_ID}/files/delete/`, {
-        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
-        body: JSON.stringify({path})
-    });
-    if (resp.ok) fmLoad(fmCurrentPath); else { const d=await resp.json(); alert(d.error||'Delete failed.'); }
-}
-async function fmNewFile() {
-    const name = prompt('File name:'); if (!name) return;
-    const path = (fmCurrentPath==='/'?'':fmCurrentPath)+'/'+name;
-    const resp = await fetch(`/user/sites/${SITE_ID}/files/create/`, {
-        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
-        body: JSON.stringify({path, type:'file'})
-    });
-    if (resp.ok) fmLoad(fmCurrentPath); else { const d=await resp.json(); alert(d.error||'Failed.'); }
-}
-async function fmNewDir() {
-    const name = prompt('Folder name:'); if (!name) return;
-    const path = (fmCurrentPath==='/'?'':fmCurrentPath)+'/'+name;
-    const resp = await fetch(`/user/sites/${SITE_ID}/files/create/`, {
-        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
-        body: JSON.stringify({path, type:'dir'})
-    });
-    if (resp.ok) fmLoad(fmCurrentPath); else { const d=await resp.json(); alert(d.error||'Failed.'); }
-}
-
-// ── Config Editor ──────────────────────────────────────────────────────────
-let configEditingPath = null;
-async function configLoad() {
-    const resp = await fetch(`/user/sites/${SITE_ID}/configs/`);
-    const data = await resp.json();
-    const list = document.getElementById('config-list');
-    const empty = document.getElementById('config-empty');
-    if (!data.configs.length) { list.style.display='none'; empty.style.display=''; return; }
-    list.style.display='flex'; empty.style.display='none';
-    list.innerHTML = data.configs.map(c =>
-        `<button class="btn btn-ghost btn-sm" onclick="configEdit('${c.path}','${c.name}')">${c.name}</button>`
-    ).join('');
-}
-async function configEdit(path, name) {
-    const resp = await fetch(`/user/sites/${SITE_ID}/files/read/?path=${encodeURIComponent(path)}`);
-    const data = await resp.json();
-    if (!resp.ok) { alert(data.error); return; }
-    configEditingPath = path;
-    document.getElementById('config-editor-path').textContent = name;
-    document.getElementById('config-editor-content').value = data.content;
-    document.getElementById('config-editor-wrap').style.display = '';
-}
-async function configSave() {
-    const content = document.getElementById('config-editor-content').value;
-    const resp = await fetch(`/user/sites/${SITE_ID}/files/write/`, {
-        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
-        body: JSON.stringify({path:configEditingPath, content})
-    });
-    if (resp.ok) alert('Saved.'); else { const d=await resp.json(); alert(d.error||'Save failed.'); }
-}
 
 // ── Logs ───────────────────────────────────────────────────────────────────
 let currentLogType = 'access';
@@ -347,13 +184,13 @@ async function loadLog(type, btn) {
     currentLogType = type;
     ['access','error'].forEach(t => {
         const b = document.getElementById('log-btn-'+t);
-        if (b) { b.className = b.className.replace('btn-primary','btn-ghost'); }
+        if (b) b.className = b.className.replace('btn-primary','btn-ghost');
     });
     if (btn) btn.className = btn.className.replace('btn-ghost','btn-primary');
     const lines = document.getElementById('log-lines').value;
     const viewer = document.getElementById('log-viewer');
     viewer.textContent = 'Loading...';
-    const resp = await fetch(`/user/sites/${SITE_ID}/logs/?type=${type}&lines=${lines}`);
+    const resp = await fetch(`/admin/logs/get/?type=site_${type}&domain={{ site.domain }}&lines=${lines}`);
     const data = await resp.json();
     viewer.textContent = data.content || '[Empty]';
     viewer.scrollTop = viewer.scrollHeight;
@@ -361,16 +198,7 @@ async function loadLog(type, btn) {
 function reloadCurrentLog() { loadLog(currentLogType, document.getElementById('log-btn-'+currentLogType)); }
 
 // ── Cronjobs ───────────────────────────────────────────────────────────────
-async function cronLoad() {
-    const resp = await fetch(`/user/sites/${SITE_ID}/cronjobs/`);
-    // The list view returns HTML, so we use the API-style approach via the existing endpoint
-    // We'll fetch the page and parse the table, or better: use a JSON endpoint
-    // For now render inline from the page data
-    cronRender(await resp.text());
-}
-// Since we don't have a JSON endpoint for cronjobs, use the existing page data passed via template
-const CRONJOBS_INIT = {{ cronjobs_json }};
-let cronJobs = [...CRONJOBS_INIT];
+const cronJobs = {{ cronjobs_json }};
 function cronRender(jobs) {
     const el = document.getElementById('cron-list');
     if (!jobs.length) { el.innerHTML='<div style="color:var(--text-dim);padding:2rem;text-align:center;"><i class="ph ph-clock" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.5;"></i>No cronjobs yet.</div>'; return; }
@@ -383,7 +211,6 @@ function cronRender(jobs) {
         </tr>`).join('')
     }</tbody></table>`;
 }
-function cronLoad() { cronRender(cronJobs); }
 async function cronAdd() {
     const schedule = document.getElementById('cron-schedule').value.trim();
     const command = document.getElementById('cron-command').value.trim();
@@ -398,9 +225,7 @@ async function cronAdd() {
         cronJobs.push({id:d.id,schedule,command,description});
         cronRender(cronJobs);
         document.getElementById('cron-form').style.display='none';
-        document.getElementById('cron-schedule').value='';
-        document.getElementById('cron-command').value='';
-        document.getElementById('cron-desc').value='';
+        ['cron-schedule','cron-command','cron-desc'].forEach(id=>document.getElementById(id).value='');
     } else { const d=await resp.json(); alert(d.error||'Failed.'); }
 }
 async function cronDelete(id) {
@@ -408,18 +233,12 @@ async function cronDelete(id) {
     const resp = await fetch(`/user/sites/${SITE_ID}/cronjobs/${id}/delete/`, {
         method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'}
     });
-    if (resp.ok) { cronJobs=cronJobs.filter(j=>j.id!==id); cronRender(cronJobs); }
+    if (resp.ok) { const i=cronJobs.findIndex(j=>j.id===id); if(i>-1)cronJobs.splice(i,1); cronRender(cronJobs); }
     else alert('Failed to delete.');
 }
 
 // ── FTP ────────────────────────────────────────────────────────────────────
-let ftpAccounts = [];
-async function ftpLoad() {
-    // Fetch from existing list endpoint (returns HTML) — use JSON via inline data instead
-    ftpRender(ftpAccounts);
-}
-const FTP_INIT = {{ ftp_json }};
-ftpAccounts = [...FTP_INIT];
+const ftpAccounts = {{ ftp_json }};
 function ftpRender(accounts) {
     const el = document.getElementById('ftp-list');
     if (!el) return;
@@ -458,14 +277,12 @@ async function ftpDelete(id, username) {
     const resp = await fetch(`/user/sites/${SITE_ID}/ftp/${id}/delete/`, {
         method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'}
     });
-    if (resp.ok) { ftpAccounts=ftpAccounts.filter(a=>a.id!==id); ftpRender(ftpAccounts); }
+    if (resp.ok) { const i=ftpAccounts.findIndex(a=>a.id===id); if(i>-1)ftpAccounts.splice(i,1); ftpRender(ftpAccounts); }
     else alert('Failed to delete.');
 }
 
 // ── Databases ──────────────────────────────────────────────────────────────
-let dbList = [];
-const DB_INIT = {{ db_json }};
-dbList = [...DB_INIT];
+const dbList = {{ db_json }};
 function dbLoad() { dbRender(dbList); }
 function dbRender(dbs) {
     const el = document.getElementById('db-list');
@@ -502,7 +319,7 @@ async function dbDelete(id, name) {
     const resp = await fetch(`/user/sites/${SITE_ID}/databases/${id}/delete/`, {
         method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'}
     });
-    if (resp.ok) { dbList=dbList.filter(d=>d.id!==id); dbRender(dbList); }
+    if (resp.ok) { const i=dbList.findIndex(d=>d.id===id); if(i>-1)dbList.splice(i,1); dbRender(dbList); }
     else alert('Failed to delete.');
 }
 </script>

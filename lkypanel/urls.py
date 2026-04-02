@@ -9,7 +9,7 @@ from lkypanel.admin_views import (
 from lkypanel.admin_views import settings as aset, email as ae, services as aserv
 from lkypanel.admin_views import logs as al
 from lkypanel.admin_views import mail as amail
-from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw, cronjobs as ucj, filemanager as ufm
+from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw, cronjobs as ucj
 from lkypanel.api import views as av
 from lkypanel.views.tools import phpMyAdminProxyView
 from lkypanel.views import security as s_user
@@ -72,15 +72,6 @@ urlpatterns = [
     path('user/dashboard/',                 uw.user_dashboard,  name='user_dashboard'),
     path('user/profile/',                   uw.user_profile,    name='user_profile'),
     path('user/sites/<int:site_id>/',       uw.site_detail,     name='user_site_detail'),
-
-    # File manager
-    path('user/sites/<int:site_id>/files/',          ufm.list_files,      name='user_list_files'),
-    path('user/sites/<int:site_id>/files/read/',     ufm.read_file,       name='user_read_file'),
-    path('user/sites/<int:site_id>/files/write/',    ufm.write_file,      name='user_write_file'),
-    path('user/sites/<int:site_id>/files/delete/',   ufm.delete_file,     name='user_delete_file'),
-    path('user/sites/<int:site_id>/files/create/',   ufm.create_item,     name='user_create_file'),
-    path('user/sites/<int:site_id>/logs/',           ufm.site_logs,       name='user_site_logs'),
-    path('user/sites/<int:site_id>/configs/',        ufm.editable_configs,name='user_site_configs'),
     path('user/sites/<int:site_id>/ftp/',                        uf.list_ftp,     name='user_list_ftp'),
     path('user/sites/<int:site_id>/ftp/create/',                 uf.create_ftp,   name='user_create_ftp'),
     path('user/sites/<int:site_id>/ftp/<int:account_id>/delete/',uf.delete_ftp,   name='user_delete_ftp'),

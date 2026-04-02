@@ -35,13 +35,11 @@ def site_detail(request, site_id):
         d['created_at'] = d['created_at'].strftime('%b %d, %Y') if d.get('created_at') else ''
 
     tabs = [
-        ('overview',    'Overview',     'squares-four'),
-        ('filemanager', 'Files',        'files'),
-        ('config',      'Config',       'sliders'),
-        ('logs',        'Logs',         'scroll'),
-        ('cronjobs',    'Cronjobs',     'clock-countdown'),
-        ('ftp',         'FTP',          'folder-open'),
-        ('databases',   'Databases',    'database'),
+        ('overview',   'Overview',  'squares-four'),
+        ('logs',       'Logs',      'scroll'),
+        ('cronjobs',   'Cronjobs',  'clock-countdown'),
+        ('ftp',        'FTP',       'folder-open'),
+        ('databases',  'Databases', 'database'),
     ]
 
     return render(request, 'user/site_detail.html', {
