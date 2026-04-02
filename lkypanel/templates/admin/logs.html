@@ -10,61 +10,93 @@
 {% block content %}
 <div class="animate-fade">
     <div class="section-card">
-        <div class="card-header" style="flex-direction: column; align-items: flex-start; gap: 1rem;">
-            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-                <h2 style="font-size: 1.1rem; font-weight: 600;">{{ log_name }}</h2>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button class="btn btn-sm btn-ghost" onclick="window.location.reload()">
-                        <i class="ph ph-arrows-clockwise"></i> Refresh
+        <div style="padding: 1rem 1rem 0;">
+
+            <!-- Log Type Selector -->
+            <div style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:1rem;">
+                {% for lid, lname in log_types %}
+                <a href="?id={{ lid }}{% if lid == 'site_access' or lid == 'site_error' %}&domain={{ selected_domain }}{% endif %}"
+                   class="btn btn-sm {% if log_id == lid %}btn-primary{% else %}btn-ghost{% endif %}">
+                    {{ lname }}
+                </a>
+                {% endfor %}
+            </div>
+
+            <!-- Domain selector for site logs -->
+            {% if log_id == 'site_access' or log_id == 'site_error' %}
+            <form method="GET" style="margin-bottom:1rem; display:flex; gap:0.5rem; align-items:center; max-width:400px;">
+                <input type="hidden" name="id" value="{{ log_id }}">
+                <select name="domain" onchange="this.form.submit()" style="flex:1; padding:0.5rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none;">
+                    {% for site in websites %}
+                    <option value="{{ site.domain }}" {% if selected_domain == site.domain %}selected{% endif %}>{{ site.domain }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% endif %}
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <h2 style="font-size:1rem; font-weight:600; color:var(--text-dim);">{{ log_name }}</h2>
+                <div style="display:flex; gap:0.5rem; align-items:center;">
+                    <select id="linesSelect" onchange="reloadLog()" style="background:var(--glass); border:1px solid var(--border); border-radius:8px; color:var(--text-main); padding:0.3rem 0.6rem; font-size:0.8rem; outline:none;">
+                        <option value="50">50 lines</option>
+                        <option value="100" selected>100 lines</option>
+                        <option value="200">200 lines</option>
+                        <option value="500">500 lines</option>
+                    </select>
+                    <button class="btn btn-sm btn-ghost" onclick="reloadLog()">
+                        <i class="ph ph-arrows-clockwise"></i>
                     </button>
                 </div>
             </div>
-
-            {% if log_id == 'site_access' or log_id == 'site_error' %}
-            <form method="GET" style="width: 100%; max-width: 400px;">
-                <input type="hidden" name="id" value="{{ log_id }}">
-                <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <select name="domain" onchange="this.form.submit()" style="flex: 1; padding: 0.5rem; background: var(--glass); border: 1px solid var(--border); border-radius: 8px; color: white;">
-                        {% for site in websites %}
-                        <option value="{{ site.domain }}" {% if selected_domain == site.domain %}selected{% endif %}>{{ site.domain }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </form>
-            {% endif %}
         </div>
 
-        <div style="padding: 1rem;">
+        <div style="padding: 0 1rem 1rem;">
             <pre class="log-viewer" id="mainLogViewer">{{ log_content }}</pre>
         </div>
     </div>
 </div>
 
 <style>
-    .log-viewer {
-        background: #0d1117;
-        color: #e6edf3;
-        padding: 1.5rem;
-        border-radius: 12px;
-        font-size: 0.9rem;
-        line-height: 1.5;
-        min-height: 600px;
-        max-height: 80vh;
-        overflow-y: auto;
-        white-space: pre-wrap;
-        word-break: break-all;
-        border: 1px solid #30363d;
-        font-family: 'JetBrains Mono', 'Fira Code', monospace;
-    }
+.log-viewer {
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 1.5rem;
+    border-radius: 12px;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    min-height: 500px;
+    max-height: 75vh;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+    border: 1px solid #30363d;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
 </style>
 
 <script>
-    // Auto-scroll to bottom
-    window.addEventListener('load', () => {
-        const viewer = document.getElementById('mainLogViewer');
-        if (viewer) {
-            viewer.scrollTop = viewer.scrollHeight;
-        }
-    });
+const LOG_ID = '{{ log_id }}';
+const DOMAIN = '{{ selected_domain|default:"" }}';
+
+window.addEventListener('load', () => {
+    const v = document.getElementById('mainLogViewer');
+    if (v) v.scrollTop = v.scrollHeight;
+});
+
+async function reloadLog() {
+    const lines = document.getElementById('linesSelect').value;
+    const viewer = document.getElementById('mainLogViewer');
+    viewer.textContent = 'Loading...';
+    try {
+        const params = new URLSearchParams({ id: LOG_ID, lines });
+        if (DOMAIN) params.set('domain', DOMAIN);
+        const resp = await fetch(`/admin/logs/get/?${params}`);
+        const data = await resp.json();
+        viewer.textContent = data.content || '[Empty]';
+        viewer.scrollTop = viewer.scrollHeight;
+    } catch(e) {
+        viewer.textContent = 'Failed to load log.';
+    }
+}
 </script>
 {% endblock %}

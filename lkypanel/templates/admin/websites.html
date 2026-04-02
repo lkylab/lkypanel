@@ -171,6 +171,8 @@
     }
     function closeCreateModal() { document.getElementById('createModal').style.display = 'none'; }
 
+    if (new URLSearchParams(window.location.search).get('action') === 'create') openCreateModal();
+
     function openConfigModal(id, php) {
         document.getElementById('config_site_id').value = id;
         document.getElementById('config_php').value = php;
