@@ -292,6 +292,22 @@ else
     success "SSL cert already exists — skipping"
 fi
 
+# ── Frontend build ────────────────────────────────────────────────────────────
+info "Building frontend assets..."
+
+# Ensure static directory exists to satisfy Django's STATICFILES_DIRS check
+mkdir -p "$INSTALL_DIR/lkypanel/static/dist"
+
+if [[ -d "$INSTALL_DIR/frontend" ]] && command -v npm &>/dev/null; then
+    cd "$INSTALL_DIR/frontend"
+    npm install --quiet
+    npm run build
+    chown -R "$PANEL_USER":"$PANEL_USER" "$INSTALL_DIR/lkypanel/static"
+    success "Frontend built and assets generated"
+else
+    warn "Frontend directory not found or npm not installed — skipping build"
+fi
+
 # ── Django setup ──────────────────────────────────────────────────────────────
 info "Running Django migrations and setup..."
 
@@ -331,18 +347,6 @@ PYEOF
 
 success "Django setup complete"
 
-# ── Frontend build ────────────────────────────────────────────────────────────
-info "Building frontend assets..."
-
-if [[ -d "$INSTALL_DIR/frontend" ]] && command -v npm &>/dev/null; then
-    cd "$INSTALL_DIR/frontend"
-    npm install --quiet
-    npm run build
-    chown -R "$PANEL_USER":"$PANEL_USER" "$INSTALL_DIR/lkypanel/static/dist"
-    success "Frontend built and assets generated"
-else
-    warn "Frontend directory not found or npm not installed — skipping build"
-fi
 
 # ── Systemd services ──────────────────────────────────────────────────────────
 info "Installing systemd services..."

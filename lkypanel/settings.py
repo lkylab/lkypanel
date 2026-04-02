@@ -168,11 +168,6 @@ STATIC_ROOT = INSTALL_DIR / 'staticfiles'
 AUTH_USER_MODEL = 'lkypanel.User'
 
 # ---------------------------------------------------------------------------
-# Custom user model
-# ---------------------------------------------------------------------------
-AUTH_USER_MODEL = 'lkypanel.User'
-
-# ---------------------------------------------------------------------------
 # Default primary key
 # ---------------------------------------------------------------------------
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
@@ -228,7 +223,10 @@ DJANGO_VITE = {
     }
 }
 
-STATICFILES_DIRS = [
-    BASE_DIR / "lkypanel" / "static",
-    BASE_DIR / "lkypanel" / "static" / "dist",
-]
+STATICFILES_DIRS = []
+_static_dir = BASE_DIR / "lkypanel" / "static"
+if _static_dir.exists():
+    STATICFILES_DIRS.append(_static_dir)
+_dist_dir = _static_dir / "dist"
+if _dist_dir.exists():
+    STATICFILES_DIRS.append(_dist_dir)
