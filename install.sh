@@ -109,42 +109,28 @@ wait_for_apt
 if [[ "$OS_ID" == "ubuntu" ]] && [[ "$OS_VER" < "24.04" ]]; then
     info "Adding deadsnakes PPA for Python 3.12 support..."
     export DEBIAN_FRONTEND=noninteractive
-    apt-get update -qq
     apt-get install -y -qq software-properties-common
     add-apt-repository -y ppa:deadsnakes/ppa
-    apt-get update -qq
 fi
 
 # Add NodeSource for Node.js 22 (required for Vite 8)
 info "Adding NodeSource repository for Node.js 22..."
-curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash - -y 2>/dev/null
 
 info "Installing system packages..."
 
 if [[ "$PKG_MGR" == "apt-get" ]]; then
     export DEBIAN_FRONTEND=noninteractive
     apt-get update -qq
-    
-    PACKAGES=(
-        python3.12 python3.12-venv python3.12-dev python3-pip nodejs git curl wget openssl certbot build-essential libssl-dev libffi-dev ufw
-    )
-
-    for PKG in "${PACKAGES[@]}"; do
-        info "Installing: $PKG"
-        if apt-get install -y -qq "$PKG" 2>/dev/null; then
-            success "$PKG installed"
-        else
-            warn "Failed to install $PKG — attempting to fix and retry..."
-            apt-get install -y "$PKG" || die "FATAL: Could not install $PKG"
-        fi
-    done
+    apt-get install -y -qq --no-install-recommends \
+        python3.12 python3.12-venv python3.12-dev python3-pip \
+        nodejs git curl wget openssl certbot \
+        build-essential libssl-dev libffi-dev ufw unzip zip
 else
     yum install -y -q \
-        python3.12 python3.12-devel \
-        python3-pip git curl wget openssl \
-        certbot \
-        gcc openssl-devel libffi-devel \
-        firewalld
+        python3.12 python3.12-devel python3-pip \
+        git curl wget openssl certbot \
+        gcc openssl-devel libffi-devel firewalld unzip zip
 fi
 success "System packages installed"
 
@@ -159,20 +145,14 @@ if ! command -v lswsctrl &>/dev/null && [[ ! -f /usr/local/lsws/bin/lswsctrl ]];
     if [[ "$PKG_MGR" == "apt-get" ]]; then
         wget -qO - https://repo.litespeed.sh | bash
         apt-get update -qq
-        # Install core OLS and PHP 8.3
-        info "Installing core OpenLiteSpeed and PHP 8.3..."
-        apt-get install -y -qq openlitespeed lsphp83 lsphp83-common lsphp83-mysql
-        # Install extensions individually (gd, mbstring, zip, xml are built into lsphp83-common on ARM)
-        info "Installing extra PHP extensions..."
-        for EXT in lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap; do
-            apt-get install -y -qq "$EXT" 2>/dev/null && success "$EXT installed" || warn "$EXT not available — skipping"
-        done
+        apt-get install -y -qq openlitespeed lsphp83 lsphp83-common lsphp83-mysql \
+            lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap 2>/dev/null || \
+        apt-get install -y -qq openlitespeed lsphp83 lsphp83-common lsphp83-mysql lsphp83-curl
     else
         wget -qO - https://repo.litespeed.sh | bash
-        yum install -y -q openlitespeed lsphp83 lsphp83-common lsphp83-mysql
-        for EXT in lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap; do
-            yum install -y -q "$EXT" 2>/dev/null && success "$EXT installed" || warn "$EXT not available — skipping"
-        done
+        yum install -y -q openlitespeed lsphp83 lsphp83-common lsphp83-mysql \
+            lsphp83-curl lsphp83-intl lsphp83-imagick lsphp83-imap 2>/dev/null || \
+        yum install -y -q openlitespeed lsphp83 lsphp83-common lsphp83-mysql lsphp83-curl
     fi
 
     # Verify install succeeded
@@ -245,6 +225,7 @@ info "Setting up Python virtualenv..."
 
 python3.12 -m venv "$VENV_DIR"
 "$VENV_DIR/bin/pip" install --quiet --upgrade pip
+"$VENV_DIR/bin/pip" install --quiet --no-deps -r "$APP_ROOT/requirements.txt"
 "$VENV_DIR/bin/pip" install --quiet -r "$APP_ROOT/requirements.txt"
 
 success "Python dependencies installed"
@@ -325,7 +306,7 @@ export DJANGO_SETTINGS_MODULE=lkypanel.settings
 "$VENV_DIR/bin/python" manage.py migrate --run-syncdb
 
 # Collect static files
-"$VENV_DIR/bin/python" manage.py collectstatic --noinput --clear 2>/dev/null || true
+"$VENV_DIR/bin/python" manage.py collectstatic --noinput 2>/dev/null || true
 
 # Create initial admin user
 # Password must be min 12 chars, upper, lower, digit, and special (!@#$%^&*()_+-=[]{}|;:,.<>?)
