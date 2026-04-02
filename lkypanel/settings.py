@@ -71,7 +71,7 @@ ROOT_URLCONF = 'lkypanel.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'lkypanel' / 'templates'],
+        'DIRS': [BASE_DIR / 'lkypanel' / 'templates', BASE_DIR / 'lkypanel' / 'filemanager' / 'templates'],
         'APP_DIRS': False,
         'OPTIONS': {
             'context_processors': [
@@ -241,3 +241,6 @@ STATICFILES_DIRS = []
 _static_dir = BASE_DIR / "lkypanel" / "static"
 if _static_dir.exists():
     STATICFILES_DIRS.append(_static_dir)
+_fm_static = BASE_DIR / "lkypanel" / "filemanager" / "static"
+if _fm_static.exists():
+    STATICFILES_DIRS.append(_fm_static)
