@@ -100,6 +100,7 @@
 {% block header %}File Manager — <span style="color:var(--accent-primary)">{{ site.domain }}</span>{% endblock %}
 
 {% block content %}
+<input type="hidden" id="fm-site-id" value="{{ site.id }}">
 <div class="fm-wrap">
   <!-- Sidebar -->
   <div class="fm-sidebar">

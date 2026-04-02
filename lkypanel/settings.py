@@ -229,7 +229,7 @@ LOGGING = {
 # ---------------------------------------------------------------------------
 DJANGO_VITE = {
     "default": {
-        "dev_mode": DEBUG,
+        "dev_mode": False,
         "manifest_path": BASE_DIR / "lkypanel" / "static" / "dist" / ".vite" / "manifest.json",
         "static_url_prefix": "dist/",
         "dev_server_host": "0.0.0.0",

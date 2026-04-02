@@ -1,5 +1,5 @@
 // LkyPanel File Manager — Part 1: core state, API, rendering
-const SITE_ID = '{{ site.id }}';
+const SITE_ID = document.getElementById('fm-site-id').value;
 const API_URL = `/filemanager/site/${SITE_ID}/api/`;
 const UPLOAD_URL = `/filemanager/site/${SITE_ID}/upload/`;
 const DOWNLOAD_URL = `/filemanager/site/${SITE_ID}/download/`;
