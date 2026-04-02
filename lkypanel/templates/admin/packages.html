@@ -4,21 +4,22 @@
 {% block content %}
 <div class="dashboard-header">
   <div class="header-main">
-    <h1>Management Center</h1>
-    <p>Manage system plugins and resource packages.</p>
+    <h1>
+        {% if active_tab == 'plugins' %}System Plugins
+        {% else %}Resource Packages{% endif %}
+    </h1>
+    <p>
+        {% if active_tab == 'plugins' %}Install and manage core system services.
+        {% else %}Define resource limits for user accounts.{% endif %}
+    </p>
   </div>
 </div>
 
-<!-- Tabs -->
-<div class="tabs-container" style="margin-bottom: 2rem;">
-    <div style="display: flex; gap: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 1px;">
-        <button class="tab-btn {% if active_tab == 'plugins' %}active{% endif %}" onclick="switchTab('plugins-tab')">System Plugins</button>
-        <button class="tab-btn {% if active_tab == 'packages' %}active{% endif %}" onclick="switchTab('packages-tab')">Resource Packages</button>
-    </div>
-</div>
+<!-- Tabs removed - handled by sidebar links -->
 
-<!-- Plugins Tab -->
-<div id="plugins-tab" class="tab-content" style="{% if active_tab == 'plugins' %}display: block;{% else %}display: none;{% endif %}">
+<!-- Plugins Content -->
+{% if active_tab == 'plugins' %}
+<div id="plugins-tab" class="tab-content">
     <div class="table-container" style="background: transparent; border: none;">
         <div id="packages-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;">
           {% for plugin in plugins %}
@@ -66,10 +67,11 @@
           {% endfor %}
         </div>
     </div>
-</div>
+{% endif %}
 
-<!-- Resource Packages Tab -->
-<div id="packages-tab" class="tab-content" style="{% if active_tab == 'packages' %}display: block;{% else %}display: none;{% endif %}">
+<!-- Resource Packages Content -->
+{% if active_tab == 'packages' %}
+<div id="packages-tab" class="tab-content">
     <div style="display: grid; grid-template-columns: 350px 1fr; gap: 2rem;">
         <!-- Create Package Form -->
         <div class="glass-card" style="padding: 2rem; height: fit-content;">
@@ -176,6 +178,7 @@
         </div>
     </div>
 </div>
+{% endif %}
 
 <div id="op-error" style="display:none;margin-top:1rem;padding:1rem;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:12px;color:#ef4444;max-height:300px;overflow-y:auto;"><pre id="op-error-text" style="white-space:pre-wrap;word-break:break-word;margin:0;font-size:0.8rem;font-family:monospace;"></pre></div>
 {% endblock %}
@@ -184,13 +187,7 @@
 <script>
 const CSRF = '{{ csrf_token }}';
 
-function switchTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    
-    document.getElementById(tabId).style.display = 'block';
-    event.currentTarget.classList.add('active');
-}
+// Internal tab switching removed - sidebar handles this.
 
 // Plugin Logic (Original)
 document.querySelectorAll('.plugin-btn').forEach(btn => {

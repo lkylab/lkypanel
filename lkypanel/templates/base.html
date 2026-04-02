@@ -67,18 +67,10 @@
 
             <!-- Packages (Admin only) -->
             {% if panel_user.role == 'admin' %}
-            <details class="nav-dropdown" {% if active_page == 'packages' %}open{% endif %}>
-                <summary class="nav-link" style="cursor: pointer;">
-                    <i class="ph ph-package"></i>
-                    <span>Packages</span>
-                    <i class="ph ph-caret-down dropdown-caret"></i>
-                </summary>
-                <div class="dropdown-content">
-                    <a href="/admin/packages/?tab=packages" class="dropdown-item {% if active_page == 'packages' and active_tab == 'packages' %}active{% endif %}">
-                        <i class="ph ph-cube"></i> Manage Packages
-                    </a>
-                </div>
-            </details>
+            <a href="/admin/packages/?tab=packages" class="nav-link {% if active_page == 'packages' and active_tab == 'packages' %}active{% endif %}">
+                <i class="ph ph-package"></i>
+                <span>Packages</span>
+            </a>
             {% endif %}
 
             <div class="section-header" style="padding: 0.5rem 1rem; font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1rem;">Services</div>

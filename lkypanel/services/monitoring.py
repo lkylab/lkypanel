@@ -52,17 +52,31 @@ def get_system_stats():
 def check_services():
     """
     Check if critical services are running using systemctl.
-    Returns a list of service statuses.
+    Returns a list of service statuses, filtered to only include
+    installed plugins/core services.
     """
-    services = [
+    from lkypanel.services.packages import is_plugin_installed
+    
+    # Core services (always monitored)
+    core = [
         {'name': 'Admin Panel', 'service': 'lky-admin'},
         {'name': 'User Panel', 'service': 'lky-user'},
         {'name': 'OpenLiteSpeed', 'service': 'lshttpd'},
-        {'name': 'MariaDB', 'service': 'mariadb'},
-        {'name': 'Pure-FTPd', 'service': 'pure-ftpd'},
-        {'name': 'Postfix', 'service': 'postfix'},
-        {'name': 'Dovecot', 'service': 'dovecot'},
     ]
+    
+    # Plugin-based services
+    plugins = [
+        {'name': 'MariaDB', 'service': 'mariadb', 'plugin': 'mariadb'},
+        {'name': 'Pure-FTPd', 'service': 'pure-ftpd', 'plugin': 'pureftpd'},
+        {'name': 'Postfix', 'service': 'postfix', 'plugin': 'postfix'},
+        {'name': 'Dovecot', 'service': 'dovecot', 'plugin': 'postfix'},
+        {'name': 'Redis', 'service': 'redis', 'plugin': 'redis'},
+    ]
+    
+    services = core
+    for p in plugins:
+        if is_plugin_installed(p['plugin']):
+            services.append(p)
     
     results = []
     for svc in services:
