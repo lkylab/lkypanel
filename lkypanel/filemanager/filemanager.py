@@ -105,7 +105,7 @@ def list_dir(base: str, rel_path: str, page: int = 1, per_page: int = 100,
             crumbs.append({'name': part, 'path': os.sep.join(parts[:i + 1])})
 
     return ok({
-        'path': os.path.relpath(target, base_real),
+        'path': '' if rel == '.' else rel,
         'entries': page_entries,
         'total': total,
         'page': page,
