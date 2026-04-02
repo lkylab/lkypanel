@@ -22,17 +22,41 @@ def user_dashboard(request):
 @owns_website
 @require_http_methods(['GET'])
 def site_detail(request, site_id):
+    import json
     from lkypanel.models import FTPAccount, Database, GitRepo, Cronjob
     from lkypanel.services.packages import is_plugin_installed
     site = request.panel_website
+
+    cronjobs = list(site.cronjobs.values('id', 'schedule', 'command', 'description', 'is_active'))
+    ftp_accounts = list(site.ftp_accounts.values('id', 'username', 'home_dir', 'quota_mb', 'status'))
+    databases = list(site.databases.values('id', 'db_name', 'db_user', 'created_at'))
+    # Serialize dates
+    for d in databases:
+        d['created_at'] = d['created_at'].strftime('%b %d, %Y') if d.get('created_at') else ''
+
+    tabs = [
+        ('overview',    'Overview',     'squares-four'),
+        ('filemanager', 'Files',        'files'),
+        ('config',      'Config',       'sliders'),
+        ('logs',        'Logs',         'scroll'),
+        ('cronjobs',    'Cronjobs',     'clock-countdown'),
+        ('ftp',         'FTP',          'folder-open'),
+        ('databases',   'Databases',    'database'),
+    ]
+
     return render(request, 'user/site_detail.html', {
         'site': site,
-        'ftp_count': FTPAccount.objects.filter(website=site).count(),
-        'db_count': Database.objects.filter(website=site).count(),
+        'ftp_count': len(ftp_accounts),
+        'db_count': len(databases),
         'git_count': GitRepo.objects.filter(website=site).count(),
-        'cronjob_count': site.cronjobs.count(),
+        'cronjob_count': len(cronjobs),
         'pureftpd_installed': is_plugin_installed('pureftpd'),
         'mariadb_installed': is_plugin_installed('mariadb'),
+        'ftp_installed': is_plugin_installed('pureftpd'),
+        'tabs': tabs,
+        'cronjobs_json': json.dumps(cronjobs),
+        'ftp_json': json.dumps(ftp_accounts),
+        'db_json': json.dumps(databases),
         'active_page': 'websites',
         'panel_user': request.panel_user,
     })

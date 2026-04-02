@@ -1,118 +1,509 @@
 {% extends 'base.html' %}
-
 {% block title %}{{ site.domain }} — LKYPanel{% endblock %}
-
-{% block header %}
-    <h1>{{ site.domain }}</h1>
-    <p>Site overview and quick access.</p>
-{% endblock %}
+{% block header %}<h1>{{ site.domain }}</h1><p>Site Management</p>{% endblock %}
 
 {% block content %}
 <div class="animate-fade">
-    <div style="margin-bottom:1.5rem;">
-        <a href="/user/dashboard/" class="btn btn-ghost btn-sm"><i class="ph ph-arrow-left"></i> Back to Dashboard</a>
-    </div>
+<div style="margin-bottom:1rem;">
+    <a href="/user/dashboard/" class="btn btn-ghost btn-sm"><i class="ph ph-arrow-left"></i> Dashboard</a>
+</div>
 
-    <!-- Stats -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:1.25rem; margin-bottom:2rem;">
-        <div class="stat-card">
-            <div class="stat-icon blue"><i class="ph-bold ph-globe"></i></div>
-            <div>
-                <div class="stat-value" style="font-size:0.95rem; word-break:break-all;">{{ site.domain }}</div>
-                <div class="stat-label">Domain</div>
+<!-- Stat Bar -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1rem; margin-bottom:1.5rem;">
+    <div class="stat-card"><div class="stat-icon blue"><i class="ph-bold ph-globe"></i></div><div><div class="stat-value" style="font-size:0.9rem;word-break:break-all;">{{ site.domain }}</div><div class="stat-label">Domain</div></div></div>
+    <div class="stat-card"><div class="stat-icon orange"><i class="ph-bold ph-code"></i></div><div><div class="stat-value">PHP {{ site.php_version }}</div><div class="stat-label">PHP</div></div></div>
+    <div class="stat-card"><div class="stat-icon {% if site.ssl_enabled %}green{% else %}red{% endif %}"><i class="ph-bold ph-shield-{% if site.ssl_enabled %}check{% else %}slash{% endif %}"></i></div><div><div class="stat-value">{% if site.ssl_enabled %}Active{% else %}None{% endif %}</div><div class="stat-label">SSL</div></div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="ph-bold ph-database"></i></div><div><div class="stat-value">{{ db_count }}</div><div class="stat-label">Databases</div></div></div>
+    <div class="stat-card"><div class="stat-icon blue"><i class="ph-bold ph-folder-open"></i></div><div><div class="stat-value">{{ ftp_count }}</div><div class="stat-label">FTP</div></div></div>
+    <div class="stat-card"><div class="stat-icon purple"><i class="ph-bold ph-clock-countdown"></i></div><div><div class="stat-value">{{ cronjob_count }}</div><div class="stat-label">Cronjobs</div></div></div>
+</div>
+
+<!-- Tabs -->
+<div style="display:flex; gap:0.25rem; flex-wrap:wrap; margin-bottom:1.5rem; border-bottom:1px solid var(--border); padding-bottom:0;">
+    {% for tid, tlabel, ticon in tabs %}
+    <button onclick="switchTab('{{ tid }}')" id="tab-btn-{{ tid }}"
+        class="btn btn-sm {% if forloop.first %}btn-primary{% else %}btn-ghost{% endif %}"
+        style="border-radius:8px 8px 0 0; border-bottom:none; margin-bottom:-1px;">
+        <i class="ph ph-{{ ticon }}"></i> {{ tlabel }}
+    </button>
+    {% endfor %}
+</div>
+
+<!-- ── OVERVIEW ── -->
+<div id="tab-overview" class="tab-panel">
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.25rem;">
+        <div class="glass-card" style="padding:1.5rem;">
+            <h3 style="margin-bottom:1rem; font-size:1rem;">Site Info</h3>
+            <div style="display:flex; flex-direction:column; gap:0.75rem; font-size:0.9rem;">
+                <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Document Root</span><code style="font-size:0.8rem; color:var(--accent-primary);">{{ site.doc_root }}</code></div>
+                <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Framework</span><span>{{ site.get_framework_display }}</span></div>
+                <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Created</span><span>{{ site.created_at|date:"M d, Y" }}</span></div>
+                <div style="display:flex; justify-content:space-between;"><span style="color:var(--text-dim);">Git Repos</span><span>{{ git_count }}</span></div>
             </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon orange"><i class="ph-bold ph-code"></i></div>
-            <div>
-                <div class="stat-value">PHP {{ site.php_version }}</div>
-                <div class="stat-label">PHP Version</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon {% if site.ssl_enabled %}green{% else %}red{% endif %}">
-                <i class="ph-bold ph-shield-{% if site.ssl_enabled %}check{% else %}slash{% endif %}"></i>
-            </div>
-            <div>
-                <div class="stat-value">{% if site.ssl_enabled %}Active{% else %}Inactive{% endif %}</div>
-                <div class="stat-label">SSL</div>
-            </div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-icon purple"><i class="ph-bold ph-clock-countdown"></i></div>
-            <div>
-                <div class="stat-value">{{ cronjob_count }}</div>
-                <div class="stat-label">Cronjobs</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Feature Cards -->
-    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:1rem;">
-
-        {% if pureftpd_installed %}
-        <a href="/user/sites/{{ site.id }}/ftp/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
-            <i class="ph ph-folder-open" style="font-size:2rem; color:var(--accent-primary);"></i>
-            <div>
-                <div style="font-weight:600;">FTP Accounts</div>
-                <div style="color:var(--text-dim); font-size:0.85rem;">{{ ftp_count }} account{{ ftp_count|pluralize }}</div>
-            </div>
-        </a>
-        {% endif %}
-
-        {% if mariadb_installed %}
-        <a href="/user/sites/{{ site.id }}/databases/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
-            <i class="ph ph-database" style="font-size:2rem; color:var(--accent-primary);"></i>
-            <div>
-                <div style="font-weight:600;">Databases</div>
-                <div style="color:var(--text-dim); font-size:0.85rem;">{{ db_count }} database{{ db_count|pluralize }}</div>
-            </div>
-        </a>
-        {% endif %}
-
-        <a href="/user/sites/{{ site.id }}/git/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
-            <i class="ph ph-git-branch" style="font-size:2rem; color:var(--accent-primary);"></i>
-            <div>
-                <div style="font-weight:600;">Git Sync</div>
-                <div style="color:var(--text-dim); font-size:0.85rem;">{{ git_count }} repo{{ git_count|pluralize }}</div>
-            </div>
-        </a>
-
-        <a href="/user/sites/{{ site.id }}/ssl/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
-            <i class="ph ph-shield-star" style="font-size:2rem; color:{% if site.ssl_enabled %}#22c55e{% else %}var(--accent-primary){% endif %};"></i>
-            <div>
-                <div style="font-weight:600;">SSL Certificate</div>
-                <div style="color:var(--text-dim); font-size:0.85rem;">{% if site.ssl_enabled %}Active{% else %}Not configured{% endif %}</div>
-            </div>
-        </a>
-
-        <a href="/user/sites/{{ site.id }}/cronjobs/" class="glass-card" style="padding:1.5rem; text-decoration:none; display:flex; flex-direction:column; gap:0.75rem; transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.borderColor=''">
-            <i class="ph ph-clock-countdown" style="font-size:2rem; color:var(--accent-primary);"></i>
-            <div>
-                <div style="font-weight:600;">Cronjobs</div>
-                <div style="color:var(--text-dim); font-size:0.85rem;">{{ cronjob_count }} job{{ cronjob_count|pluralize }}</div>
-            </div>
-        </a>
-
-    </div>
-
-    <!-- Site Info -->
-    <div class="glass-card" style="padding:1.5rem; margin-top:1.5rem;">
-        <h3 style="margin-bottom:1.25rem; font-size:1rem;">Site Information</h3>
-        <div style="display:flex; flex-direction:column; gap:0.75rem; font-size:0.9rem;">
-            <div style="display:flex; justify-content:space-between;">
-                <span style="color:var(--text-dim);">Document Root</span>
-                <code style="font-size:0.8rem; color:var(--accent-primary);">{{ site.doc_root }}</code>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-                <span style="color:var(--text-dim);">Created</span>
-                <span>{{ site.created_at|date:"M d, Y H:i" }}</span>
-            </div>
-            <div style="display:flex; justify-content:space-between;">
-                <span style="color:var(--text-dim);">Framework</span>
-                <span>{{ site.get_framework_display }}</span>
+        <div class="glass-card" style="padding:1.5rem;">
+            <h3 style="margin-bottom:1rem; font-size:1rem;">Quick Actions</h3>
+            <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                <button class="btn btn-ghost" onclick="switchTab('filemanager')"><i class="ph ph-files"></i> File Manager</button>
+                <button class="btn btn-ghost" onclick="switchTab('logs')"><i class="ph ph-scroll"></i> View Logs</button>
+                <a href="/user/sites/{{ site.id }}/ssl/" class="btn btn-ghost"><i class="ph ph-shield-star"></i> SSL Certificate</a>
+                <a href="/user/sites/{{ site.id }}/git/" class="btn btn-ghost"><i class="ph ph-git-branch"></i> Git Sync</a>
             </div>
         </div>
     </div>
 </div>
+
+<!-- ── FILE MANAGER ── -->
+<div id="tab-filemanager" class="tab-panel" style="display:none;">
+    <div class="glass-card" style="padding:1.25rem;">
+        <div style="display:flex; align-items:center; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm" onclick="fmUp()"><i class="ph ph-arrow-up"></i> Up</button>
+            <code id="fm-path" style="flex:1; font-size:0.85rem; color:var(--accent-primary); background:rgba(0,0,0,0.2); padding:0.4rem 0.75rem; border-radius:8px;">/</code>
+            <button class="btn btn-ghost btn-sm" onclick="fmNewFile()"><i class="ph ph-file-plus"></i> New File</button>
+            <button class="btn btn-ghost btn-sm" onclick="fmNewDir()"><i class="ph ph-folder-plus"></i> New Folder</button>
+            <button class="btn btn-ghost btn-sm" onclick="fmLoad(fmCurrentPath)"><i class="ph ph-arrows-clockwise"></i></button>
+        </div>
+        <div id="fm-list" style="min-height:300px;">
+            <div style="color:var(--text-dim); padding:2rem; text-align:center;">Loading...</div>
+        </div>
+    </div>
+    <!-- Editor panel -->
+    <div id="fm-editor" style="display:none; margin-top:1rem;">
+        <div class="glass-card" style="padding:1.25rem;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <code id="fm-editor-path" style="font-size:0.85rem; color:var(--accent-primary);"></code>
+                <div style="display:flex; gap:0.5rem;">
+                    <button class="btn btn-primary btn-sm" onclick="fmSave()"><i class="ph ph-floppy-disk"></i> Save</button>
+                    <button class="btn btn-ghost btn-sm" onclick="fmCloseEditor()"><i class="ph ph-x"></i></button>
+                </div>
+            </div>
+            <textarea id="fm-editor-content" style="width:100%; height:400px; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:8px; padding:1rem; font-family:monospace; font-size:0.82rem; line-height:1.6; resize:vertical; outline:none;"></textarea>
+        </div>
+    </div>
+</div>
+
+<!-- ── CONFIG EDITOR ── -->
+<div id="tab-config" class="tab-panel" style="display:none;">
+    <div class="glass-card" style="padding:1.25rem;">
+        <h3 style="margin-bottom:1rem; font-size:1rem;">Configuration Files</h3>
+        <div id="config-list" style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-bottom:1rem;">
+            <div style="color:var(--text-dim); font-size:0.9rem;">Loading...</div>
+        </div>
+        <div id="config-editor-wrap" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                <code id="config-editor-path" style="font-size:0.85rem; color:var(--accent-primary);"></code>
+                <button class="btn btn-primary btn-sm" onclick="configSave()"><i class="ph ph-floppy-disk"></i> Save</button>
+            </div>
+            <textarea id="config-editor-content" style="width:100%; height:450px; background:#0d1117; color:#e6edf3; border:1px solid #30363d; border-radius:8px; padding:1rem; font-family:monospace; font-size:0.82rem; line-height:1.6; resize:vertical; outline:none;"></textarea>
+        </div>
+        <div id="config-empty" style="display:none; color:var(--text-dim); padding:2rem; text-align:center;">
+            <i class="ph ph-file-x" style="font-size:2rem; display:block; margin-bottom:0.5rem; opacity:0.5;"></i>
+            No editable config files found in site root (.htaccess, php.ini, .env, wp-config.php, etc.)
+        </div>
+    </div>
+</div>
+
+<!-- ── LOGS ── -->
+<div id="tab-logs" class="tab-panel" style="display:none;">
+    <div class="glass-card" style="padding:1.25rem;">
+        <div style="display:flex; gap:0.5rem; align-items:center; margin-bottom:1rem; flex-wrap:wrap;">
+            <button class="btn btn-sm btn-primary" id="log-btn-access" onclick="loadLog('access',this)"><i class="ph ph-list-magnifying-glass"></i> Access Log</button>
+            <button class="btn btn-sm btn-ghost" id="log-btn-error" onclick="loadLog('error',this)"><i class="ph ph-warning-circle"></i> Error Log</button>
+            <select id="log-lines" onchange="reloadCurrentLog()" style="background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; padding:0.3rem 0.6rem; font-size:0.8rem; outline:none; margin-left:auto;">
+                <option value="50">50 lines</option>
+                <option value="100" selected>100 lines</option>
+                <option value="200">200 lines</option>
+                <option value="500">500 lines</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="reloadCurrentLog()"><i class="ph ph-arrows-clockwise"></i></button>
+        </div>
+        <pre id="log-viewer" style="background:#0d1117; color:#e6edf3; padding:1.25rem; border-radius:10px; font-size:0.8rem; line-height:1.6; min-height:400px; max-height:65vh; overflow-y:auto; white-space:pre-wrap; word-break:break-all; border:1px solid #30363d; font-family:monospace;">Loading...</pre>
+    </div>
+</div>
+
+<!-- ── CRONJOBS ── -->
+<div id="tab-cronjobs" class="tab-panel" style="display:none;">
+    <div class="glass-card" style="padding:1.25rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="font-size:1rem; margin:0;">Scheduled Tasks</h3>
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('cron-form').style.display='block'"><i class="ph ph-plus"></i> Add</button>
+        </div>
+        <div id="cron-form" style="display:none; background:rgba(0,0,0,0.2); border-radius:10px; padding:1rem; margin-bottom:1rem;">
+            <div style="display:grid; grid-template-columns:1fr 2fr; gap:0.75rem; margin-bottom:0.75rem;">
+                <div><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Schedule</label><input type="text" id="cron-schedule" placeholder="*/5 * * * *" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none; font-family:monospace;"></div>
+                <div><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Command</label><input type="text" id="cron-command" placeholder="/usr/bin/php {{ site.doc_root }}/cron.php" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none; font-family:monospace;"></div>
+            </div>
+            <div style="margin-bottom:0.75rem;"><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Description (optional)</label><input type="text" id="cron-desc" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none;"></div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cron-form').style.display='none'">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="cronAdd()"><i class="ph ph-plus"></i> Add Cronjob</button>
+            </div>
+        </div>
+        <div id="cron-list"></div>
+    </div>
+</div>
+
+<!-- ── FTP ── -->
+<div id="tab-ftp" class="tab-panel" style="display:none;">
+    <div class="glass-card" style="padding:1.25rem;">
+        {% if ftp_installed %}
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="font-size:1rem; margin:0;">FTP Accounts</h3>
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('ftp-form').style.display='block'"><i class="ph ph-plus"></i> Add</button>
+        </div>
+        <div id="ftp-form" style="display:none; background:rgba(0,0,0,0.2); border-radius:10px; padding:1rem; margin-bottom:1rem;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                <div><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Username</label><input type="text" id="ftp-username" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none;"></div>
+                <div><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Password</label><input type="password" id="ftp-password" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none;"></div>
+            </div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-bottom:0.75rem;">
+                <div><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Quota (MB)</label><input type="number" id="ftp-quota" value="1024" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none;"></div>
+                <div><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Home Dir (optional)</label><input type="text" id="ftp-homedir" placeholder="{{ site.doc_root }}" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none; font-family:monospace; font-size:0.8rem;"></div>
+            </div>
+            <div id="ftp-error" style="display:none; color:#ef4444; font-size:0.85rem; margin-bottom:0.5rem;"></div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ftp-form').style.display='none'">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="ftpAdd()"><i class="ph ph-plus"></i> Create</button>
+            </div>
+        </div>
+        <div id="ftp-list"></div>
+        {% else %}
+        <div style="padding:1rem; background:rgba(251,146,60,0.1); border:1px solid rgba(251,146,60,0.3); border-radius:10px; color:#fb923c;">
+            <i class="ph-bold ph-warning"></i> Pure-FTPd is not installed. Contact your administrator.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- ── DATABASES ── -->
+<div id="tab-databases" class="tab-panel" style="display:none;">
+    <div class="glass-card" style="padding:1.25rem;">
+        {% if mariadb_installed %}
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+            <h3 style="font-size:1rem; margin:0;">Databases</h3>
+            <button class="btn btn-primary btn-sm" onclick="document.getElementById('db-form').style.display='block'"><i class="ph ph-plus"></i> Create</button>
+        </div>
+        <div id="db-form" style="display:none; background:rgba(0,0,0,0.2); border-radius:10px; padding:1rem; margin-bottom:1rem;">
+            <div style="margin-bottom:0.75rem;"><label style="display:block; font-size:0.8rem; color:var(--text-dim); margin-bottom:0.3rem;">Database Name</label><input type="text" id="db-name" style="width:100%; padding:0.6rem; background:var(--glass); border:1px solid var(--border); border-radius:8px; color:white; outline:none;"></div>
+            <div id="db-error" style="display:none; color:#ef4444; font-size:0.85rem; margin-bottom:0.5rem;"></div>
+            <div style="display:flex; gap:0.5rem; justify-content:flex-end;">
+                <button class="btn btn-ghost btn-sm" onclick="document.getElementById('db-form').style.display='none'">Cancel</button>
+                <button class="btn btn-primary btn-sm" onclick="dbCreate()"><i class="ph ph-plus"></i> Create</button>
+            </div>
+        </div>
+        <div id="db-list"></div>
+        {% else %}
+        <div style="padding:1rem; background:rgba(251,146,60,0.1); border:1px solid rgba(251,146,60,0.3); border-radius:10px; color:#fb923c;">
+            <i class="ph-bold ph-warning"></i> MariaDB is not installed. Contact your administrator.
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+</div><!-- end animate-fade -->
+{% endblock %}
+
+{% block scripts %}
+<script>
+const SITE_ID = {{ site.id }};
+const CSRF = '{{ csrf_token }}';
+
+// ── Tab switching ──────────────────────────────────────────────────────────
+const TAB_IDS = ['overview','filemanager','config','logs','cronjobs','ftp','databases'];
+function switchTab(id) {
+    TAB_IDS.forEach(t => {
+        document.getElementById('tab-'+t).style.display = t===id ? '' : 'none';
+        const btn = document.getElementById('tab-btn-'+t);
+        if (btn) { btn.className = btn.className.replace('btn-primary','btn-ghost'); }
+    });
+    const active = document.getElementById('tab-btn-'+id);
+    if (active) active.className = active.className.replace('btn-ghost','btn-primary');
+    if (id==='filemanager' && !fmLoaded) { fmLoad('/'); fmLoaded=true; }
+    if (id==='logs') loadLog('access', document.getElementById('log-btn-access'));
+    if (id==='cronjobs') cronLoad();
+    if (id==='ftp') ftpLoad();
+    if (id==='databases') dbLoad();
+    if (id==='config') configLoad();
+    location.hash = id;
+}
+window.addEventListener('load', () => {
+    const hash = location.hash.replace('#','');
+    if (TAB_IDS.includes(hash)) switchTab(hash); else switchTab('overview');
+});
+
+// ── File Manager ───────────────────────────────────────────────────────────
+let fmCurrentPath = '/';
+let fmLoaded = false;
+let fmEditingPath = null;
+
+async function fmLoad(path) {
+    fmCurrentPath = path;
+    document.getElementById('fm-path').textContent = path;
+    document.getElementById('fm-list').innerHTML = '<div style="color:var(--text-dim);padding:2rem;text-align:center;">Loading...</div>';
+    const resp = await fetch(`/user/sites/${SITE_ID}/files/?path=${encodeURIComponent(path)}`);
+    const data = await resp.json();
+    if (!resp.ok) { document.getElementById('fm-list').innerHTML = `<div style="color:#ef4444;padding:1rem;">${data.error}</div>`; return; }
+    if (!data.entries.length) { document.getElementById('fm-list').innerHTML = '<div style="color:var(--text-dim);padding:2rem;text-align:center;">Empty directory</div>'; return; }
+    const rows = data.entries.map(e => `
+        <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            <td style="padding:0.6rem 0.75rem;">
+                <i class="ph ph-${e.type==='dir'?'folder-open':'file-text'}" style="color:${e.type==='dir'?'#f59e0b':'var(--text-dim)'};margin-right:0.4rem;"></i>
+                ${e.type==='dir'
+                    ? `<a href="#" onclick="fmLoad('${path==='/'?'':path}/${e.name}');return false;" style="color:white;text-decoration:none;">${e.name}</a>`
+                    : `<span>${e.name}</span>`}
+            </td>
+            <td style="padding:0.6rem 0.75rem;color:var(--text-dim);font-size:0.8rem;">${e.size!=null?fmSize(e.size):''}</td>
+            <td style="padding:0.6rem 0.75rem;">
+                <div style="display:flex;gap:0.4rem;">
+                    ${e.type==='file'&&e.editable?`<button class="btn btn-ghost btn-sm" onclick="fmEdit('${path==='/'?'':path}/${e.name}')"><i class="ph ph-pencil"></i></button>`:''}
+                    <button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="fmDelete('${path==='/'?'':path}/${e.name}','${e.type}')"><i class="ph ph-trash"></i></button>
+                </div>
+            </td>
+        </tr>`).join('');
+    document.getElementById('fm-list').innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.88rem;"><thead><tr style="color:var(--text-dim);border-bottom:1px solid var(--border);"><th style="padding:0.5rem 0.75rem;text-align:left;">Name</th><th style="padding:0.5rem 0.75rem;text-align:left;">Size</th><th style="padding:0.5rem 0.75rem;"></th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function fmSize(b) { if(b<1024)return b+'B'; if(b<1048576)return (b/1024).toFixed(1)+'KB'; return (b/1048576).toFixed(1)+'MB'; }
+function fmUp() { const p=fmCurrentPath; if(p==='/'||p==='')return; const parts=p.split('/').filter(Boolean); parts.pop(); fmLoad('/'+parts.join('/')||'/'); }
+async function fmEdit(path) {
+    const resp = await fetch(`/user/sites/${SITE_ID}/files/read/?path=${encodeURIComponent(path)}`);
+    const data = await resp.json();
+    if (!resp.ok) { alert(data.error); return; }
+    fmEditingPath = path;
+    document.getElementById('fm-editor-path').textContent = path;
+    document.getElementById('fm-editor-content').value = data.content;
+    document.getElementById('fm-editor').style.display = '';
+    document.getElementById('fm-editor-content').focus();
+}
+async function fmSave() {
+    const content = document.getElementById('fm-editor-content').value;
+    const resp = await fetch(`/user/sites/${SITE_ID}/files/write/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+        body: JSON.stringify({path:fmEditingPath, content})
+    });
+    if (resp.ok) { alert('Saved.'); } else { const d=await resp.json(); alert(d.error||'Save failed.'); }
+}
+function fmCloseEditor() { document.getElementById('fm-editor').style.display='none'; fmEditingPath=null; }
+async function fmDelete(path, type) {
+    if (!confirm(`Delete ${type} "${path}"?`)) return;
+    const resp = await fetch(`/user/sites/${SITE_ID}/files/delete/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+        body: JSON.stringify({path})
+    });
+    if (resp.ok) fmLoad(fmCurrentPath); else { const d=await resp.json(); alert(d.error||'Delete failed.'); }
+}
+async function fmNewFile() {
+    const name = prompt('File name:'); if (!name) return;
+    const path = (fmCurrentPath==='/'?'':fmCurrentPath)+'/'+name;
+    const resp = await fetch(`/user/sites/${SITE_ID}/files/create/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+        body: JSON.stringify({path, type:'file'})
+    });
+    if (resp.ok) fmLoad(fmCurrentPath); else { const d=await resp.json(); alert(d.error||'Failed.'); }
+}
+async function fmNewDir() {
+    const name = prompt('Folder name:'); if (!name) return;
+    const path = (fmCurrentPath==='/'?'':fmCurrentPath)+'/'+name;
+    const resp = await fetch(`/user/sites/${SITE_ID}/files/create/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+        body: JSON.stringify({path, type:'dir'})
+    });
+    if (resp.ok) fmLoad(fmCurrentPath); else { const d=await resp.json(); alert(d.error||'Failed.'); }
+}
+
+// ── Config Editor ──────────────────────────────────────────────────────────
+let configEditingPath = null;
+async function configLoad() {
+    const resp = await fetch(`/user/sites/${SITE_ID}/configs/`);
+    const data = await resp.json();
+    const list = document.getElementById('config-list');
+    const empty = document.getElementById('config-empty');
+    if (!data.configs.length) { list.style.display='none'; empty.style.display=''; return; }
+    list.style.display='flex'; empty.style.display='none';
+    list.innerHTML = data.configs.map(c =>
+        `<button class="btn btn-ghost btn-sm" onclick="configEdit('${c.path}','${c.name}')">${c.name}</button>`
+    ).join('');
+}
+async function configEdit(path, name) {
+    const resp = await fetch(`/user/sites/${SITE_ID}/files/read/?path=${encodeURIComponent(path)}`);
+    const data = await resp.json();
+    if (!resp.ok) { alert(data.error); return; }
+    configEditingPath = path;
+    document.getElementById('config-editor-path').textContent = name;
+    document.getElementById('config-editor-content').value = data.content;
+    document.getElementById('config-editor-wrap').style.display = '';
+}
+async function configSave() {
+    const content = document.getElementById('config-editor-content').value;
+    const resp = await fetch(`/user/sites/${SITE_ID}/files/write/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+        body: JSON.stringify({path:configEditingPath, content})
+    });
+    if (resp.ok) alert('Saved.'); else { const d=await resp.json(); alert(d.error||'Save failed.'); }
+}
+
+// ── Logs ───────────────────────────────────────────────────────────────────
+let currentLogType = 'access';
+async function loadLog(type, btn) {
+    currentLogType = type;
+    ['access','error'].forEach(t => {
+        const b = document.getElementById('log-btn-'+t);
+        if (b) { b.className = b.className.replace('btn-primary','btn-ghost'); }
+    });
+    if (btn) btn.className = btn.className.replace('btn-ghost','btn-primary');
+    const lines = document.getElementById('log-lines').value;
+    const viewer = document.getElementById('log-viewer');
+    viewer.textContent = 'Loading...';
+    const resp = await fetch(`/user/sites/${SITE_ID}/logs/?type=${type}&lines=${lines}`);
+    const data = await resp.json();
+    viewer.textContent = data.content || '[Empty]';
+    viewer.scrollTop = viewer.scrollHeight;
+}
+function reloadCurrentLog() { loadLog(currentLogType, document.getElementById('log-btn-'+currentLogType)); }
+
+// ── Cronjobs ───────────────────────────────────────────────────────────────
+async function cronLoad() {
+    const resp = await fetch(`/user/sites/${SITE_ID}/cronjobs/`);
+    // The list view returns HTML, so we use the API-style approach via the existing endpoint
+    // We'll fetch the page and parse the table, or better: use a JSON endpoint
+    // For now render inline from the page data
+    cronRender(await resp.text());
+}
+// Since we don't have a JSON endpoint for cronjobs, use the existing page data passed via template
+const CRONJOBS_INIT = {{ cronjobs_json }};
+let cronJobs = [...CRONJOBS_INIT];
+function cronRender(jobs) {
+    const el = document.getElementById('cron-list');
+    if (!jobs.length) { el.innerHTML='<div style="color:var(--text-dim);padding:2rem;text-align:center;"><i class="ph ph-clock" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.5;"></i>No cronjobs yet.</div>'; return; }
+    el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.88rem;"><thead><tr style="color:var(--text-dim);border-bottom:1px solid var(--border);"><th style="padding:0.5rem 0.75rem;text-align:left;">Schedule</th><th style="padding:0.5rem 0.75rem;text-align:left;">Command</th><th style="padding:0.5rem 0.75rem;text-align:left;">Description</th><th></th></tr></thead><tbody>${
+        jobs.map(j=>`<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            <td style="padding:0.6rem 0.75rem;"><code style="color:var(--accent-primary);font-size:0.8rem;">${j.schedule}</code></td>
+            <td style="padding:0.6rem 0.75rem;font-family:monospace;font-size:0.78rem;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${j.command}</td>
+            <td style="padding:0.6rem 0.75rem;color:var(--text-dim);font-size:0.82rem;">${j.description||'—'}</td>
+            <td style="padding:0.6rem 0.75rem;"><button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="cronDelete(${j.id})"><i class="ph ph-trash"></i></button></td>
+        </tr>`).join('')
+    }</tbody></table>`;
+}
+function cronLoad() { cronRender(cronJobs); }
+async function cronAdd() {
+    const schedule = document.getElementById('cron-schedule').value.trim();
+    const command = document.getElementById('cron-command').value.trim();
+    const description = document.getElementById('cron-desc').value.trim();
+    if (!schedule||!command) { alert('Schedule and command required.'); return; }
+    const resp = await fetch(`/user/sites/${SITE_ID}/cronjobs/create/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+        body: JSON.stringify({schedule,command,description})
+    });
+    if (resp.ok) {
+        const d = await resp.json();
+        cronJobs.push({id:d.id,schedule,command,description});
+        cronRender(cronJobs);
+        document.getElementById('cron-form').style.display='none';
+        document.getElementById('cron-schedule').value='';
+        document.getElementById('cron-command').value='';
+        document.getElementById('cron-desc').value='';
+    } else { const d=await resp.json(); alert(d.error||'Failed.'); }
+}
+async function cronDelete(id) {
+    if (!confirm('Delete this cronjob?')) return;
+    const resp = await fetch(`/user/sites/${SITE_ID}/cronjobs/${id}/delete/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'}
+    });
+    if (resp.ok) { cronJobs=cronJobs.filter(j=>j.id!==id); cronRender(cronJobs); }
+    else alert('Failed to delete.');
+}
+
+// ── FTP ────────────────────────────────────────────────────────────────────
+let ftpAccounts = [];
+async function ftpLoad() {
+    // Fetch from existing list endpoint (returns HTML) — use JSON via inline data instead
+    ftpRender(ftpAccounts);
+}
+const FTP_INIT = {{ ftp_json }};
+ftpAccounts = [...FTP_INIT];
+function ftpRender(accounts) {
+    const el = document.getElementById('ftp-list');
+    if (!el) return;
+    if (!accounts.length) { el.innerHTML='<div style="color:var(--text-dim);padding:2rem;text-align:center;"><i class="ph ph-folder-open" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.5;"></i>No FTP accounts yet.</div>'; return; }
+    el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.88rem;"><thead><tr style="color:var(--text-dim);border-bottom:1px solid var(--border);"><th style="padding:0.5rem 0.75rem;text-align:left;">Username</th><th style="padding:0.5rem 0.75rem;text-align:left;">Home Dir</th><th style="padding:0.5rem 0.75rem;text-align:left;">Quota</th><th style="padding:0.5rem 0.75rem;text-align:left;">Status</th><th></th></tr></thead><tbody>${
+        accounts.map(a=>`<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            <td style="padding:0.6rem 0.75rem;font-weight:600;font-family:monospace;">${a.username}</td>
+            <td style="padding:0.6rem 0.75rem;color:var(--text-dim);font-size:0.78rem;font-family:monospace;">${a.home_dir}</td>
+            <td style="padding:0.6rem 0.75rem;">${a.quota_mb} MB</td>
+            <td style="padding:0.6rem 0.75rem;"><span style="background:rgba(34,197,94,0.1);color:#22c55e;padding:0.2rem 0.6rem;border-radius:6px;font-size:0.78rem;">${a.status}</span></td>
+            <td style="padding:0.6rem 0.75rem;"><button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="ftpDelete(${a.id},'${a.username}')"><i class="ph ph-trash"></i></button></td>
+        </tr>`).join('')
+    }</tbody></table>`;
+}
+async function ftpAdd() {
+    const username = document.getElementById('ftp-username').value.trim();
+    const password = document.getElementById('ftp-password').value;
+    const quota_mb = parseInt(document.getElementById('ftp-quota').value);
+    const home_dir = document.getElementById('ftp-homedir').value.trim();
+    const errEl = document.getElementById('ftp-error');
+    if (!username||!password) { errEl.textContent='Username and password required.'; errEl.style.display=''; return; }
+    errEl.style.display='none';
+    const resp = await fetch(`/user/sites/${SITE_ID}/ftp/create/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+        body: JSON.stringify({username,password,quota_mb,home_dir})
+    });
+    if (resp.ok) {
+        const d = await resp.json();
+        ftpAccounts.push({id:d.id,username,home_dir:home_dir||'{{ site.doc_root }}',quota_mb,status:'active'});
+        ftpRender(ftpAccounts);
+        document.getElementById('ftp-form').style.display='none';
+    } else { const d=await resp.json(); errEl.textContent=d.error||'Failed.'; errEl.style.display=''; }
+}
+async function ftpDelete(id, username) {
+    if (!confirm(`Delete FTP account "${username}"?`)) return;
+    const resp = await fetch(`/user/sites/${SITE_ID}/ftp/${id}/delete/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'}
+    });
+    if (resp.ok) { ftpAccounts=ftpAccounts.filter(a=>a.id!==id); ftpRender(ftpAccounts); }
+    else alert('Failed to delete.');
+}
+
+// ── Databases ──────────────────────────────────────────────────────────────
+let dbList = [];
+const DB_INIT = {{ db_json }};
+dbList = [...DB_INIT];
+function dbLoad() { dbRender(dbList); }
+function dbRender(dbs) {
+    const el = document.getElementById('db-list');
+    if (!el) return;
+    if (!dbs.length) { el.innerHTML='<div style="color:var(--text-dim);padding:2rem;text-align:center;"><i class="ph ph-database" style="font-size:2rem;display:block;margin-bottom:0.5rem;opacity:0.5;"></i>No databases yet.</div>'; return; }
+    el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:0.88rem;"><thead><tr style="color:var(--text-dim);border-bottom:1px solid var(--border);"><th style="padding:0.5rem 0.75rem;text-align:left;">Database</th><th style="padding:0.5rem 0.75rem;text-align:left;">User</th><th style="padding:0.5rem 0.75rem;text-align:left;">Created</th><th></th></tr></thead><tbody>${
+        dbs.map(d=>`<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+            <td style="padding:0.6rem 0.75rem;font-family:monospace;font-weight:600;">${d.db_name}</td>
+            <td style="padding:0.6rem 0.75rem;font-family:monospace;color:var(--text-dim);">${d.db_user}</td>
+            <td style="padding:0.6rem 0.75rem;color:var(--text-dim);font-size:0.82rem;">${d.created_at}</td>
+            <td style="padding:0.6rem 0.75rem;"><button class="btn btn-ghost btn-sm" style="color:#ef4444;" onclick="dbDelete(${d.id},'${d.db_name}')"><i class="ph ph-trash"></i></button></td>
+        </tr>`).join('')
+    }</tbody></table>`;
+}
+async function dbCreate() {
+    const db_name = document.getElementById('db-name').value.trim();
+    const errEl = document.getElementById('db-error');
+    if (!db_name) { errEl.textContent='Database name required.'; errEl.style.display=''; return; }
+    errEl.style.display='none';
+    const resp = await fetch(`/user/sites/${SITE_ID}/databases/create/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'},
+        body: JSON.stringify({db_name})
+    });
+    if (resp.ok) {
+        const d = await resp.json();
+        dbList.push({id:d.id,db_name:d.db_name,db_user:d.db_user,created_at:'just now'});
+        dbRender(dbList);
+        document.getElementById('db-form').style.display='none';
+        document.getElementById('db-name').value='';
+    } else { const d=await resp.json(); errEl.textContent=d.error||'Failed.'; errEl.style.display=''; }
+}
+async function dbDelete(id, name) {
+    if (!confirm(`Delete database "${name}"?`)) return;
+    const resp = await fetch(`/user/sites/${SITE_ID}/databases/${id}/delete/`, {
+        method:'POST', headers:{'X-CSRFToken':CSRF,'Content-Type':'application/json'}
+    });
+    if (resp.ok) { dbList=dbList.filter(d=>d.id!==id); dbRender(dbList); }
+    else alert('Failed to delete.');
+}
+</script>
 {% endblock %}
