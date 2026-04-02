@@ -188,6 +188,22 @@
                 <span>Service Status</span>
             </a>
 
+            <details class="nav-dropdown" {% if active_page == 'php' %}open{% endif %}>
+                <summary class="nav-link" style="cursor: pointer;">
+                    <i class="ph ph-code"></i>
+                    <span>PHP</span>
+                    <i class="ph ph-caret-down dropdown-caret"></i>
+                </summary>
+                <div class="dropdown-content">
+                    <a href="/admin/php/?tab=ini" class="dropdown-item {% if active_page == 'php' and active_tab == 'ini' %}active{% endif %}">
+                        <i class="ph ph-sliders"></i> php.ini Editor
+                    </a>
+                    <a href="/admin/php/?tab=packages" class="dropdown-item {% if active_page == 'php' and active_tab == 'packages' %}active{% endif %}">
+                        <i class="ph ph-package"></i> Extensions
+                    </a>
+                </div>
+            </details>
+
             {% if restic_installed %}
             <a href="{% url 'admin_list_backups' %}" class="nav-link {% if active_page == 'backup' %}active{% endif %}">
                 <i class="ph ph-cloud-arrow-up"></i>

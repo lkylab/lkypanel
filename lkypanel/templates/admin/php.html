@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% block title %}PHP Manager — LKYPanel{% endblock %}
+
+{% block head %}
+<style>
+.pkg-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:.6rem; margin-top:1rem; }
+.pkg-card { display:flex; align-items:center; gap:.6rem; padding:.6rem .75rem; border-radius:10px; border:1px solid var(--border); background:rgba(255,255,255,.04); cursor:pointer; transition:background .15s; }
+.pkg-card:hover { background:rgba(255,255,255,.08); }
+.pkg-card.selected { border-color:rgba(99,102,241,.5); background:rgba(99,102,241,.1); }
+.pkg-card input[type=checkbox] { pointer-events:none; }
+.pkg-badge { font-size:.7rem; padding:.15rem .45rem; border-radius:6px; }
+.pkg-badge.installed { background:rgba(34,197,94,.15); color:#22c55e; }
+.pkg-badge.missing { background:rgba(239,68,68,.1); color:#ef4444; }
+#ini-editor { width:100%; min-height:500px; font-family:monospace; font-size:.82rem; background:#0d0d1a; color:#e2e8f0; border:1px solid var(--border); border-radius:10px; padding:1rem; resize:vertical; outline:none; box-sizing:border-box; line-height:1.6; }
+.tab-btn { padding:.45rem 1rem; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:rgba(255,255,255,.7); cursor:pointer; font-size:.85rem; transition:background .15s; }
+.tab-btn.active { background:var(--accent-primary); border-color:var(--accent-primary); color:#fff; }
+</style>
+{% endblock %}
+
+{% block header %}PHP Manager{% endblock %}
+
+{% block content %}
+<div class="animate-fade">
+
+{% if not versions %}
+<div class="glass-card" style="padding:2rem;text-align:center;color:var(--text-dim)">
+  <i class="ph ph-warning" style="font-size:2rem"></i>
+  <p>No lsphp versions detected. Install OpenLiteSpeed and lsphp first.</p>
+</div>
+{% else %}
+
+<!-- Version + Tab selector -->
+<div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.5rem">
+  <div style="display:flex;gap:.5rem;align-items:center">
+    <label style="color:var(--text-dim);font-size:.85rem">PHP Version:</label>
+    <select id="version-select" onchange="switchVersion(this.value)"
+      style="padding:.4rem .75rem;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-size:.85rem;outline:none">
+      {% for v in versions %}
+      <option value="{{ v }}" {% if v == selected %}selected{% endif %}>PHP {{ v }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div style="display:flex;gap:.5rem">
+    <button class="tab-btn {% if tab == 'ini' %}active{% endif %}" id="tab-ini" onclick="switchTab('ini')">
+      <i class="ph ph-sliders"></i> php.ini Editor
+    </button>
+    <button class="tab-btn {% if tab == 'packages' %}active{% endif %}" id="tab-packages" onclick="switchTab('packages')">
+      <i class="ph ph-package"></i> Extensions
+    </button>
+  </div>
+</div>
+
+<!-- INI Editor -->
+<div id="panel-ini" style="display:{% if tab == 'ini' %}block{% else %}none{% endif %}">
+  <div class="glass-card" style="padding:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+      <div>
+        <h3 style="margin:0;font-size:1rem">php.ini Editor</h3>
+        <div id="ini-path" style="font-size:.75rem;color:var(--text-dim);margin-top:.25rem"></div>
+      </div>
+      <div style="display:flex;gap:.5rem;align-items:center">
+        <span id="ini-status" style="font-size:.8rem;color:var(--text-dim)"></span>
+        <button class="btn btn-primary" onclick="saveIni()"><i class="ph ph-floppy-disk"></i> Save</button>
+      </div>
+    </div>
+    <!-- Quick settings -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.75rem;margin-bottom:1rem;padding:1rem;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid var(--border)">
+      <div>
+        <label style="font-size:.75rem;color:var(--text-dim)">memory_limit</label>
+        <input type="text" id="q-memory" placeholder="256M" oninput="syncQuick('memory_limit',this.value)"
+          style="width:100%;padding:.35rem .6rem;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-size:.83rem;outline:none;box-sizing:border-box;margin-top:.25rem">
+      </div>
+      <div>
+        <label style="font-size:.75rem;color:var(--text-dim)">upload_max_filesize</label>
+        <input type="text" id="q-upload" placeholder="64M" oninput="syncQuick('upload_max_filesize',this.value)"
+          style="width:100%;padding:.35rem .6rem;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-size:.83rem;outline:none;box-sizing:border-box;margin-top:.25rem">
+      </div>
+      <div>
+        <label style="font-size:.75rem;color:var(--text-dim)">max_execution_time</label>
+        <input type="text" id="q-exec" placeholder="300" oninput="syncQuick('max_execution_time',this.value)"
+          style="width:100%;padding:.35rem .6rem;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-size:.83rem;outline:none;box-sizing:border-box;margin-top:.25rem">
+      </div>
+      <div>
+        <label style="font-size:.75rem;color:var(--text-dim)">post_max_size</label>
+        <input type="text" id="q-post" placeholder="64M" oninput="syncQuick('post_max_size',this.value)"
+          style="width:100%;padding:.35rem .6rem;border-radius:6px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-size:.83rem;outline:none;box-sizing:border-box;margin-top:.25rem">
+      </div>
+    </div>
+    <textarea id="ini-editor" spellcheck="false" placeholder="Loading..."></textarea>
+  </div>
+</div>
+
+<!-- Extensions -->
+<div id="panel-packages" style="display:{% if tab == 'packages' %}block{% else %}none{% endif %}">
+  <div class="glass-card" style="padding:1.5rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+      <h3 style="margin:0;font-size:1rem">PHP Extensions</h3>
+      <div style="display:flex;gap:.5rem">
+        <span id="pkg-sel-count" style="font-size:.82rem;color:var(--text-dim);align-self:center">0 selected</span>
+        <button class="btn btn-primary" onclick="managePackages('install')"><i class="ph ph-download-simple"></i> Install Selected</button>
+        <button class="btn" style="border-color:rgba(239,68,68,.3);color:#ef4444" onclick="managePackages('remove')"><i class="ph ph-trash"></i> Remove Selected</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:.5rem;margin-bottom:.75rem;flex-wrap:wrap">
+      <button class="btn" style="font-size:.78rem;padding:.3rem .6rem" onclick="filterPkgs('all')">All</button>
+      <button class="btn" style="font-size:.78rem;padding:.3rem .6rem" onclick="filterPkgs('installed')">Installed</button>
+      <button class="btn" style="font-size:.78rem;padding:.3rem .6rem" onclick="filterPkgs('missing')">Not Installed</button>
+      <input type="text" placeholder="Search extensions…" oninput="searchPkgs(this.value)"
+        style="padding:.3rem .6rem;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:#fff;font-size:.82rem;outline:none;min-width:160px">
+    </div>
+    <div id="pkg-loading" style="color:var(--text-dim);padding:1rem">Loading...</div>
+    <div class="pkg-grid" id="pkg-grid" style="display:none"></div>
+  </div>
+</div>
+
+{% endif %}
+</div>
+
+<!-- Toast -->
+<div id="php-toasts" style="position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;display:flex;flex-direction:column;gap:.5rem"></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CSRF = document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||'';
+let currentVersion = '{{ selected }}';
+let currentTab = '{{ tab }}';
+let allPackages = [];
+let selectedPkgs = new Set();
+
+function toast(msg, type='info') {
+  const w = document.getElementById('php-toasts');
+  const el = document.createElement('div');
+  el.style.cssText = `padding:.6rem 1rem;border-radius:10px;font-size:.82rem;color:#fff;max-width:320px;animation:slideIn .2s ease;background:${type==='success'?'rgba(34,197,94,.9)':type==='error'?'rgba(239,68,68,.9)':'rgba(99,102,241,.9)'}`;
+  el.textContent = msg;
+  w.appendChild(el);
+  setTimeout(()=>el.remove(), 3500);
+}
+
+function switchVersion(v) {
+  currentVersion = v;
+  if (currentTab === 'ini') loadIni();
+  else loadPackages();
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('panel-ini').style.display = tab==='ini'?'block':'none';
+  document.getElementById('panel-packages').style.display = tab==='packages'?'block':'none';
+  document.getElementById('tab-ini').classList.toggle('active', tab==='ini');
+  document.getElementById('tab-packages').classList.toggle('active', tab==='packages');
+  if (tab==='ini') loadIni();
+  else loadPackages();
+}
+
+// ── INI ──────────────────────────────────────────────────────────────────────
+async function loadIni() {
+  document.getElementById('ini-status').textContent = 'Loading...';
+  const r = await fetch(`/admin/php/ini/?version=${currentVersion}`);
+  const data = await r.json();
+  if (data.error) { toast(data.error, 'error'); return; }
+  document.getElementById('ini-editor').value = data.raw || '';
+  document.getElementById('ini-path').textContent = data.path || '';
+  // Populate quick fields
+  const v = data.values || {};
+  document.getElementById('q-memory').value = v['memory_limit'] || '';
+  document.getElementById('q-upload').value = v['upload_max_filesize'] || '';
+  document.getElementById('q-exec').value = v['max_execution_time'] || '';
+  document.getElementById('q-post').value = v['post_max_size'] || '';
+  document.getElementById('ini-status').textContent = '';
+}
+
+function syncQuick(key, val) {
+  const ta = document.getElementById('ini-editor');
+  const pattern = new RegExp(`^(\\s*;?\\s*${key}\\s*=.*)$`, 'gm');
+  if (pattern.test(ta.value)) {
+    ta.value = ta.value.replace(new RegExp(`^(\\s*;?\\s*${key}\\s*=.*)$`, 'gm'), `${key} = ${val}`);
+  } else {
+    ta.value += `\n${key} = ${val}`;
+  }
+}
+
+async function saveIni() {
+  const content = document.getElementById('ini-editor').value;
+  document.getElementById('ini-status').textContent = 'Saving...';
+  const r = await fetch('/admin/php/ini/save/', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+    body: JSON.stringify({version: currentVersion, content})
+  });
+  const data = await r.json();
+  if (data.status) { toast('php.ini saved', 'success'); document.getElementById('ini-status').textContent = 'Saved ✓'; }
+  else { toast(data.error, 'error'); document.getElementById('ini-status').textContent = ''; }
+}
+
+// ── Packages ─────────────────────────────────────────────────────────────────
+async function loadPackages() {
+  document.getElementById('pkg-loading').style.display = 'block';
+  document.getElementById('pkg-grid').style.display = 'none';
+  selectedPkgs.clear();
+  const r = await fetch(`/admin/php/packages/?version=${currentVersion}`);
+  const data = await r.json();
+  allPackages = data.packages || [];
+  renderPackages(allPackages);
+}
+
+function renderPackages(pkgs) {
+  const grid = document.getElementById('pkg-grid');
+  document.getElementById('pkg-loading').style.display = 'none';
+  grid.style.display = 'grid';
+  grid.innerHTML = pkgs.map(p => `
+    <div class="pkg-card ${selectedPkgs.has(p.name)?'selected':''}" onclick="togglePkg('${p.name}',this)">
+      <input type="checkbox" ${selectedPkgs.has(p.name)?'checked':''}>
+      <span style="flex:1;font-size:.83rem">${p.name}</span>
+      <span class="pkg-badge ${p.installed?'installed':'missing'}">${p.installed?'on':'off'}</span>
+    </div>`).join('');
+  document.getElementById('pkg-sel-count').textContent = `${selectedPkgs.size} selected`;
+}
+
+function togglePkg(name, el) {
+  if (selectedPkgs.has(name)) selectedPkgs.delete(name);
+  else selectedPkgs.add(name);
+  el.classList.toggle('selected', selectedPkgs.has(name));
+  el.querySelector('input').checked = selectedPkgs.has(name);
+  document.getElementById('pkg-sel-count').textContent = `${selectedPkgs.size} selected`;
+}
+
+function filterPkgs(filter) {
+  if (filter === 'installed') renderPackages(allPackages.filter(p=>p.installed));
+  else if (filter === 'missing') renderPackages(allPackages.filter(p=>!p.installed));
+  else renderPackages(allPackages);
+}
+
+function searchPkgs(q) {
+  renderPackages(allPackages.filter(p=>p.name.includes(q.toLowerCase())));
+}
+
+async function managePackages(action) {
+  if (!selectedPkgs.size) { toast('Select at least one extension', 'error'); return; }
+  const extensions = [...selectedPkgs];
+  toast(`${action === 'install' ? 'Installing' : 'Removing'} ${extensions.length} extension(s)...`);
+  const r = await fetch('/admin/php/packages/manage/', {
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+    body: JSON.stringify({version: currentVersion, action, extensions})
+  });
+  const data = await r.json();
+  if (data.status) { toast(`Done`, 'success'); selectedPkgs.clear(); loadPackages(); }
+  else toast(data.error, 'error');
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  if (currentTab === 'ini') loadIni();
+  else loadPackages();
+});
+</script>
+{% endblock %}

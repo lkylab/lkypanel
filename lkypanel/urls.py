@@ -9,6 +9,7 @@ from lkypanel.admin_views import (
 from lkypanel.admin_views import settings as aset, email as ae, services as aserv
 from lkypanel.admin_views import logs as al
 from lkypanel.admin_views import mail as amail
+from lkypanel.admin_views import php as aphp
 from lkypanel.user_views import ftp as uf, git as ug, ssl as us, databases as ud, websites as uw, cronjobs as ucj
 from lkypanel.api import views as av
 from lkypanel.views.tools import phpMyAdminProxyView
@@ -111,6 +112,13 @@ urlpatterns = [
 
     # ── Security ────────────────────────────────────────────────────────
     path('user/security/2fa/', s_user.two_factor_setup, name='security_2fa_setup'),
+
+    # ── PHP Manager ───────────────────────────────────────────────────────────
+    path('admin/php/',                  aphp.php_dashboard,    name='admin_php'),
+    path('admin/php/ini/',              aphp.get_ini,          name='admin_php_ini'),
+    path('admin/php/ini/save/',         aphp.save_ini,         name='admin_php_ini_save'),
+    path('admin/php/packages/',         aphp.get_packages,     name='admin_php_packages'),
+    path('admin/php/packages/manage/',  aphp.manage_packages,  name='admin_php_packages_manage'),
 
     # ── Tools Proxy ──────────────────────────────────────────────────────
     path('admin/phpmyadmin/',                   phpMyAdminProxyView.as_view(), name='pma_index'),
