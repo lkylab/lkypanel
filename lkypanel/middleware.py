@@ -44,6 +44,9 @@ class PortIsolationMiddleware:
 # ---------------------------------------------------------------------------
 
 class RoleEnforcementMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
     def __call__(self, request):
         port = int(request.META.get('SERVER_PORT', 0))
         user = getattr(request, 'user', None)
