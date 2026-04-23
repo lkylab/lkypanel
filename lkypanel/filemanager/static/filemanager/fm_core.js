@@ -2,15 +2,19 @@ function getCsrf() {
   return document.querySelector('[name=csrfmiddlewaretoken]')?.value || '';
 }
 
-const SITE_ID = document.getElementById('fm-site-id')?.value || '0';
-const API_URL = `/filemanager/site/${SITE_ID}/api/`;
-const UPLOAD_URL = `/filemanager/site/${SITE_ID}/upload/`;
-const DOWNLOAD_URL = `/filemanager/site/${SITE_ID}/download/`;
+function getSiteId() {
+  return document.getElementById('fm-site-id')?.value || '0';
+}
 
-function getSiteId() { return SITE_ID; }
-function getApiUrl() { return API_URL; }
-function getUploadUrl() { return UPLOAD_URL; }
-function getDownloadUrl() { return DOWNLOAD_URL; }
+function getApiUrl() { return `/filemanager/site/${getSiteId()}/api/`; }
+function getUploadUrl() { return `/filemanager/site/${getSiteId()}/upload/`; }
+function getDownloadUrl() { return `/filemanager/site/${getSiteId()}/download/`; }
+
+// Compatibility globals for fm_actions.js
+const SITE_ID = getSiteId();
+const API_URL = getApiUrl();
+const UPLOAD_URL = getUploadUrl();
+const DOWNLOAD_URL = getDownloadUrl();
 
 async function apiFetch(data) {
   try {
@@ -37,7 +41,7 @@ const FM = (() => {
     search: '',
     view: 'grid',
     selected: new Set(),
-    clipboard: null, // {action:'copy'|'cut', dir, items}
+    clipboard: null,
     ctxEntry: null,
     newMode: 'file',
     chmodPath: '',
@@ -47,7 +51,6 @@ const FM = (() => {
     lastSelected: null,
   };
 
-  // ── Toast ──────────────────────────────────────────────────────────────
   function toast(msg, type = 'info') {
     const wrap = document.getElementById('fm-toasts');
     if (!wrap) return;
@@ -58,21 +61,25 @@ const FM = (() => {
     setTimeout(() => el.remove(), 3500);
   }
 
-  // ── Modal helpers ──────────────────────────────────────────────────────
-  function openModal(id) { document.getElementById(id).classList.add('show'); }
-  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  function openModal(id) { 
+    const el = document.getElementById(id);
+    if (el) el.classList.add('show'); 
+  }
+  function closeModal(id) { 
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show'); 
+  }
 
   function confirm(title, msg, onOk) {
-    const titleEl = document.getElementById('confirm-title');
-    const msgEl = document.getElementById('confirm-msg');
-    const btn = document.getElementById('confirm-ok');
-    if (titleEl) titleEl.textContent = title;
-    if (msgEl) msgEl.textContent = msg;
-    if (btn) btn.onclick = () => { closeModal('modal-confirm'); onOk(); };
+    const tEl = document.getElementById('confirm-title');
+    const mEl = document.getElementById('confirm-msg');
+    const bEl = document.getElementById('confirm-ok');
+    if (tEl) tEl.textContent = title;
+    if (mEl) mEl.textContent = msg;
+    if (bEl) bEl.onclick = () => { closeModal('modal-confirm'); onOk(); };
     openModal('modal-confirm');
   }
 
-  // ── File icons ─────────────────────────────────────────────────────────
   function fileIcon(entry) {
     if (entry.is_dir) return 'ph-folder';
     const ext = entry.name.split('.').pop().toLowerCase();
@@ -102,7 +109,6 @@ const FM = (() => {
     return new Date(ts * 1000).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
-  // ── Load directory ─────────────────────────────────────────────────────
   async function load(path, page) {
     if (path !== undefined) state.path = path;
     if (page !== undefined) state.page = page;
@@ -129,7 +135,6 @@ const FM = (() => {
     updateStatus();
   }
 
-  // ── Breadcrumb ─────────────────────────────────────────────────────────
   function renderBreadcrumb(crumbs) {
     const el = document.getElementById('fm-breadcrumb');
     if (!el) return;
@@ -144,7 +149,6 @@ const FM = (() => {
     el.innerHTML = html;
   }
 
-  // ── Sidebar tree ───────────────────────────────────────────────────────
   function renderTree(crumbs) {
     const el = document.getElementById('fm-tree');
     if (!el) return;
@@ -152,7 +156,6 @@ const FM = (() => {
     crumbs.forEach(c => {
       html += `<div class="fm-tree-item" style="padding-left:1.2rem" onclick="FM.load('${esc(c.path)}')"><i class="ph ph-folder"></i> ${esc(c.name)}</div>`;
     });
-    // Show subdirs of current
     state.entries.filter(e => e.is_dir).forEach(e => {
       const p = state.path ? state.path + '/' + e.name : e.name;
       html += `<div class="fm-tree-item" style="padding-left:${(crumbs.length+1)*0.8+0.6}rem" onclick="FM.load('${esc(p)}')"><i class="ph ph-folder"></i> ${esc(e.name)}</div>`;
@@ -160,7 +163,6 @@ const FM = (() => {
     el.innerHTML = html;
   }
 
-  // ── Content area ───────────────────────────────────────────────────────
   function renderContent() {
     const el = document.getElementById('fm-content');
     if (!el) return;
@@ -187,7 +189,6 @@ const FM = (() => {
       </div>`;
     });
     html += '</div>';
-    // Pagination
     html += renderPagination();
     el.innerHTML = html;
   }
@@ -235,7 +236,6 @@ const FM = (() => {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
-  // ── Selection ──────────────────────────────────────────────────────────
   function cardClick(e, name) {
     if (e.ctrlKey || e.metaKey) {
       toggleSelect(name);
@@ -285,54 +285,62 @@ const FM = (() => {
   }
 
   function updateStatus() {
-    const pathEl = document.getElementById('sb-path');
-    const countEl = document.getElementById('sb-count');
-    const selEl = document.getElementById('sb-sel');
-    if (pathEl) pathEl.textContent = '/' + state.path;
-    if (countEl) countEl.textContent = `${state.total} items`;
+    const pEl = document.getElementById('sb-path');
+    const cEl = document.getElementById('sb-count');
+    const sEl = document.getElementById('sb-sel');
+    if (pEl) pEl.textContent = '/' + state.path;
+    if (cEl) cEl.textContent = `${state.total} items`;
     const n = state.selected.size;
-    if (selEl) selEl.textContent = n > 0 ? `${n} selected` : '';
+    if (sEl) sEl.textContent = n > 0 ? `${n} selected` : '';
   }
 
-  // ── Open / navigate ────────────────────────────────────────────────────
   function open(name, isDir) {
     if (isDir) {
       load(state.path ? state.path + '/' + name : name);
     } else {
-      editFile(name);
+      if (typeof FM.editFile === 'function') FM.editFile(name);
     }
   }
 
-  // ── View / sort ────────────────────────────────────────────────────────
   function setView(v) {
     state.view = v;
-    document.getElementById('btn-view-grid').classList.toggle('primary', v==='grid');
-    document.getElementById('btn-view-list').classList.toggle('primary', v==='list');
+    const gBtn = document.getElementById('btn-view-grid');
+    const lBtn = document.getElementById('btn-view-list');
+    if (gBtn) gBtn.classList.toggle('primary', v==='grid');
+    if (lBtn) lBtn.classList.toggle('primary', v==='list');
     renderContent();
   }
 
   function setSort(field) {
     if (state.sort === field) state.reverse = !state.reverse;
     else { state.sort = field; state.reverse = false; }
-    document.getElementById('sort-dir-icon').className = state.reverse ? 'ph ph-sort-descending' : 'ph ph-sort-ascending';
+    const icon = document.getElementById('sort-dir-icon');
+    if (icon) icon.className = state.reverse ? 'ph ph-sort-descending' : 'ph ph-sort-ascending';
     load();
   }
 
-  function toggleSortDir() { state.reverse = !state.reverse; document.getElementById('sort-dir-icon').className = state.reverse ? 'ph ph-sort-descending' : 'ph ph-sort-ascending'; load(); }
+  function toggleSortDir() { 
+    state.reverse = !state.reverse; 
+    const icon = document.getElementById('sort-dir-icon');
+    if (icon) icon.className = state.reverse ? 'ph ph-sort-descending' : 'ph ph-sort-ascending'; 
+    load(); 
+  }
 
   let searchTimer;
-  function onSearch(v) { clearTimeout(searchTimer); searchTimer = setTimeout(() => { state.search = v; load(state.path, 1); }, 300); }
+  function onSearch(v) { 
+    clearTimeout(searchTimer); 
+    searchTimer = setTimeout(() => { state.search = v; load(state.path, 1); }, 300); 
+  }
 
-  // ── Disk usage ─────────────────────────────────────────────────────────
   async function loadDisk() {
     try {
       const res = await apiFetch({ action: 'disk_usage' });
       if (!res.status) return;
       const pct = res.total > 0 ? Math.round(res.used / res.total * 100) : 0;
-      const fillEl = document.getElementById('fm-disk-fill');
-      const labelEl = document.getElementById('fm-disk-label');
-      if (fillEl) fillEl.style.width = pct + '%';
-      if (labelEl) labelEl.textContent = `${fmtSize(res.used)} / ${fmtSize(res.total)}`;
+      const fEl = document.getElementById('fm-disk-fill');
+      const lEl = document.getElementById('fm-disk-label');
+      if (fEl) fEl.style.width = pct + '%';
+      if (lEl) lEl.textContent = `${fmtSize(res.used)} / ${fmtSize(res.total)}`;
     } catch (e) {}
   }
 
@@ -341,8 +349,6 @@ const FM = (() => {
     toggleSelect, toggleAll, clearSelection, updateBulk, closeModal, toast,
     esc, fmtSize, fmtDate, fileIcon, isArchive, state,
     loadDisk,
-    getUploadUrl, getDownloadUrl, getApiUrl, getSiteId, getCsrf,
-    // compatibility for fm_actions.js
     _apiFetch: apiFetch, _confirm: confirm, _openModal: openModal,
     _closeModal: closeModal, _toast: toast, _load: load,
     _renderContent: renderContent, _state: state,
