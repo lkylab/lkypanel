@@ -160,7 +160,7 @@ const FM = (() => {
         onclick="FM.cardClick(event,'${esc(e.name)}')"
         ondblclick="FM.open('${esc(e.name)}',${e.is_dir})"
         oncontextmenu="FM.showCtx(event,'${esc(e.name)}',${e.is_dir})">
-        <div class="fm-card-check"><i class="ph ph-check" style="${sel?'':'display:none'}"></i></div>
+        <div class="fm-card-check" onclick="event.stopPropagation();FM.toggleSelect('${esc(e.name)}')"><i class="ph ph-check" style="${sel?'':'display:none'}"></i></div>
         <i class="ph ${icon} fm-card-icon" style="color:${e.is_dir?'#f59e0b':'#94a3b8'}"></i>
         <div class="fm-card-name" title="${esc(e.name)}">${esc(e.name)}</div>
       </div>`;

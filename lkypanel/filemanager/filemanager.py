@@ -12,9 +12,9 @@ import shutil
 from django.http import JsonResponse, FileResponse, Http404
 
 
-def _run(cmd, input=None, timeout=30):
+def _run(cmd, input=None, timeout=30, cwd=None):
     return subprocess.run(cmd, shell=False, capture_output=True, text=True,
-                          input=input, timeout=timeout)
+                          input=input, timeout=timeout, cwd=cwd)
 
 
 def _safe_path(base: str, requested: str) -> str | None:
@@ -322,15 +322,21 @@ def compress_items(base, rel_dir, items, archive_name, fmt):
     src_dir = _safe_path(base, rel_dir) if rel_dir else os.path.realpath(base)
     if not src_dir:
         return err('Invalid path.')
+    
     if fmt == 'zip':
-        out = _safe_path(base, os.path.join(rel_dir, archive_name + '.zip'))
-        r = _run(['sudo', 'zip', '-r', out] + [os.path.join(src_dir, i) for i in items])
+        filename = archive_name + '.zip'
+        out = _safe_path(base, os.path.join(rel_dir, filename))
+        if not out:
+            return err('Invalid output path.')
+        r = _run(['sudo', 'zip', '-r', filename] + items, cwd=src_dir)
     else:
-        out = _safe_path(base, os.path.join(rel_dir, archive_name + '.tar.gz'))
-        r = _run(['sudo', 'tar', '-czf', out] + [os.path.join(src_dir, i) for i in items])
-    if not out:
-        return err('Invalid output path.')
-    return ok({'archive': os.path.basename(out)}) if r.returncode == 0 else err(r.stderr.strip())
+        filename = archive_name + '.tar.gz'
+        out = _safe_path(base, os.path.join(rel_dir, filename))
+        if not out:
+            return err('Invalid output path.')
+        r = _run(['sudo', 'tar', '-czf', filename] + items, cwd=src_dir)
+
+    return ok({'archive': filename}) if r.returncode == 0 else err(r.stderr.strip())
 
 
 def change_permissions(base, rel_path, mode_octal, recursive):
