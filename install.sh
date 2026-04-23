@@ -104,6 +104,15 @@ if systemctl is-active --quiet unattended-upgrades 2>/dev/null; then
 fi
 wait_for_apt
 
+# Install core dependencies for repo management
+info "Installing core dependencies..."
+if [[ "$PKG_MGR" == "apt-get" ]]; then
+    apt-get update -qq
+    apt-get install -y -qq gnupg ca-certificates curl
+else
+    yum install -y -q gnupg2 ca-certificates curl
+fi
+
 # Add deadsnakes PPA for Python 3.12 on older Ubuntu
 if [[ "$OS_ID" == "ubuntu" ]] && [[ "$OS_VER" < "24.04" ]]; then
     info "Adding deadsnakes PPA for Python 3.12 support..."
@@ -112,9 +121,16 @@ if [[ "$OS_ID" == "ubuntu" ]] && [[ "$OS_VER" < "24.04" ]]; then
     add-apt-repository -y ppa:deadsnakes/ppa
 fi
 
-# Add NodeSource for Node.js 22 (required for Vite 8)
+# Add NodeSource for Node.js 22
 info "Adding NodeSource repository for Node.js 22..."
-curl -fsSL https://deb.nodesource.com/setup_22.x | bash - -y 2>/dev/null
+if [[ "$PKG_MGR" == "apt-get" ]]; then
+    mkdir -p /etc/apt/keyrings
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg --yes
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_22.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list
+    apt-get update -qq
+else
+    curl -fsSL https://rpm.nodesource.com/setup_22.x | bash -
+fi
 
 info "Installing system packages..."
 
