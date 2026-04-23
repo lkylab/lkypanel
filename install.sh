@@ -67,7 +67,6 @@ echo "  ╚══════╝╚═╝  ╚═╝   ╚═╝   ╚═╝    
 echo -e "${NC}"
 echo -e "  ${CYAN}Lightweight Hosting Control Panel${NC}"
 echo -e "  Arch:  ${ARCH_LABEL}   OS: ${OS_ID} ${OS_VER}"
-echo -e "  Admin: https://YOUR_IP:${ADMIN_PORT}   User: https://YOUR_IP:${USER_PORT}"
 echo ""
 
 # ── Helper: wait for dpkg lock ────────────────────────────────────────────────
