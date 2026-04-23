@@ -36,6 +36,7 @@ const FM = (() => {
     destAction: null,
     destPath: '',
     editorPath: '',
+    lastSelected: null,
   };
 
   // ── Toast ──────────────────────────────────────────────────────────────
@@ -105,8 +106,11 @@ const FM = (() => {
     state.selected.clear();
     renderBreadcrumb(res.breadcrumbs);
     renderTree(res.breadcrumbs);
-    renderContent();
     updateBulk();
+    const el = document.getElementById('fm-content');
+    const scroll = el.scrollTop;
+    renderContent();
+    el.scrollTop = scroll;
     updateStatus();
   }
 
@@ -155,12 +159,11 @@ const FM = (() => {
     state.entries.forEach(e => {
       const sel = state.selected.has(e.name);
       const icon = fileIcon(e);
-      const p = state.path ? state.path + '/' + e.name : e.name;
       html += `<div class="fm-card${sel?' selected':''}" data-name="${esc(e.name)}"
-        onclick="FM.cardClick(event,'${esc(e.name)}')"
-        ondblclick="FM.open('${esc(e.name)}',${e.is_dir})"
-        oncontextmenu="FM.showCtx(event,'${esc(e.name)}',${e.is_dir})">
-        <div class="fm-card-check" onclick="event.stopPropagation();FM.toggleSelect('${esc(e.name)}')"><i class="ph ph-check" style="${sel?'':'display:none'}"></i></div>
+        onclick="FM.cardClick(event, this.getAttribute('data-name'))"
+        ondblclick="FM.open(this.getAttribute('data-name'),${e.is_dir})"
+        oncontextmenu="FM.showCtx(event, this.getAttribute('data-name'),${e.is_dir})">
+        <div class="fm-card-check" onclick="event.stopPropagation();FM.toggleSelect(this.closest('.fm-card').getAttribute('data-name'))"><i class="ph ph-check" style="${sel?'':'display:none'}"></i></div>
         <i class="ph ${icon} fm-card-icon" style="color:${e.is_dir?'#f59e0b':'#94a3b8'}"></i>
         <div class="fm-card-name" title="${esc(e.name)}">${esc(e.name)}</div>
       </div>`;
@@ -172,8 +175,9 @@ const FM = (() => {
   }
 
   function renderList(el) {
+    const allSel = state.entries.length > 0 && state.entries.every(e => state.selected.has(e.name));
     let html = `<table class="fm-list"><thead><tr>
-      <th style="width:24px"><input type="checkbox" onchange="FM.toggleAll(this.checked)"></th>
+      <th style="width:24px"><input type="checkbox" ${allSel?'checked':''} onchange="FM.toggleAll(this.checked)"></th>
       <th onclick="FM.setSort('name')">Name</th>
       <th onclick="FM.setSort('size')">Size</th>
       <th onclick="FM.setSort('mtime')">Modified</th>
@@ -183,10 +187,10 @@ const FM = (() => {
       const sel = state.selected.has(e.name);
       const icon = fileIcon(e);
       html += `<tr class="${sel?'selected':''}" data-name="${esc(e.name)}"
-        onclick="FM.cardClick(event,'${esc(e.name)}')"
-        ondblclick="FM.open('${esc(e.name)}',${e.is_dir})"
-        oncontextmenu="FM.showCtx(event,'${esc(e.name)}',${e.is_dir})">
-        <td><input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();FM.toggleSelect('${esc(e.name)}')"></td>
+        onclick="FM.cardClick(event, this.getAttribute('data-name'))"
+        ondblclick="FM.open(this.getAttribute('data-name'),${e.is_dir})"
+        oncontextmenu="FM.showCtx(event, this.getAttribute('data-name'),${e.is_dir})">
+        <td><input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();FM.toggleSelect(this.closest('tr').getAttribute('data-name'))"></td>
         <td><div class="fm-name-cell"><i class="ph ${icon}" style="color:${e.is_dir?'#f59e0b':'#94a3b8'}"></i>${esc(e.name)}</div></td>
         <td>${e.is_dir?'—':fmtSize(e.size)}</td>
         <td>${fmtDate(e.mtime)}</td>
@@ -217,23 +221,31 @@ const FM = (() => {
   function cardClick(e, name) {
     if (e.ctrlKey || e.metaKey) {
       toggleSelect(name);
-    } else if (e.shiftKey && state.selected.size > 0) {
+    } else if (e.shiftKey && state.lastSelected) {
       const names = state.entries.map(en => en.name);
-      const last = [...state.selected].pop();
-      const a = names.indexOf(last), b = names.indexOf(name);
-      const [lo, hi] = [Math.min(a,b), Math.max(a,b)];
-      names.slice(lo, hi+1).forEach(n => state.selected.add(n));
+      const a = names.indexOf(state.lastSelected), b = names.indexOf(name);
+      if (a !== -1 && b !== -1) {
+        const [lo, hi] = [Math.min(a,b), Math.max(a,b)];
+        names.slice(lo, hi+1).forEach(n => state.selected.add(n));
+      } else {
+        state.selected.add(name);
+      }
+      state.lastSelected = name;
       updateBulk(); renderContent();
     } else {
       state.selected.clear();
       state.selected.add(name);
+      state.lastSelected = name;
       updateBulk(); renderContent();
     }
   }
 
   function toggleSelect(name) {
     if (state.selected.has(name)) state.selected.delete(name);
-    else state.selected.add(name);
+    else {
+      state.selected.add(name);
+      state.lastSelected = name;
+    }
     updateBulk(); renderContent();
   }
 
