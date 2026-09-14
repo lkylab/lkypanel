@@ -1,0 +1,79 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}FTP Accounts — W3Panel{% endblock %}
+{% block page_title %}FTP Service{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">FTP Server Management</h2>
+            <p class="text-xs text-gray-500">Pure-FTPd virtual users and chroot directory assignments</p>
+        </div>
+    </div>
+
+    <!-- Add FTP User Form -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-900 mb-4 text-sm flex items-center gap-2">
+            <i class="ti ti-user-plus text-blue-600"></i> Add FTP Account
+        </h3>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Username *</label>
+                    <input type="text" name="username" required placeholder="ftpuser" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Home Directory</label>
+                    <input type="text" name="directory" value="/var/www" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-600">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full inline-flex justify-center items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+                        <i class="ti ti-check"></i> Create FTP User
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- FTP Accounts Table -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50/70 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">FTP User</th>
+                        <th class="px-5 py-3.5">Owner</th>
+                        <th class="px-5 py-3.5">Directory</th>
+                        <th class="px-5 py-3.5">Created</th>
+                        <th class="px-5 py-3.5">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for f in ftp_accounts %}
+                    <tr class="hover:bg-gray-50/60 transition">
+                        <td class="px-5 py-3.5 font-medium text-gray-900 flex items-center gap-2">
+                            <i class="ti ti-transfer text-blue-600"></i> {{ f.username }}
+                        </td>
+                        <td class="px-5 py-3.5 text-gray-600 text-xs">{{ f.owner.username }}</td>
+                        <td class="px-5 py-3.5 text-gray-600 font-mono text-xs">{{ f.directory }}</td>
+                        <td class="px-5 py-3.5 text-gray-500 text-xs">{{ f.created_at|date:"M d, Y" }}</td>
+                        <td class="px-5 py-3.5">
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <span class="size-1.5 rounded-full bg-emerald-500"></span> Active
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-5 py-8 text-center text-gray-400 text-sm">No FTP users created yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,57 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Feature Manager — W3Panel{% endblock %}
+{% block page_title %}Feature Manager{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">Feature Manager</h2>
+            <p class="text-xs text-gray-500">Configure feature availability lists for user packages</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-900 text-sm mb-4">Core Feature Sets</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 rounded-xl border border-gray-200 bg-gray-50/50">
+                <div class="flex items-center gap-3 font-semibold text-gray-900 text-sm mb-2">
+                    <i class="ti ti-globe text-blue-600 text-lg"></i> Web Management
+                </div>
+                <ul class="text-xs text-gray-600 space-y-1.5">
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> Multiple PHP Versions</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> Let's Encrypt Free SSL</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> Custom Document Roots</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> Nginx / OpenLiteSpeed VirtualHosts</li>
+                </ul>
+            </div>
+
+            <div class="p-4 rounded-xl border border-gray-200 bg-gray-50/50">
+                <div class="flex items-center gap-3 font-semibold text-gray-900 text-sm mb-2">
+                    <i class="ti ti-database text-emerald-600 text-lg"></i> Database Engine
+                </div>
+                <ul class="text-xs text-gray-600 space-y-1.5">
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> MariaDB / MySQL 10.x+</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> PostgreSQL 16+</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> phpMyAdmin Direct Access</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> Isolated User Databases</li>
+                </ul>
+            </div>
+
+            <div class="p-4 rounded-xl border border-gray-200 bg-gray-50/50">
+                <div class="flex items-center gap-3 font-semibold text-gray-900 text-sm mb-2">
+                    <i class="ti ti-mail text-indigo-600 text-lg"></i> Mail Services
+                </div>
+                <ul class="text-xs text-gray-600 space-y-1.5">
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> Postfix SMTP Relay</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> Dovecot IMAP/POP3</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> SnappyMail Modern Webmail</li>
+                    <li class="flex items-center gap-2"><i class="ti ti-check text-emerald-600"></i> Automatic DKIM & SPF</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Plugins{% endblock %}
+{% block page_title %}Plugins{% endblock %}
+
+{% block content %}
+{% if messages %}
+{% for message in messages %}
+<div class="mb-4 p-3 rounded text-sm {% if message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+    {{ message }}
+</div>
+{% endfor %}
+{% endif %}
+
+<div class="bg-white rounded-lg border border-gray-200">
+    <div class="border-b border-gray-200 px-4 py-3 flex items-center justify-between">
+        <h3 class="font-semibold text-gray-900">Available Plugins</h3>
+    </div>
+    <div class="p-4">
+        <table class="w-full text-sm">
+            <thead>
+                <tr class="border-b border-gray-200">
+                    <th class="text-left py-2 text-gray-500 font-medium">Plugin</th>
+                    <th class="text-left py-2 text-gray-500 font-medium">Description</th>
+                    <th class="text-left py-2 text-gray-500 font-medium">Version</th>
+                    <th class="text-left py-2 text-gray-500 font-medium">Status</th>
+                    <th class="text-right py-2 text-gray-500 font-medium">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plugin in plugins %}
+                <tr class="border-b border-gray-100 last:border-0">
+                    <td class="py-3">
+                        <div class="font-medium text-gray-900">{{ plugin.name }}</div>
+                        <div class="text-xs text-gray-500">{{ plugin.id }}</div>
+                    </td>
+                    <td class="py-3 text-gray-600">{{ plugin.description|truncatewords:20 }}</td>
+                    <td class="py-3 text-gray-600">{{ plugin.version }}</td>
+                    <td class="py-3">
+                        {% if plugin.installed %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Installed</span>
+                        {% else %}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Available</span>
+                        {% endif %}
+                    </td>
+                    <td class="py-3 text-right">
+                        {% if plugin.installed %}
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="plugin_id" value="{{ plugin.id }}">
+                            <input type="hidden" name="action" value="uninstall">
+                            <button type="submit" class="px-3 py-1 text-xs font-medium text-red-600 hover:text-red-700">Uninstall</button>
+                        </form>
+                        {% else %}
+                        <form method="post" style="display: inline;">
+                            {% csrf_token %}
+                            <input type="hidden" name="plugin_id" value="{{ plugin.id }}">
+                            <input type="hidden" name="action" value="install">
+                            <button type="submit" class="px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700">Install</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="py-8 text-center text-gray-500">No plugins available</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

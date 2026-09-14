@@ -1,0 +1,27 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Mail Queue — W3Panel{% endblock %}
+{% block page_title %}Mail Queue{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">Mail Queue</h2>
+            <p class="text-xs text-gray-500">Monitor outgoing Postfix delivery queue and deferred emails</p>
+        </div>
+        <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            <i class="ti ti-refresh text-base"></i> Flush Mail Queue
+        </button>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500 shadow-sm">
+        <div class="inline-flex items-center justify-center size-12 rounded-full bg-emerald-50 text-emerald-600 mb-3">
+            <i class="ti ti-circle-check text-2xl"></i>
+        </div>
+        <h3 class="font-semibold text-gray-900 text-sm">Mail Queue is Empty</h3>
+        <p class="text-xs text-gray-400 mt-1">All outbound email messages have been processed and delivered.</p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,171 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Cron Jobs — cPanel{% endblock %}
+{% block header_title %}Cron Jobs{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Cron Jobs</h2>
+            <p class="text-xs text-slate-500">Automate recurring commands, background scripts, and scheduled maintenance tasks</p>
+        </div>
+    </div>
+
+    <!-- Add New Cron Job Card -->
+    <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm">
+        <h3 class="font-bold text-slate-900 mb-2 text-sm flex items-center gap-2">
+            <i class="ti ti-clock-plus text-[#ff6c2c]"></i> Add New Cron Job
+        </h3>
+        <p class="text-xs text-slate-500 mb-5">Select a common schedule preset or configure custom cron intervals.</p>
+
+        <form method="post" action="{% url 'user_cron' %}" class="space-y-5" id="cronForm">
+            {% csrf_token %}
+
+            <!-- Common Settings Presets -->
+            <div>
+                <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Common Settings</label>
+                <select id="commonPresets" onchange="applyPreset(this.value)" class="w-full sm:w-80 rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-800 bg-white outline-none focus:border-[#ff6c2c] focus:ring-2 focus:ring-[#ff6c2c]/20 transition">
+                    <option value="">-- Choose Common Preset --</option>
+                    <option value="* * * * *">Once Per Minute (* * * * *)</option>
+                    <option value="*/5 * * * *">Once Per 5 Minutes (*/5 * * * *)</option>
+                    <option value="0,30 * * * *">Twice Per Hour (0,30 * * * *)</option>
+                    <option value="0 * * * *">Once Per Hour (0 * * * *)</option>
+                    <option value="0 0,12 * * *">Twice Per Day (0 0,12 * * *)</option>
+                    <option value="0 0 * * *" selected>Once Per Day (0 0 * * *)</option>
+                    <option value="0 0 * * 0">Once Per Week (0 0 * * 0)</option>
+                    <option value="0 0 1,15 * *">1st and 15th of Month (0 0 1,15 * *)</option>
+                    <option value="0 0 1 * *">Once Per Month (0 0 1 * *)</option>
+                    <option value="0 0 1 1 *">Once Per Year (0 0 1 1 *)</option>
+                </select>
+            </div>
+
+            <!-- Standard 5 Crontab Fields -->
+            <div class="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 rounded-xl bg-slate-50 border border-slate-200/80">
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Minute</label>
+                    <input type="text" id="in_minute" name="minute" value="0" required class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-mono text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                    <span class="text-[10px] text-slate-400">0-59 or *</span>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Hour</label>
+                    <input type="text" id="in_hour" name="hour" value="0" required class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-mono text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                    <span class="text-[10px] text-slate-400">0-23 or *</span>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Day</label>
+                    <input type="text" id="in_day" name="day" value="*" required class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-mono text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                    <span class="text-[10px] text-slate-400">1-31 or *</span>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Month</label>
+                    <input type="text" id="in_month" name="month" value="*" required class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-mono text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                    <span class="text-[10px] text-slate-400">1-12 or *</span>
+                </div>
+                <div>
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Weekday</label>
+                    <input type="text" id="in_weekday" name="weekday" value="*" required class="w-full rounded-md border border-slate-300 px-2.5 py-1.5 text-xs font-mono text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                    <span class="text-[10px] text-slate-400">0-6 (0=Sun) or *</span>
+                </div>
+            </div>
+
+            <!-- Description & Command -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Description (Optional)</label>
+                    <input type="text" name="description" placeholder="e.g. Laravel queue runner" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-xs text-slate-900 outline-none focus:border-[#ff6c2c]">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">Command / Script Path *</label>
+                    <input type="text" name="command" required placeholder="php /home/{{ request.panel_user.username }}/domain.com/public_html/cron.php" class="w-full rounded-lg border border-slate-300 px-3.5 py-2 text-xs font-mono text-slate-900 outline-none focus:border-[#ff6c2c]">
+                </div>
+            </div>
+
+            <div class="pt-2 flex justify-end">
+                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm transition">
+                    <i class="ti ti-plus"></i> Add New Cron Job
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Current Cron Jobs Table -->
+    <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm">
+        <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">Current Cron Jobs ({{ cron_jobs|length }})</h3>
+            <span class="text-xs text-slate-400 font-mono">/etc/cron.d/w3panel_{{ request.panel_user.username }}</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Status</th>
+                        <th class="px-5 py-3.5">Schedule</th>
+                        <th class="px-5 py-3.5">Command</th>
+                        <th class="px-5 py-3.5">Description</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for c in cron_jobs %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <td class="px-5 py-3.5">
+                            <form method="post" action="{% url 'user_cron_toggle' c.id %}" class="inline">
+                                {% csrf_token %}
+                                {% if c.is_active %}
+                                <button type="submit" class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-full transition" title="Click to pause cron job">
+                                    <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                                </button>
+                                {% else %}
+                                <button type="submit" class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-200 px-2 py-0.5 rounded-full transition" title="Click to resume cron job">
+                                    <span class="size-1.5 rounded-full bg-slate-400"></span> Paused
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                        <td class="px-5 py-3.5 font-mono text-xs font-semibold text-slate-800">{{ c.schedule }}</td>
+                        <td class="px-5 py-3.5 font-mono text-xs text-slate-700 truncate max-w-md" title="{{ c.command }}">{{ c.command }}</td>
+                        <td class="px-5 py-3.5 text-xs text-slate-500">{{ c.description|default:"—" }}</td>
+                        <td class="px-5 py-3.5 text-right">
+                            <form method="post" action="{% url 'user_cron_delete' c.id %}" onsubmit="return confirm('Permanently delete this cron job?');" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete Cron Job">
+                                    <i class="ti ti-trash text-base"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-5 py-10 text-center text-slate-400 text-sm">
+                            <div class="size-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-2 text-xl">
+                                <i class="ti ti-clock"></i>
+                            </div>
+                            <p class="font-medium text-slate-600">No scheduled cron jobs</p>
+                            <p class="text-xs text-slate-400 mt-0.5">Use the form above to schedule recurring tasks or command executions.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+function applyPreset(val) {
+    if (!val) return;
+    const parts = val.split(' ');
+    if (parts.length === 5) {
+        document.getElementById('in_minute').value = parts[0];
+        document.getElementById('in_hour').value = parts[1];
+        document.getElementById('in_day').value = parts[2];
+        document.getElementById('in_month').value = parts[3];
+        document.getElementById('in_weekday').value = parts[4];
+    }
+}
+</script>
+{% endblock %}

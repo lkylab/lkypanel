@@ -1,0 +1,65 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Logs: {{ site.domain }} — cPanel{% endblock %}
+{% block header_title %}Website Logs{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <a href="{% url 'user_websites' %}" class="hover:text-[#ff6c2c] transition">Domains</a>
+                <i class="ti ti-chevron-right text-[10px]"></i>
+                <a href="{% url 'user_website_manage' site.id %}" class="hover:text-[#ff6c2c] transition">{{ site.domain }}</a>
+                <i class="ti ti-chevron-right text-[10px]"></i>
+                <span class="text-slate-800 font-semibold">Web Logs</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+                <i class="ti ti-file-text text-[#ff6c2c]"></i>
+                HTTP Logs — {{ site.domain }}
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Real-time inspection of incoming visitor requests, 404s, and PHP application errors</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'user_website_vhost' site.id %}" class="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold uppercase tracking-wider transition">
+                <i class="ti ti-code"></i> VHost Editor
+            </a>
+            <a href="{% url 'user_website_manage' site.id %}" class="inline-flex items-center gap-1 px-3 py-1.5 border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold uppercase tracking-wider transition">
+                <i class="ti ti-arrow-left"></i> Manage
+            </a>
+        </div>
+    </div>
+
+    <!-- Log Type Selector Tabs -->
+    <div class="flex items-center justify-between border-b border-slate-200 pb-2">
+        <div class="flex items-center gap-2">
+            <a href="?type=error" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 {% if log_type == 'error' %}bg-red-50 text-red-700 border border-red-200{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="ti ti-alert-triangle"></i> Error Log
+            </a>
+            <a href="?type=access" class="px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider transition flex items-center gap-1.5 {% if log_type == 'access' %}bg-blue-50 text-blue-700 border border-blue-200{% else %}text-slate-600 hover:bg-slate-100{% endif %}">
+                <i class="ti ti-activity"></i> Raw Access Log
+            </a>
+        </div>
+        <button onclick="window.location.reload();" class="inline-flex items-center gap-1 text-xs text-slate-600 hover:text-slate-900 border border-slate-200 bg-white px-2.5 py-1 rounded-md transition shadow-xs">
+            <i class="ti ti-refresh"></i> Refresh
+        </button>
+    </div>
+
+    <!-- Log Output Terminal -->
+    <div class="bg-slate-950 rounded-xl border border-slate-800 shadow-sm overflow-hidden">
+        <div class="bg-slate-900 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+            <div class="flex items-center gap-2">
+                <span class="size-2 rounded-full {% if log_type == 'error' %}bg-red-500{% else %}bg-emerald-500{% endif %} animate-pulse"></span>
+                <span>/var/log/w3panel/{{ site.domain }}_{{ log_type }}.log</span>
+            </div>
+            <span>Last 150 lines</span>
+        </div>
+
+        <div class="p-4 font-mono text-xs text-slate-300 overflow-x-auto max-h-[600px] overflow-y-auto leading-relaxed selection:bg-slate-700">
+            <pre class="whitespace-pre-wrap">{{ logs }}</pre>
+        </div>
+    </div>
+</div>
+{% endblock %}

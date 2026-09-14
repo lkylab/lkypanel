@@ -1,0 +1,44 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}System Logs — W3Panel{% endblock %}
+{% block page_title %}System Logs{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">System Log Viewer</h2>
+            <p class="text-xs text-gray-500">Live operational server logs, error logs, and access logs</p>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <a href="?log=panel" class="px-3 py-1.5 rounded-lg text-xs font-medium border {% if selected_log == 'panel' %}bg-blue-600 border-blue-600 text-white{% else %}bg-white border-gray-300 text-gray-700 hover:bg-gray-50{% endif %}">
+                Panel Error Log
+            </a>
+            <a href="?log=access" class="px-3 py-1.5 rounded-lg text-xs font-medium border {% if selected_log == 'access' %}bg-blue-600 border-blue-600 text-white{% else %}bg-white border-gray-300 text-gray-700 hover:bg-gray-50{% endif %}">
+                Access Log
+            </a>
+            <a href="?log=syslog" class="px-3 py-1.5 rounded-lg text-xs font-medium border {% if selected_log == 'syslog' %}bg-blue-600 border-blue-600 text-white{% else %}bg-white border-gray-300 text-gray-700 hover:bg-gray-50{% endif %}">
+                System Syslog
+            </a>
+            <a href="?log=auth" class="px-3 py-1.5 rounded-lg text-xs font-medium border {% if selected_log == 'auth' %}bg-blue-600 border-blue-600 text-white{% else %}bg-white border-gray-300 text-gray-700 hover:bg-gray-50{% endif %}">
+                Auth Log
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-slate-900 rounded-xl p-4 shadow-sm border border-slate-800">
+        <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 text-xs text-slate-400">
+            <div class="flex items-center gap-2">
+                <span class="size-2 rounded-full bg-emerald-500"></span>
+                <span>Active Log Stream (Last 150 lines)</span>
+            </div>
+            <button onclick="window.location.reload()" class="hover:text-white transition flex items-center gap-1">
+                <i class="ti ti-refresh"></i> Refresh
+            </button>
+        </div>
+        <pre class="font-mono text-xs text-slate-200 overflow-x-auto max-h-[600px] leading-relaxed whitespace-pre-wrap select-text">{{ log_content }}</pre>
+    </div>
+</div>
+{% endblock %}

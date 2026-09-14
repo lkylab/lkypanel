@@ -1,0 +1,46 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Webmail — SnappyMail{% endblock %}
+{% block header_title %}Webmail Client{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">SnappyMail Webmail</h2>
+            <p class="text-xs text-slate-500">Access your email inboxes via the modern webmail client</p>
+        </div>
+        <a href="{% url 'user_emails' %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold transition">
+            <i class="ti ti-arrow-left"></i> Back to Accounts
+        </a>
+    </div>
+
+    {% if is_installed %}
+    <div class="bg-white rounded-xl border border-slate-200/80 p-8 text-center shadow-sm max-w-xl mx-auto space-y-5">
+        <div class="size-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-3xl mx-auto shadow-sm">
+            <i class="ti ti-brand-chrome"></i>
+        </div>
+        <div>
+            <h3 class="font-bold text-slate-900 text-base">SnappyMail Webmail is Active</h3>
+            <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">Log in with your full email address (e.g. <code>contact@yourdomain.com</code>) and mailbox password.</p>
+        </div>
+        <div class="pt-2">
+            <a href="/snappymail/" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-sm font-semibold shadow-sm transition">
+                <i class="ti ti-login"></i> Launch SnappyMail Webmail
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-slate-200/80 p-8 text-center shadow-sm max-w-xl mx-auto space-y-4">
+        <div class="size-14 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center text-2xl mx-auto">
+            <i class="ti ti-alert-triangle"></i>
+        </div>
+        <div>
+            <h3 class="font-bold text-slate-900 text-base">SnappyMail is Not Yet Installed</h3>
+            <p class="text-xs text-slate-500 mt-1">Please ask your server administrator to activate the SnappyMail service from the Admin Services Page.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

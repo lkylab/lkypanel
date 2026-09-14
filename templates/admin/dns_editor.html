@@ -1,0 +1,123 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}DNS Zone Editor — W3Panel{% endblock %}
+{% block page_title %}DNS Zone Editor{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">DNS Zone Editor</h2>
+            <p class="text-xs text-gray-500">Manage DNS records (A, CNAME, MX, TXT, AAAA, NS) for your domains</p>
+        </div>
+
+        <!-- Domain Selector Dropdown -->
+        <div>
+            <form method="get" class="flex items-center gap-2">
+                <label for="domain_id" class="text-xs font-semibold text-gray-600">Select Domain:</label>
+                <select name="domain_id" id="domain_id" onchange="this.form.submit()" class="rounded-lg border border-gray-300 px-3 py-1.5 text-sm bg-white text-gray-900 outline-none">
+                    {% for w in websites %}
+                    <option value="{{ w.id }}" {% if selected_domain.id == w.id %}selected{% endif %}>{{ w.domain }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+
+    {% if selected_domain %}
+    <!-- Add DNS Record Form -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-900 mb-3 text-sm flex items-center gap-2">
+            <i class="ti ti-plus text-blue-600"></i> Add Record to {{ selected_domain.domain }}
+        </h3>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_record">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Type</label>
+                    <select name="record_type" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm bg-white outline-none">
+                        <option value="A">A (IPv4)</option>
+                        <option value="AAAA">AAAA (IPv6)</option>
+                        <option value="CNAME">CNAME (Alias)</option>
+                        <option value="MX">MX (Mail)</option>
+                        <option value="TXT">TXT (Text / SPF)</option>
+                        <option value="NS">NS (Nameserver)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Host / Name</label>
+                    <input type="text" name="name" value="@" placeholder="@ or subdomain" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm outline-none">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-xs font-medium text-gray-600">Target Value / IP</label>
+                    <input type="text" name="value" required placeholder="192.168.1.1 or mail.domain.com" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">TTL (seconds)</label>
+                    <input type="number" name="ttl" value="3600" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-1">
+                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+                    <i class="ti ti-check"></i> Add DNS Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50/70 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Type</th>
+                        <th class="px-5 py-3.5">Name</th>
+                        <th class="px-5 py-3.5">Value</th>
+                        <th class="px-5 py-3.5">TTL</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for r in records %}
+                    <tr class="hover:bg-gray-50/60 transition">
+                        <td class="px-5 py-3.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold font-mono bg-blue-50 text-blue-700">
+                                {{ r.record_type }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5 font-medium text-gray-900">{{ r.name }}</td>
+                        <td class="px-5 py-3.5 text-gray-600 font-mono text-xs">{{ r.value }}</td>
+                        <td class="px-5 py-3.5 text-gray-500 text-xs">{{ r.ttl }}s</td>
+                        <td class="px-5 py-3.5 text-right">
+                            <form method="post" action="{% url 'admin_dns_editor' %}" onsubmit="return confirm('Delete this record?');" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_record">
+                                <input type="hidden" name="record_id" value="{{ r.id }}">
+                                <button type="submit" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete Record">
+                                    <i class="ti ti-trash text-base"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-5 py-8 text-center text-gray-400 text-sm">No DNS records configured for this zone.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-500">
+        <i class="ti ti-world-off text-3xl text-gray-400 mb-2"></i>
+        <p>No domains available. Create a website first to manage DNS zones.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

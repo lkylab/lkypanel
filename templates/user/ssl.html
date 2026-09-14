@@ -1,0 +1,67 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}SSL Certificates — W3Panel{% endblock %}
+{% block header_title %}SSL Certificates{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">SSL / TLS Certificates</h2>
+            <p class="text-xs text-slate-500">Free automated Let's Encrypt certificates with auto-renewal</p>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/70 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Domain</th>
+                        <th class="px-5 py-3.5">SSL Status</th>
+                        <th class="px-5 py-3.5">Issuer</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for w in websites %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <td class="px-5 py-3.5 font-medium text-slate-900">{{ w.domain }}</td>
+                        <td class="px-5 py-3.5">
+                            {% if w.ssl_enabled %}
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <i class="ti ti-lock"></i> HTTPS Enabled
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 text-xs text-slate-400">
+                                <i class="ti ti-lock-off"></i> Not Protected
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3.5 text-xs text-slate-500">{% if w.ssl_enabled %}Let's Encrypt Authority{% else %}—{% endif %}</td>
+                        <td class="px-5 py-3.5 text-right">
+                            {% if not w.ssl_enabled %}
+                            <form method="post" action="{% url 'user_ssl' %}" class="inline">
+                                {% csrf_token %}
+                                <input type="hidden" name="website_id" value="{{ w.id }}">
+                                <button type="submit" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                                    <i class="ti ti-lock"></i> Issue Free SSL
+                                </button>
+                            </form>
+                            {% else %}
+                            <span class="text-xs text-emerald-600 font-semibold">Active & Valid</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-5 py-8 text-center text-slate-400 text-sm">No domains added yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

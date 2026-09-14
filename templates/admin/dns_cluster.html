@@ -1,0 +1,37 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}DNS Cluster — W3Panel{% endblock %}
+{% block page_title %}DNS Cluster{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">DNS Cluster Configuration</h2>
+            <p class="text-xs text-gray-500">Synchronize PowerDNS zones across master and edge DNS cluster nodes</p>
+        </div>
+        <button class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            <i class="ti ti-plus text-base"></i> Add Cluster Server
+        </button>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
+            <div class="size-12 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center text-2xl">
+                <i class="ti ti-server-2"></i>
+            </div>
+            <div>
+                <h3 class="font-bold text-gray-900 text-base">Cluster Master Node (Local)</h3>
+                <p class="text-xs text-gray-500">Status: <span class="text-emerald-600 font-semibold">Active & Broadcasting</span></p>
+            </div>
+        </div>
+
+        <h4 class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Connected Edge DNS Nodes</h4>
+        <div class="bg-gray-50 rounded-xl p-8 text-center text-gray-500 border border-gray-200">
+            <i class="ti ti-network text-3xl text-gray-400 mb-2"></i>
+            <p class="text-sm">No remote DNS cluster nodes attached. All DNS queries are answered by the primary nameserver.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,95 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Create a New Domain — cPanel{% endblock %}
+{% block header_title %}Domains{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Create a New Domain</h2>
+            <p class="text-xs text-slate-500">Configure a new virtual host, document root, and web application stack on Nginx</p>
+        </div>
+        <a href="{% url 'user_websites' %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold uppercase tracking-wider transition">
+            <i class="ti ti-arrow-left"></i> Back to Domains
+        </a>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm">
+        <form method="post" class="space-y-6" id="domainForm">
+            {% csrf_token %}
+            <div>
+                <label for="domain" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Domain Name *</label>
+                <div class="mt-1.5 relative">
+                    <input type="text" id="domain" name="domain" required
+                           placeholder="example.com"
+                           oninput="updateDocRootPreview(this.value)"
+                           class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 pl-10 text-slate-900 text-sm focus:border-[#ff6c2c] focus:ring-2 focus:ring-[#ff6c2c]/20 outline-none transition">
+                    <i class="ti ti-world absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                </div>
+                <p class="text-[11px] text-slate-400 mt-1">Enter fully qualified domain name (FQDN), e.g. domain.com or sub.domain.com</p>
+            </div>
+
+            <!-- Document root calculation preview -->
+            <div class="p-3.5 rounded-lg bg-slate-50 border border-slate-200/80">
+                <div class="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">Document Root Directory</div>
+                <div class="text-xs font-mono text-slate-800 break-all flex items-center gap-1.5">
+                    <i class="ti ti-folder text-[#ff6c2c]"></i>
+                    <span>/home/{{ request.panel_user.username|default:"user" }}/</span><span id="docRootPreview" class="font-bold text-[#ff6c2c]">example.com</span><span>/public_html</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label for="framework" class="block text-xs font-bold uppercase tracking-wider text-slate-700">Application Stack</label>
+                    <div class="mt-1.5">
+                        <select id="framework" name="framework" class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-slate-900 text-sm bg-white focus:border-[#ff6c2c] focus:ring-2 focus:ring-[#ff6c2c]/20 outline-none transition">
+                            <option value="none">Standard PHP / Static HTML</option>
+                            <option value="wordpress">WordPress</option>
+                            <option value="laravel">Laravel</option>
+                            <option value="django">Django</option>
+                            <option value="nodejs">Node.js</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="php_version" class="block text-xs font-bold uppercase tracking-wider text-slate-700">PHP Version</label>
+                    <div class="mt-1.5">
+                        <select id="php_version" name="php_version" class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-slate-900 text-sm bg-white focus:border-[#ff6c2c] focus:ring-2 focus:ring-[#ff6c2c]/20 outline-none transition">
+                            <option value="8.4">PHP 8.4</option>
+                            <option value="8.3" selected>PHP 8.3 (Recommended)</option>
+                            <option value="8.2">PHP 8.2</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <label class="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" name="proxy_real_ip" value="1" class="mt-0.5 size-4 rounded border-slate-300 text-[#ff6c2c] focus:ring-[#ff6c2c]">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-800">Behind Reverse Proxy (Cloudflare / CDN)</span>
+                        <p class="text-xs text-slate-500 mt-0.5">Enable visitor Real-IP restoration from CF-Connecting-IP and X-Forwarded-For headers in Nginx vhost config.</p>
+                    </div>
+                </label>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+                <a href="{% url 'user_websites' %}" class="px-4 py-2 text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-slate-900">Cancel</a>
+                <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm transition">
+                    <i class="ti ti-plus"></i> Create Domain
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function updateDocRootPreview(val) {
+    const clean = val.trim().toLowerCase().replace(/[^a-z0-9.-]/g, '');
+    document.getElementById('docRootPreview').textContent = clean || 'example.com';
+}
+</script>
+{% endblock %}

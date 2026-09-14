@@ -1,0 +1,124 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Firewall — W3Panel{% endblock %}
+{% block page_title %}Firewall Rules{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">Firewall Rules</h2>
+            <p class="text-xs text-gray-500">UFW / Firewalld port accessibility and IP access control lists</p>
+        </div>
+    </div>
+
+    <!-- Add Rule Form -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-900 mb-4 text-sm flex items-center gap-2">
+            <i class="ti ti-shield-plus text-blue-600"></i> Add Inbound Rule
+        </h3>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_rule">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-5 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Action</label>
+                    <select name="f_action" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm bg-white outline-none">
+                        <option value="ALLOW">Allow</option>
+                        <option value="DENY">Deny / Block</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Protocol</label>
+                    <select name="protocol" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm bg-white outline-none">
+                        <option value="tcp">TCP</option>
+                        <option value="udp">UDP</option>
+                        <option value="both">Both (TCP/UDP)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Port(s)</label>
+                    <input type="text" name="port" required placeholder="80 or 8000:8100" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Source IP CIDR</label>
+                    <input type="text" name="source_ip" value="0.0.0.0/0" placeholder="0.0.0.0/0" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Comment / Label</label>
+                    <input type="text" name="comment" placeholder="Custom service" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-2 text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-1">
+                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+                    <i class="ti ti-shield-check"></i> Add Rule
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Rules Table -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50/70 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Action</th>
+                        <th class="px-5 py-3.5">Port</th>
+                        <th class="px-5 py-3.5">Protocol</th>
+                        <th class="px-5 py-3.5">Source</th>
+                        <th class="px-5 py-3.5">Comment</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    <!-- Standard defaults -->
+                    <tr class="bg-gray-50/40">
+                        <td class="px-5 py-3 text-emerald-600 font-bold text-xs">ALLOW</td>
+                        <td class="px-5 py-3 font-mono text-xs text-gray-900">22</td>
+                        <td class="px-5 py-3 text-xs text-gray-600 font-mono">TCP</td>
+                        <td class="px-5 py-3 text-xs text-gray-500">0.0.0.0/0</td>
+                        <td class="px-5 py-3 text-xs text-gray-500 italic">SSH System Access</td>
+                        <td class="px-5 py-3 text-right text-xs text-gray-400">System Default</td>
+                    </tr>
+                    <tr class="bg-gray-50/40">
+                        <td class="px-5 py-3 text-emerald-600 font-bold text-xs">ALLOW</td>
+                        <td class="px-5 py-3 font-mono text-xs text-gray-900">2087, 2083</td>
+                        <td class="px-5 py-3 text-xs text-gray-600 font-mono">TCP</td>
+                        <td class="px-5 py-3 text-xs text-gray-500">0.0.0.0/0</td>
+                        <td class="px-5 py-3 text-xs text-gray-500 italic">W3Panel HTTPS Interfaces</td>
+                        <td class="px-5 py-3 text-right text-xs text-gray-400">System Default</td>
+                    </tr>
+
+                    {% for r in rules %}
+                    <tr class="hover:bg-gray-50/60 transition">
+                        <td class="px-5 py-3.5">
+                            <span class="font-bold text-xs {% if r.action == 'ALLOW' %}text-emerald-600{% else %}text-red-600{% endif %}">
+                                {{ r.action }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5 font-mono text-xs font-semibold text-gray-900">{{ r.port }}</td>
+                        <td class="px-5 py-3.5 text-gray-600 font-mono text-xs uppercase">{{ r.protocol }}</td>
+                        <td class="px-5 py-3.5 text-gray-600 font-mono text-xs">{{ r.source_ip }}</td>
+                        <td class="px-5 py-3.5 text-gray-500 text-xs">{{ r.comment|default:"—" }}</td>
+                        <td class="px-5 py-3.5 text-right">
+                            <form method="post" action="{% url 'admin_firewall' %}" class="inline" onsubmit="return confirm('Delete this firewall rule?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="action" value="delete_rule">
+                                <input type="hidden" name="rule_id" value="{{ r.id }}">
+                                <button type="submit" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete Rule">
+                                    <i class="ti ti-trash text-base"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

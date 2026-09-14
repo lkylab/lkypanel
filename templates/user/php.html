@@ -1,0 +1,127 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}MultiPHP INI Editor — cPanel{% endblock %}
+{% block header_title %}MultiPHP INI Editor{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">MultiPHP INI Editor</h2>
+            <p class="text-xs text-slate-500">Configure PHP directives, memory limits, and file upload sizes for your applications</p>
+        </div>
+        <div>
+            {% if websites %}
+            <form method="get" class="flex items-center gap-2">
+                <label for="domainSelect" class="text-xs font-bold uppercase tracking-wider text-slate-600">Domain:</label>
+                <select id="domainSelect" name="domain_id" onchange="this.form.submit()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-[#ff6c2c]">
+                    {% for w in websites %}
+                    <option value="{{ w.id }}" {% if selected_domain and selected_domain.id == w.id %}selected{% endif %}>{{ w.domain }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if selected_domain %}
+    <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm">
+        <div class="border-b border-slate-100 pb-4 mb-5 flex items-center justify-between">
+            <div>
+                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <i class="ti ti-brand-php text-[#ff6c2c]"></i> Basic Settings: {{ selected_domain.domain }}
+                </h3>
+                <p class="text-xs text-slate-400 mt-0.5 font-mono">Location: {{ selected_domain.doc_root }}/.user.ini</p>
+            </div>
+            <span class="px-2.5 py-1 rounded bg-orange-50 text-[#ff6c2c] border border-orange-200 font-mono text-xs font-bold">
+                PHP {{ selected_domain.php_version }}
+            </span>
+        </div>
+
+        <form method="post" action="{% url 'user_php' %}?domain_id={{ selected_domain.id }}" class="space-y-6">
+            {% csrf_token %}
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <!-- PHP Version -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">PHP Version</label>
+                    <select name="php_version" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                        <option value="8.4" {% if selected_domain.php_version == '8.4' %}selected{% endif %}>PHP 8.4</option>
+                        <option value="8.3" {% if selected_domain.php_version == '8.3' %}selected{% endif %}>PHP 8.3 (Recommended)</option>
+                        <option value="8.2" {% if selected_domain.php_version == '8.2' %}selected{% endif %}>PHP 8.2</option>
+                    </select>
+                    <span class="text-[11px] text-slate-400">Switches tenant socket pool and Nginx fastcgi pass</span>
+                </div>
+
+                <!-- Memory Limit -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">memory_limit</label>
+                    <select name="memory_limit" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                        <option value="128M" {% if php_ini.memory_limit == '128M' %}selected{% endif %}>128M</option>
+                        <option value="256M" {% if php_ini.memory_limit == '256M' %}selected{% endif %}>256M (Standard)</option>
+                        <option value="512M" {% if php_ini.memory_limit == '512M' %}selected{% endif %}>512M (High)</option>
+                        <option value="1024M" {% if php_ini.memory_limit == '1024M' %}selected{% endif %}>1024M (Enterprise)</option>
+                    </select>
+                    <span class="text-[11px] text-slate-400">Maximum amount of memory a script may consume</span>
+                </div>
+
+                <!-- Upload Max Filesize -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">upload_max_filesize</label>
+                    <select name="upload_max_filesize" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                        <option value="16M" {% if php_ini.upload_max_filesize == '16M' %}selected{% endif %}>16M</option>
+                        <option value="32M" {% if php_ini.upload_max_filesize == '32M' %}selected{% endif %}>32M</option>
+                        <option value="64M" {% if php_ini.upload_max_filesize == '64M' %}selected{% endif %}>64M (Standard)</option>
+                        <option value="128M" {% if php_ini.upload_max_filesize == '128M' %}selected{% endif %}>128M</option>
+                        <option value="256M" {% if php_ini.upload_max_filesize == '256M' %}selected{% endif %}>256M (Large media)</option>
+                    </select>
+                    <span class="text-[11px] text-slate-400">Maximum size of an uploaded file</span>
+                </div>
+
+                <!-- Post Max Size -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">post_max_size</label>
+                    <select name="post_max_size" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                        <option value="16M" {% if php_ini.post_max_size == '16M' %}selected{% endif %}>16M</option>
+                        <option value="32M" {% if php_ini.post_max_size == '32M' %}selected{% endif %}>32M</option>
+                        <option value="64M" {% if php_ini.post_max_size == '64M' %}selected{% endif %}>64M (Standard)</option>
+                        <option value="128M" {% if php_ini.post_max_size == '128M' %}selected{% endif %}>128M</option>
+                        <option value="256M" {% if php_ini.post_max_size == '256M' %}selected{% endif %}>256M</option>
+                    </select>
+                    <span class="text-[11px] text-slate-400">Maximum size of POST data permitted</span>
+                </div>
+
+                <!-- Max Execution Time -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">max_execution_time (Seconds)</label>
+                    <input type="number" name="max_execution_time" value="{{ php_ini.max_execution_time|default:'120' }}" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono text-slate-900 outline-none focus:border-[#ff6c2c]">
+                    <span class="text-[11px] text-slate-400">Maximum script parse time before termination (default 120)</span>
+                </div>
+
+                <!-- Display Errors -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">display_errors</label>
+                    <select name="display_errors" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-medium text-slate-900 bg-white outline-none focus:border-[#ff6c2c]">
+                        <option value="Off" {% if php_ini.display_errors == 'Off' %}selected{% endif %}>Off (Production - Recommended)</option>
+                        <option value="On" {% if php_ini.display_errors == 'On' %}selected{% endif %}>On (Development Debugging)</option>
+                    </select>
+                    <span class="text-[11px] text-slate-400">Determines whether PHP prints errors to visitor screens</span>
+                </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex justify-end">
+                <button type="submit" class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm transition">
+                    <i class="ti ti-device-floppy"></i> Apply Changes
+                </button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
+        No domains configured yet. <a href="{% url 'user_website_create' %}" class="text-[#ff6c2c] font-semibold hover:underline">Create a Domain</a> first to manage PHP directives.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

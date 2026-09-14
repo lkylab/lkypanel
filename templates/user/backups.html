@@ -1,0 +1,66 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Backups — W3Panel{% endblock %}
+{% block header_title %}Backups{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Account Backups</h2>
+            <p class="text-xs text-slate-500">Create snapshots of your public web files and database schemas</p>
+        </div>
+        <form method="post" class="inline">
+            {% csrf_token %}
+            <button type="submit" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition shadow-sm">
+                <i class="ti ti-archive text-base"></i> Generate Backup Now
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/70 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Archive File</th>
+                        <th class="px-5 py-3.5">Size</th>
+                        <th class="px-5 py-3.5">Created</th>
+                        <th class="px-5 py-3.5">Status</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for b in backups %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <td class="px-5 py-3.5 font-medium text-slate-900 font-mono text-xs flex items-center gap-2">
+                            <i class="ti ti-file-zip text-teal-600 text-base"></i> {{ b.name }}
+                        </td>
+                        <td class="px-5 py-3.5 text-xs text-slate-500">12.5 MB</td>
+                        <td class="px-5 py-3.5 text-xs text-slate-500">{{ b.created_at|date:"M d, Y H:i" }}</td>
+                        <td class="px-5 py-3.5">
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <span class="size-1.5 rounded-full bg-emerald-500"></span> Completed
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5 text-right">
+                            <form method="post" action="{% url 'user_backup_delete' b.id %}" onsubmit="return confirm('Delete backup {{ b.name }}?');" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete Backup">
+                                    <i class="ti ti-trash text-base"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-5 py-8 text-center text-slate-400 text-sm">No backup archives created yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

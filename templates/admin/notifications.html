@@ -1,0 +1,45 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Notifications — W3Panel{% endblock %}
+{% block page_title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">System Notifications</h2>
+            <p class="text-xs text-gray-500">Security warnings, incident alerts, and administrative updates</p>
+        </div>
+        <form method="post" class="inline">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="mark_all_read">
+            <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg text-xs font-medium transition">
+                <i class="ti ti-check-all"></i> Mark All as Read
+            </button>
+        </form>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100 overflow-hidden shadow-sm">
+        {% for n in notifications %}
+        <div class="p-4 flex items-start gap-3.5 hover:bg-gray-50/60 transition">
+            <div class="size-8 rounded-full {% if n.level == 'danger' %}bg-red-50 text-red-600{% elif n.level == 'warning' %}bg-amber-50 text-amber-600{% else %}bg-blue-50 text-blue-600{% endif %} flex items-center justify-center shrink-0 mt-0.5">
+                <i class="ti {% if n.level == 'danger' %}ti-alert-circle{% elif n.level == 'warning' %}ti-alert-triangle{% else %}ti-info-circle{% endif %} text-base"></i>
+            </div>
+            <div class="flex-1 min-w-0">
+                <p class="text-sm text-gray-900 leading-snug">{{ n.message }}</p>
+                <div class="text-xs text-gray-400 mt-1 flex items-center gap-2">
+                    <span>{{ n.created_at|timesince }} ago</span>
+                    {% if n.target %}<span>•</span><span>{{ n.target }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="p-12 text-center text-gray-400">
+            <i class="ti ti-bell-off text-3xl mb-2 text-gray-300"></i>
+            <p class="text-sm">No notifications to display.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

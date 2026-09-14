@@ -1,0 +1,210 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Web Terminal — W3Panel{% endblock %}
+{% block header_title %}Web Terminal{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <i class="ti ti-terminal-2 text-blue-600"></i> Web Terminal & SSH Shell
+            </h2>
+            <p class="text-xs text-slate-500">Interactive web shell console and remote SSH credentials</p>
+        </div>
+        <div class="flex items-center gap-2">
+            {% if shell_enabled %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold">
+                <span class="size-2 rounded-full bg-emerald-500 animate-pulse"></span> Shell Access Enabled
+            </span>
+            {% else %}
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-50 border border-amber-200 text-amber-700 rounded-lg text-xs font-semibold">
+                <span class="size-2 rounded-full bg-amber-500"></span> Shell Access Disabled
+            </span>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if not shell_enabled %}
+    <!-- Shell Access Disabled Notice -->
+    <div class="rounded-2xl border border-amber-200 bg-amber-50/60 p-6 flex flex-col sm:flex-row items-start gap-4">
+        <div class="size-12 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl shrink-0">
+            <i class="ti ti-lock"></i>
+        </div>
+        <div class="space-y-1.5">
+            <h3 class="text-sm font-bold text-amber-900">SSH & Terminal Access Is Disabled</h3>
+            <p class="text-xs text-amber-800 leading-relaxed max-w-2xl">
+                Interactive shell execution is currently restricted for your tenant account. If you require command-line access for Composer, Git, NPM, or WP-CLI development, please contact your server administrator to enable Terminal permissions.
+            </p>
+            <div class="pt-2">
+                <span class="text-[11px] font-mono text-amber-700 bg-amber-100/70 px-2.5 py-1 rounded">Default POSIX Shell: /bin/false (Jailed)</span>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- SSH Connection Helper Card -->
+    <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-3">
+            <div class="size-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-lg shrink-0">
+                <i class="ti ti-key"></i>
+            </div>
+            <div>
+                <span class="font-bold text-slate-800">Remote SSH Command</span>
+                <p class="text-slate-400 text-[11px]">Connect via standard SSH client using your panel password or authorized keys</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <code class="bg-slate-100 text-slate-800 px-3 py-1.5 rounded-lg font-mono font-semibold select-all">
+                ssh {{ request.panel_user.username }}@{{ server_ip }}
+            </code>
+        </div>
+    </div>
+
+    <!-- Web Terminal Console Component -->
+    <div x-data="webTerminal()" class="bg-slate-950 rounded-2xl shadow-xl border border-slate-800 overflow-hidden flex flex-col">
+        <!-- Terminal Titlebar -->
+        <div class="px-4 py-3 bg-slate-900/90 border-b border-slate-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+                <span class="size-3 rounded-full bg-red-500/80 inline-block"></span>
+                <span class="size-3 rounded-full bg-amber-500/80 inline-block"></span>
+                <span class="size-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                <span class="ml-2 font-mono text-slate-400">{{ request.panel_user.username }}@w3panel: {{ cwd }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button @click="clearConsole()" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] transition">
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Terminal Output Screen -->
+        <div id="terminal-screen" class="p-4 font-mono text-xs text-slate-200 overflow-y-auto space-y-2 h-[420px] bg-slate-950/95 leading-relaxed selection:bg-blue-600 selection:text-white">
+            <div class="text-slate-500 text-[11px]">
+                Welcome to W3Panel Web Terminal v2.0<br>
+                Type commands below (e.g. <span class="text-blue-400">ls -la</span>, <span class="text-blue-400">git status</span>, <span class="text-blue-400">composer --version</span>, <span class="text-blue-400">node -v</span>).
+            </div>
+
+            <template x-for="(entry, index) in history" :key="index">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 text-slate-400">
+                        <span class="text-emerald-400 font-bold">{{ request.panel_user.username }}</span>:<span class="text-blue-400 font-semibold" x-text="entry.cwd || '~'"></span>$
+                        <span class="text-white font-semibold" x-text="entry.cmd"></span>
+                    </div>
+                    <pre x-show="entry.output" class="whitespace-pre-wrap text-slate-300 pl-4 border-l border-slate-800 text-xs" x-text="entry.output"></pre>
+                    <pre x-show="entry.error" class="whitespace-pre-wrap text-red-400 pl-4 border-l border-red-500/40 text-xs" x-text="entry.error"></pre>
+                </div>
+            </template>
+
+            <div x-show="loading" class="flex items-center gap-2 text-slate-500">
+                <span class="animate-spin text-sm"><i class="ti ti-loader-2"></i></span> Executing command...
+            </div>
+        </div>
+
+        <!-- Quick Shortcuts Bar -->
+        <div class="px-4 py-2 bg-slate-900/60 border-t border-slate-800/80 flex items-center gap-2 overflow-x-auto text-[11px]">
+            <span class="text-slate-500 uppercase tracking-wider text-[10px] font-bold">Quick:</span>
+            <button @click="runQuick('ls -la')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">ls -la</button>
+            <button @click="runQuick('pwd')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">pwd</button>
+            <button @click="runQuick('php -v')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">php -v</button>
+            <button @click="runQuick('node -v')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">node -v</button>
+            <button @click="runQuick('git status')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">git status</button>
+            <button @click="runQuick('composer --version')" class="px-2 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 transition">composer</button>
+        </div>
+
+        <!-- Terminal Input Line -->
+        <form @submit.prevent="executeCommand()" class="p-3 bg-slate-900 border-t border-slate-800 flex items-center gap-2">
+            {% csrf_token %}
+            <span class="text-emerald-400 font-bold font-mono text-xs pl-2">{{ request.panel_user.username }}:$</span>
+            <input type="text" x-model="currentCommand" @keydown.up.prevent="prevHistory()" @keydown.down.prevent="nextHistory()" placeholder="Type shell command..." autofocus class="flex-1 bg-transparent text-slate-100 font-mono text-xs outline-none placeholder:text-slate-600">
+            <button type="submit" :disabled="loading || !currentCommand.trim()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                <span>Run</span> <i class="ti ti-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function webTerminal() {
+    return {
+        currentCommand: '',
+        loading: false,
+        cwd: '~',
+        history: [],
+        cmdList: [],
+        cmdIndex: -1,
+        
+        async executeCommand() {
+            const cmd = this.currentCommand.trim();
+            if (!cmd || this.loading) return;
+            
+            this.cmdList.push(cmd);
+            this.cmdIndex = this.cmdList.length;
+            this.loading = true;
+            this.currentCommand = '';
+            
+            try {
+                const formData = new FormData();
+                formData.append('command', cmd);
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+                
+                const resp = await fetch('{% url "user_terminal_exec" %}', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await resp.json();
+                
+                this.history.push({
+                    cmd: cmd,
+                    cwd: this.cwd,
+                    output: data.stdout || '',
+                    error: data.stderr || (data.error || ''),
+                });
+                if (data.cwd) this.cwd = data.cwd;
+            } catch (err) {
+                this.history.push({
+                    cmd: cmd,
+                    cwd: this.cwd,
+                    output: '',
+                    error: 'Network or execution error: ' + err.message,
+                });
+            } finally {
+                this.loading = false;
+                this.$nextTick(() => {
+                    const screen = document.getElementById('terminal-screen');
+                    if (screen) screen.scrollTop = screen.scrollHeight;
+                });
+            }
+        },
+
+        runQuick(cmd) {
+            this.currentCommand = cmd;
+            this.executeCommand();
+        },
+
+        prevHistory() {
+            if (this.cmdList.length === 0) return;
+            if (this.cmdIndex > 0) this.cmdIndex--;
+            this.currentCommand = this.cmdList[this.cmdIndex] || '';
+        },
+
+        nextHistory() {
+            if (this.cmdIndex < this.cmdList.length - 1) {
+                this.cmdIndex++;
+                this.currentCommand = this.cmdList[this.cmdIndex] || '';
+            } else {
+                this.cmdIndex = this.cmdList.length;
+                this.currentCommand = '';
+            }
+        },
+
+        clearConsole() {
+            this.history = [];
+        }
+    }
+}
+</script>
+{% endblock %}

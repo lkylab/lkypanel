@@ -1,0 +1,149 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Websites & Domains — W3Panel{% endblock %}
+{% block page_title %}Websites & Domains{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">Websites & Domains</h2>
+            <p class="text-xs text-gray-500">Manage all hosted domains, frameworks, and virtual hosts</p>
+        </div>
+        <a href="{% url 'admin_user_create' %}" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            <i class="ti ti-user-plus text-base"></i> Create Account
+        </a>
+    </div>
+
+    {% if not is_nginx_installed %}
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="size-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+                <i class="ti ti-alert-triangle"></i>
+            </div>
+            <div>
+                <h4 class="text-xs font-bold text-amber-900">Nginx Web Server is Not Installed</h4>
+                <p class="text-xs text-amber-700 mt-0.5">Sites can be registered in the panel, but won't serve HTTP/HTTPS requests until Nginx is installed.</p>
+            </div>
+        </div>
+        <a href="{% url 'admin_services_status' %}" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-semibold shrink-0 transition">
+            Install Nginx from Services Page
+        </a>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50/70 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Domain</th>
+                        <th class="px-5 py-3.5">Owner</th>
+                        <th class="px-5 py-3.5">Framework</th>
+                        <th class="px-5 py-3.5">PHP</th>
+                        <th class="px-5 py-3.5">SSL</th>
+                        <th class="px-5 py-3.5">Proxy Real-IP</th>
+                        <th class="px-5 py-3.5">Status</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for w in websites %}
+                    <tr class="hover:bg-gray-50/60 transition">
+                        <td class="px-5 py-3.5 font-medium text-gray-900 flex items-center gap-2.5">
+                            <div class="size-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-sm">
+                                <i class="ti ti-world"></i>
+                            </div>
+                            <div>
+                                <a href="http://{{ w.domain }}" target="_blank" class="hover:text-blue-600 font-semibold flex items-center gap-1">
+                                    {{ w.domain }} <i class="ti ti-external-link text-xs text-gray-400"></i>
+                                </a>
+                                <div class="text-xs text-gray-400">{{ w.doc_root }}</div>
+                            </div>
+                        </td>
+                        <td class="px-5 py-3.5 text-gray-600 text-xs font-medium">
+                            <div class="flex items-center gap-1.5">
+                                <span>{{ w.owner.username }}</span>
+                                <a href="{% url 'admin_user_autologin' w.owner.id %}" target="_blank" rel="noopener noreferrer"
+                                   class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-50 hover:bg-orange-100 text-[#ff6c2c] border border-orange-200 rounded text-[10px] font-bold transition"
+                                   title="Auto-Login to cPanel for {{ w.owner.username }} in new tab">
+                                    <span>cPanel</span>
+                                    <i class="ti ti-external-link text-[9px]"></i>
+                                </a>
+                            </div>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-700 capitalize">
+                                {{ w.framework|default:"None" }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5 text-gray-600 text-xs font-mono">PHP {{ w.php_version }}</td>
+                        <td class="px-5 py-3.5">
+                            {% if w.ssl_enabled %}
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <i class="ti ti-lock text-sm"></i> Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 text-xs text-gray-400">
+                                <i class="ti ti-lock-off text-sm"></i> Off
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <form method="post" action="{% url 'admin_website_toggle_proxy' w.id %}" class="inline">
+                                {% csrf_token %}
+                                {% if w.proxy_real_ip %}
+                                <button type="submit" class="inline-flex items-center gap-1 text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1 rounded-lg transition" title="Click to disable reverse proxy mode">
+                                    <i class="ti ti-shield-check"></i> Cloudflare / Proxy
+                                </button>
+                                {% else %}
+                                <button type="submit" class="inline-flex items-center gap-1 text-xs font-medium text-gray-500 bg-gray-50 hover:bg-gray-100 border border-gray-200 px-2.5 py-1 rounded-lg transition" title="Click to enable reverse proxy mode">
+                                    <i class="ti ti-plug"></i> Direct (No Proxy)
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                        <td class="px-5 py-3.5">
+                            {% if w.is_active %}
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-emerald-600">
+                                <span class="size-1.5 rounded-full bg-emerald-500"></span> Active
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-red-600">
+                                <span class="size-1.5 rounded-full bg-red-500"></span> Disabled
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3.5 text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <a href="{% url 'admin_user_autologin' w.owner.id %}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded text-[10px] font-bold shadow-2xs transition" title="Log in to cPanel for {{ w.owner.username }}">
+                                    <span>cPanel</span>
+                                    <i class="ti ti-external-link text-[9px]"></i>
+                                </a>
+                                <a href="{% url 'admin_website_vhost' w.id %}" class="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition" title="Edit VirtualHost">
+                                    <i class="ti ti-code text-base"></i>
+                                </a>
+                                <a href="{% url 'admin_dns_editor' %}?domain_id={{ w.id }}" class="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition" title="DNS Records">
+                                    <i class="ti ti-world-www text-base"></i>
+                                </a>
+                                <form method="post" action="{% url 'admin_website_delete' w.id %}" onsubmit="return confirm('Permanently delete {{ w.domain }}?');" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete Website">
+                                        <i class="ti ti-trash text-base"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-8 text-center text-gray-400 text-sm">No websites configured yet. Click "Add New Website" to launch your first domain.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

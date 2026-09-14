@@ -1,0 +1,33 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Email Summary Reports — W3Panel{% endblock %}
+{% block page_title %}Email Reports{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div>
+        <h2 class="text-lg font-bold text-gray-900">Email Delivery Reports</h2>
+        <p class="text-xs text-gray-500">Summary statistics for inbound and outbound email traffic</p>
+    </div>
+
+    <div class="grid grid-cols-4 gap-4">
+        <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+            <div class="text-2xl font-bold text-gray-900">0</div>
+            <div class="text-xs text-gray-500 mt-1">Sent Today</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+            <div class="text-2xl font-bold text-gray-900">0</div>
+            <div class="text-xs text-gray-500 mt-1">Received Today</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+            <div class="text-2xl font-bold text-emerald-600">100%</div>
+            <div class="text-xs text-gray-500 mt-1">Delivery Success</div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-4 text-center">
+            <div class="text-2xl font-bold text-red-500">0</div>
+            <div class="text-xs text-gray-500 mt-1">Bounced / Rejected</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

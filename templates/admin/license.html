@@ -1,0 +1,100 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}License — W3Panel{% endblock %}
+{% block page_title %}License Management{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">License Management</h2>
+            <p class="text-xs text-gray-500">Activate core tier licenses or manage server subscription</p>
+        </div>
+    </div>
+
+    <!-- Active License Summary -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <div class="flex items-center justify-between pb-4 mb-4 border-b border-gray-100">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                    <i class="ti ti-key"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-gray-900 text-base">Current Tier: <span class="capitalize text-blue-600">{{ tier|default:'Free' }}</span></h3>
+                    <p class="text-xs text-gray-500">{% if license %}Valid & Active{% else %}Open-core free community edition{% endif %}</p>
+                </div>
+            </div>
+            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {% if tier == 'free' %}bg-slate-100 text-slate-700{% else %}bg-emerald-100 text-emerald-700{% endif %} capitalize">
+                {{ tier|default:'Free' }} Tier
+            </span>
+        </div>
+
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label for="license_key" class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Enter License Key</label>
+                <div class="mt-1.5 flex gap-3">
+                    <input type="text" id="license_key" name="license_key" placeholder="W3P-XXXX-XXXX-XXXX" required
+                           class="flex-1 rounded-lg border border-gray-300 px-3.5 py-2.5 font-mono text-sm text-gray-900 outline-none focus:border-blue-600">
+                    <button type="submit" class="inline-flex items-center gap-1.5 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+                        <i class="ti ti-bolt"></i> Activate
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- License Tiers Comparison -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-900 text-sm mb-4">Plan Comparison</h3>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
+            <div class="p-4 rounded-xl border {% if tier == 'free' %}border-blue-600 bg-blue-50/40{% else %}border-gray-200{% endif %}">
+                <div class="font-bold text-gray-900 text-sm">Free</div>
+                <div class="text-lg font-black text-gray-900 my-2">$0</div>
+                <div class="text-xs text-gray-500 space-y-1">
+                    <div>1 Website</div>
+                    <div>1 Database</div>
+                    <div>Community Support</div>
+                </div>
+            </div>
+            <div class="p-4 rounded-xl border {% if tier == 'solo' %}border-blue-600 bg-blue-50/40{% else %}border-gray-200{% endif %}">
+                <div class="font-bold text-gray-900 text-sm">Solo</div>
+                <div class="text-lg font-black text-blue-600 my-2">$15<span class="text-xs font-normal text-gray-500">/mo</span></div>
+                <div class="text-xs text-gray-500 space-y-1">
+                    <div>5 Websites</div>
+                    <div>5 Databases</div>
+                    <div>Email & SSL</div>
+                </div>
+            </div>
+            <div class="p-4 rounded-xl border {% if tier == 'admin' %}border-blue-600 bg-blue-50/40{% else %}border-gray-200{% endif %}">
+                <div class="font-bold text-gray-900 text-sm">Admin</div>
+                <div class="text-lg font-black text-blue-600 my-2">$25<span class="text-xs font-normal text-gray-500">/mo</span></div>
+                <div class="text-xs text-gray-500 space-y-1">
+                    <div>25 Websites</div>
+                    <div>Wizards & Containers</div>
+                    <div>Full REST API</div>
+                </div>
+            </div>
+            <div class="p-4 rounded-xl border {% if tier == 'pro' %}border-blue-600 bg-blue-50/40{% else %}border-gray-200{% endif %}">
+                <div class="font-bold text-gray-900 text-sm">Pro</div>
+                <div class="text-lg font-black text-blue-600 my-2">$45<span class="text-xs font-normal text-gray-500">/mo</span></div>
+                <div class="text-xs text-gray-500 space-y-1">
+                    <div>100 Websites</div>
+                    <div>Live Monitoring</div>
+                    <div>White-label UI</div>
+                </div>
+            </div>
+            <div class="p-4 rounded-xl border {% if tier == 'enterprise' %}border-blue-600 bg-blue-50/40{% else %}border-gray-200{% endif %}">
+                <div class="font-bold text-gray-900 text-sm">Enterprise</div>
+                <div class="text-lg font-black text-blue-600 my-2">$75<span class="text-xs font-normal text-gray-500">/mo</span></div>
+                <div class="text-xs text-gray-500 space-y-1">
+                    <div>Unlimited Websites</div>
+                    <div>Multi-server sync</div>
+                    <div>24/7 SLA Support</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

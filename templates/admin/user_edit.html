@@ -1,0 +1,210 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Edit User {{ target_user.username }} — W3Panel{% endblock %}
+{% block page_title %}Edit User Account{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <div class="flex items-center gap-2">
+                <h2 class="text-lg font-bold text-gray-900">Edit Account: {{ target_user.username }}</h2>
+                {% if target_user.is_active %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    <span class="size-1.5 rounded-full bg-emerald-500"></span> Active
+                </span>
+                {% else %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                    <span class="size-1.5 rounded-full bg-red-500"></span> Suspended
+                </span>
+                {% endif %}
+                {% if target_user.shell_enabled %}
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                    <i class="ti ti-terminal text-[11px]"></i> Shell
+                </span>
+                {% endif %}
+            </div>
+            <p class="text-xs text-gray-500 mt-0.5">Manage permissions, hosting plan, credentials, and shell permissions</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'admin_user_autologin' target_user.id %}" target="_blank" rel="noopener noreferrer"
+               class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold shadow-xs hover:shadow transition"
+               title="Auto-Login to W3UserPanel for {{ target_user.username }} in new tab">
+                <i class="ti ti-layout-dashboard text-sm"></i>
+                <span>Auto-Login to W3UserPanel</span>
+                <i class="ti ti-external-link text-xs text-blue-200"></i>
+            </a>
+            <a href="{% url 'admin_users' %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 rounded-lg text-xs font-medium transition">
+                <i class="ti ti-arrow-left"></i> Back to Users
+            </a>
+        </div>
+    </div>
+
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" x-data="userEditForm()">
+        <form method="post" class="p-6 space-y-6">
+            {% csrf_token %}
+
+            <!-- Account Details Section -->
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4 pb-2 border-b border-gray-100">
+                    Account Information
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Username</label>
+                        <div class="mt-1.5 relative">
+                            <input type="text" value="{{ target_user.username }}" disabled
+                                   class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3.5 py-2.5 pl-10 text-gray-500 text-sm cursor-not-allowed">
+                            <i class="ti ti-user absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                        <p class="mt-1 text-[11px] text-gray-400">System username is mapped to Linux POSIX tenant.</p>
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Email Address</label>
+                        <div class="mt-1.5 relative">
+                            <input type="email" id="email" name="email" value="{{ target_user.email|default:'' }}"
+                                   placeholder="user@example.com"
+                                   class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pl-10 text-gray-900 text-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none">
+                            <i class="ti ti-mail absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="role" class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Role / Access Level</label>
+                        <div class="mt-1.5">
+                            <select id="role" name="role" class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-gray-900 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none">
+                                <option value="user" {% if target_user.role == 'user' %}selected{% endif %}>Standard User</option>
+                                <option value="reseller" {% if target_user.role == 'reseller' %}selected{% endif %}>Reseller</option>
+                                <option value="admin" {% if target_user.role == 'admin' %}selected{% endif %}>Administrator</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label for="package" class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Hosting Package</label>
+                        <div class="mt-1.5">
+                            <select id="package" name="package" class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 text-gray-900 text-sm bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none">
+                                <option value="">No Package / Default</option>
+                                {% for p in packages %}
+                                <option value="{{ p.id }}" {% if target_user.package_id == p.id %}selected{% endif %}>{{ p.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Reset Section -->
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4 pb-2 border-b border-gray-100">
+                    Password & Authentication
+                </h3>
+                <div class="space-y-2">
+                    <label for="password" class="block text-xs font-semibold uppercase tracking-wider text-gray-700">
+                        New Password <span class="text-gray-400 font-normal lowercase">(leave blank to keep existing password)</span>
+                    </label>
+                    <div class="flex items-center gap-2">
+                        <div class="relative flex-1">
+                            <input :type="showPassword ? 'text' : 'password'" id="password" name="password" x-model="password"
+                                   placeholder="Enter new password or click Generate..."
+                                   class="w-full rounded-lg border border-gray-300 px-3.5 py-2.5 pl-10 pr-10 text-gray-900 text-sm focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 outline-none font-mono">
+                            <i class="ti ti-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                            <button type="button" @click="showPassword = !showPassword" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                                <i :class="showPassword ? 'ti ti-eye-off' : 'ti ti-eye'"></i>
+                            </button>
+                        </div>
+                        <button type="button" @click="generatePassword()" class="inline-flex items-center gap-1.5 px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold transition shrink-0">
+                            <i class="ti ti-refresh"></i> Generate
+                        </button>
+                    </div>
+                    <p class="text-[11px] text-gray-500">
+                        Updating the password syncs both the W3Panel web authentication and the underlying Linux POSIX account (<code class="text-gray-700 font-mono">chpasswd</code>).
+                    </p>
+                </div>
+            </div>
+
+            <!-- Permissions & Linux System Access Section -->
+            <div>
+                <h3 class="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4 pb-2 border-b border-gray-100">
+                    Access & System Privileges
+                </h3>
+                <div class="space-y-4">
+                    <!-- Shell / Terminal Toggle -->
+                    <div class="flex items-start justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <div class="space-y-1 pr-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-gray-900">SSH & Web Terminal Access</span>
+                                {% if target_user.shell_enabled %}
+                                <span class="px-2 py-0.5 text-[10px] font-bold uppercase bg-blue-100 text-blue-700 rounded">Enabled</span>
+                                {% else %}
+                                <span class="px-2 py-0.5 text-[10px] font-bold uppercase bg-gray-200 text-gray-600 rounded">Disabled</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                Allow this tenant to execute commands via Web Terminal and remote SSH. When enabled, sets POSIX login shell to <code class="font-mono text-gray-700">/bin/bash</code>. When disabled, restricts login to <code class="font-mono text-gray-700">/bin/false</code>.
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                            <input type="checkbox" name="shell_enabled" value="1" class="sr-only peer" {% if target_user.shell_enabled %}checked{% endif %}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+
+                    <!-- Account Active / Suspended Toggle -->
+                    <div class="flex items-start justify-between p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <div class="space-y-1 pr-4">
+                            <div class="flex items-center gap-2">
+                                <span class="text-sm font-semibold text-gray-900">Account Status (Active)</span>
+                                {% if target_user.is_active %}
+                                <span class="px-2 py-0.5 text-[10px] font-bold uppercase bg-emerald-100 text-emerald-700 rounded">Active</span>
+                                {% else %}
+                                <span class="px-2 py-0.5 text-[10px] font-bold uppercase bg-red-100 text-red-700 rounded">Suspended</span>
+                                {% endif %}
+                            </div>
+                            <p class="text-xs text-gray-500 leading-relaxed">
+                                When active, the user can access their control panel and websites remain served. Suspending disables login and locks the Linux OS user (<code class="font-mono text-gray-700">usermod -L</code>).
+                            </p>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer shrink-0 mt-1">
+                            <input type="checkbox" name="is_active" value="1" class="sr-only peer" {% if target_user.is_active %}checked{% endif %}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="pt-4 border-t border-gray-200 flex items-center justify-between">
+                <a href="{% url 'admin_users' %}" class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900">
+                    Cancel
+                </a>
+                <div class="flex items-center gap-3">
+                    <button type="submit" class="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+                        <i class="ti ti-device-floppy"></i> Save Changes
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function userEditForm() {
+    return {
+        password: '',
+        showPassword: false,
+        generatePassword() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%&*';
+            let res = '';
+            for (let i = 0; i < 16; i++) {
+                res += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            this.password = res;
+            this.showPassword = true;
+        }
+    }
+}
+</script>
+{% endblock %}

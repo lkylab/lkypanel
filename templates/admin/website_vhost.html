@@ -1,0 +1,92 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}VirtualHost Editor: {{ site.domain }} — WHM{% endblock %}
+{% block page_title %}VirtualHost Configuration{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header & Navigation -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <a href="{% url 'admin_websites' %}" class="hover:text-blue-600 transition">Websites</a>
+                <i class="ti ti-chevron-right text-[10px]"></i>
+                <span class="text-slate-800 font-semibold">{{ site.domain }}</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2.5">
+                <i class="ti ti-code text-blue-600"></i>
+                Nginx VirtualHost — {{ site.domain }}
+            </h2>
+            <p class="text-xs text-slate-500 mt-1">Tenant: <span class="font-bold text-slate-800 font-mono">{{ site.owner.username }}</span> | Document Root: <span class="font-mono text-slate-700">{{ site.doc_root }}</span></p>
+        </div>
+        <div class="flex items-center gap-2">
+            <a href="{% url 'admin_websites' %}" class="inline-flex items-center gap-1 px-3.5 py-2 border border-slate-300 text-slate-700 bg-white hover:bg-slate-50 rounded-lg text-xs font-semibold uppercase tracking-wider transition">
+                <i class="ti ti-arrow-left"></i> Back to Websites
+            </a>
+        </div>
+    </div>
+
+    <!-- Safety Banner -->
+    <div class="bg-blue-50 border border-blue-200/80 rounded-xl p-4 flex items-start gap-3">
+        <div class="size-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center shrink-0 mt-0.5">
+            <i class="ti ti-shield-check text-lg"></i>
+        </div>
+        <div class="text-xs text-blue-900 space-y-1">
+            <p class="font-bold">WHM Administrator Protection & Automated Syntax Verification</p>
+            <p class="text-blue-700 leading-relaxed">
+                Modifications to this virtual host are atomically validated with <code class="bg-blue-100/80 px-1.5 py-0.5 rounded font-mono font-bold">sudo nginx -t</code> prior to applying. If a syntax mistake is encountered, changes are rolled back immediately without interrupting active Nginx workers.
+            </p>
+        </div>
+    </div>
+
+    <!-- Editor Form -->
+    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="bg-slate-900 px-5 py-3 border-b border-slate-800 flex items-center justify-between text-xs text-slate-300">
+            <div class="flex items-center gap-2 font-mono">
+                <i class="ti ti-file-code text-blue-400"></i>
+                <span>/etc/nginx/sites-available/{{ site.domain }}.conf</span>
+            </div>
+            <span class="text-[11px] text-slate-400">Target: Ports 80 & 443</span>
+        </div>
+
+        <form method="post" action="{% url 'admin_website_vhost' site.id %}" class="p-0">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="save_vhost">
+
+            <div class="relative">
+                <textarea name="vhost_content" rows="26" spellcheck="false"
+                          class="w-full p-4 bg-slate-950 text-emerald-400 font-mono text-xs leading-relaxed outline-none border-none resize-y selection:bg-slate-700 selection:text-white">{{ vhost_content }}</textarea>
+            </div>
+
+            <div class="px-5 py-4 bg-slate-50 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="text-xs text-slate-500">
+                    <i class="ti ti-info-circle text-slate-400 mr-1"></i>
+                    All changes are tested before saving and triggering an Nginx graceful reload.
+                </div>
+                <div class="flex items-center gap-2.5">
+                    <button type="submit"
+                            class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm transition">
+                        <i class="ti ti-device-floppy"></i> Save & Test VirtualHost
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Reset to Default Card -->
+    <div class="bg-white rounded-xl border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h4 class="text-xs font-bold uppercase tracking-wider text-slate-900">Reset to Default Configuration</h4>
+            <p class="text-xs text-slate-500 mt-0.5">Discard custom overrides and restore standard W3Panel template for this tenant.</p>
+        </div>
+        <form method="post" action="{% url 'admin_website_vhost' site.id %}" onsubmit="return confirm('Reset this VirtualHost to default template?');">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="reset_vhost">
+            <button type="submit" class="px-3.5 py-2 border border-slate-300 hover:border-red-300 text-slate-700 hover:text-red-700 bg-white hover:bg-red-50 rounded-lg text-xs font-semibold uppercase tracking-wider transition shrink-0">
+                <i class="ti ti-refresh"></i> Reset to Default
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

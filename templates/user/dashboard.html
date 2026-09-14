@@ -1,0 +1,287 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Tools — cPanel{% endblock %}
+{% block page_title %}Tools{% endblock %}
+{% block header_title %}Tools{% endblock %}
+
+{% block content %}
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Main Column: Categorized Tools Grid -->
+    <div class="lg:col-span-8 space-y-6">
+
+        <!-- DOMAINS SECTION -->
+        <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-xs">
+            <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-3 flex items-center justify-between">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="ti ti-world text-blue-600 text-sm"></i> Domains
+                </h3>
+                <span class="text-[11px] text-slate-400 font-mono">{{ websites_count }} configured</span>
+            </div>
+            <div class="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <!-- Domains / Websites -->
+                <a href="/websites/" class="p-3 rounded-lg hover:bg-blue-50/50 border border-transparent hover:border-blue-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-world-www"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">Domains</div>
+                        <div class="text-[11px] text-slate-400 truncate">Manage websites</div>
+                    </div>
+                </a>
+
+                <!-- Add Domain -->
+                <a href="/websites/create/" class="p-3 rounded-lg hover:bg-emerald-50/50 border border-transparent hover:border-emerald-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-plus"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">Create Website</div>
+                        <div class="text-[11px] text-slate-400 truncate">Add new domain</div>
+                    </div>
+                </a>
+
+                <!-- Zone Editor -->
+                <a href="/dns/" class="p-3 rounded-lg hover:bg-indigo-50/50 border border-transparent hover:border-indigo-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-dns"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">Zone Editor</div>
+                        <div class="text-[11px] text-slate-400 truncate">DNS records (A/CNAME)</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- DATABASES SECTION -->
+        <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-xs">
+            <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-3 flex items-center justify-between">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="ti ti-database text-emerald-600 text-sm"></i> Databases
+                </h3>
+                <span class="text-[11px] text-slate-400 font-mono">{{ databases_count }} active</span>
+            </div>
+            <div class="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <!-- MariaDB / MySQL Databases -->
+                <a href="/databases/" class="p-3 rounded-lg hover:bg-emerald-50/50 border border-transparent hover:border-emerald-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-emerald-50 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-database"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">MySQL Databases</div>
+                        <div class="text-[11px] text-slate-400 truncate">MariaDB SQL engine</div>
+                    </div>
+                </a>
+
+                <!-- PostgreSQL Databases -->
+                <a href="/databases/" class="p-3 rounded-lg hover:bg-blue-50/50 border border-transparent hover:border-blue-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-database-import"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">PostgreSQL</div>
+                        <div class="text-[11px] text-slate-400 truncate">PostgreSQL databases</div>
+                    </div>
+                </a>
+
+                <!-- Database Users -->
+                <a href="/databases/" class="p-3 rounded-lg hover:bg-purple-50/50 border border-transparent hover:border-purple-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-users"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">Database Users</div>
+                        <div class="text-[11px] text-slate-400 truncate">Privileges & passwords</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- FILES SECTION -->
+        <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-xs">
+            <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-3 flex items-center justify-between">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="ti ti-folder text-amber-600 text-sm"></i> Files
+                </h3>
+            </div>
+            <div class="p-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                <!-- File Manager -->
+                <a href="/filemanager/" class="p-3 rounded-lg hover:bg-amber-50/50 border border-transparent hover:border-amber-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-amber-50 text-amber-600 group-hover:bg-amber-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-folder"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">File Manager</div>
+                        <div class="text-[11px] text-slate-400 truncate">Upload & code editor</div>
+                    </div>
+                </a>
+
+                <!-- Document Root -->
+                <a href="/filemanager/" class="p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-slate-100 text-slate-600 group-hover:bg-slate-800 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-folder-check"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">public_html</div>
+                        <div class="text-[11px] text-slate-400 truncate">Primary web root</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- SECURITY & ADVANCED SOFTWARE SECTION -->
+        <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-xs">
+            <div class="border-b border-slate-100 bg-slate-50/50 px-5 py-3 flex items-center justify-between">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="ti ti-shield-lock text-purple-600 text-sm"></i> Security & Software
+                </h3>
+            </div>
+            <div class="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <!-- SSL Certificates -->
+                <a href="/ssl/" class="p-3 rounded-lg hover:bg-purple-50/50 border border-transparent hover:border-purple-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-purple-50 text-purple-600 group-hover:bg-purple-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-lock"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">SSL / TLS</div>
+                        <div class="text-[11px] text-slate-400 truncate">Let's Encrypt</div>
+                    </div>
+                </a>
+
+                <!-- MultiPHP INI -->
+                <a href="/php/" class="p-3 rounded-lg hover:bg-indigo-50/50 border border-transparent hover:border-indigo-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-brand-php"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">MultiPHP INI</div>
+                        <div class="text-[11px] text-slate-400 truncate">PHP settings & ver</div>
+                    </div>
+                </a>
+
+                <!-- Cron Jobs -->
+                <a href="/cron/" class="p-3 rounded-lg hover:bg-orange-50/50 border border-transparent hover:border-orange-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-orange-50 text-[#ff6c2c] group-hover:bg-[#ff6c2c] group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-clock"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">Cron Jobs</div>
+                        <div class="text-[11px] text-slate-400 truncate">Scheduled tasks</div>
+                    </div>
+                </a>
+
+                <!-- Terminal -->
+                <a href="/terminal/" class="p-3 rounded-lg hover:bg-slate-50 border border-transparent hover:border-slate-200 transition flex items-center gap-3 group">
+                    <div class="size-10 rounded-lg bg-slate-100 text-slate-700 group-hover:bg-slate-800 group-hover:text-white flex items-center justify-center text-lg transition shrink-0">
+                        <i class="ti ti-terminal-2"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-xs font-bold text-slate-800 truncate">Terminal</div>
+                        <div class="text-[11px] text-slate-400 truncate">Command line shell</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right Column: cPanel General Information & Statistics Sidebar -->
+    <div class="lg:col-span-4 space-y-5">
+
+        <!-- General Information Card -->
+        <div class="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="border-b border-slate-100 bg-slate-50/70 px-4 py-3">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="ti ti-id text-slate-500"></i> General Information
+                </h3>
+            </div>
+            <div class="p-4 space-y-2.5 text-xs">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span class="text-slate-400 font-medium">Current User</span>
+                    <span class="font-mono font-bold text-slate-900">{{ panel_user.username }}</span>
+                </div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span class="text-slate-400 font-medium">Primary Domain</span>
+                    <span class="font-mono text-blue-600 font-semibold truncate max-w-[150px]">{{ primary_domain }}</span>
+                </div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span class="text-slate-400 font-medium">Shared IP Address</span>
+                    <span class="font-mono text-slate-700">127.0.0.1</span>
+                </div>
+                <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                    <span class="text-slate-400 font-medium">Home Directory</span>
+                    <span class="font-mono text-[11px] text-slate-500 truncate max-w-[150px]" title="/home/{{ panel_user.username }}">/home/{{ panel_user.username }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                    <span class="text-slate-400 font-medium">Web Server</span>
+                    <span class="font-mono font-semibold text-emerald-700">Nginx</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="bg-white rounded-xl border border-slate-200/80 shadow-xs overflow-hidden">
+            <div class="border-b border-slate-100 bg-slate-50/70 px-4 py-3">
+                <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700 flex items-center gap-2">
+                    <i class="ti ti-chart-bar text-[#ff6c2c]"></i> Statistics
+                </h3>
+            </div>
+            <div class="p-4 space-y-4 text-xs">
+                <!-- Disk Usage -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-medium text-slate-600 flex items-center gap-1.5"><i class="ti ti-device-hard-drive text-amber-600"></i> Disk Usage</span>
+                        <span class="font-mono text-[11px] text-slate-500">{{ disk_used_mb }} MB / {{ limits.disk }} MB</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+                        <div class="h-full bg-amber-500 rounded-full" style="width: {{ disk_percent }}%"></div>
+                    </div>
+                </div>
+
+                <!-- Domains / Websites -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-medium text-slate-600 flex items-center gap-1.5"><i class="ti ti-world text-blue-600"></i> Domains</span>
+                        <span class="font-mono text-[11px] text-slate-500">{{ websites_count }} / {{ limits.websites }}</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+                        <div class="h-full bg-blue-600 rounded-full" style="width: {{ websites_percent }}%"></div>
+                    </div>
+                </div>
+
+                <!-- MySQL / MariaDB Databases -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-medium text-slate-600 flex items-center gap-1.5"><i class="ti ti-database text-emerald-600"></i> MySQL Databases</span>
+                        <span class="font-mono text-[11px] text-slate-500">{{ mariadb_count }} / {{ limits.databases }}</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+                        <div class="h-full bg-emerald-600 rounded-full" style="width: {{ databases_percent }}%"></div>
+                    </div>
+                </div>
+
+                <!-- PostgreSQL Databases -->
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="font-medium text-slate-600 flex items-center gap-1.5"><i class="ti ti-database-import text-indigo-600"></i> PostgreSQL Databases</span>
+                        <span class="font-mono text-[11px] text-slate-500">{{ postgres_count }} / {{ limits.databases }}</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200/60">
+                        <div class="h-full bg-indigo-600 rounded-full" style="width: {{ databases_percent }}%"></div>
+                    </div>
+                </div>
+
+                <!-- PHP Version -->
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <span class="text-slate-400 font-medium">PHP Version</span>
+                    <span class="font-mono font-semibold text-slate-800">8.3</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+{% endblock %}

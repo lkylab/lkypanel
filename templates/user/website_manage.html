@@ -1,0 +1,326 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Manage {{ site.domain }} — W3Panel{% endblock %}
+{% block header_title %}Manage Website{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top Breadcrumb and Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center gap-2 text-xs text-slate-500 mb-1">
+                <a href="{% url 'user_websites' %}" class="hover:text-blue-600 transition">Websites</a>
+                <i class="ti ti-chevron-right text-[10px]"></i>
+                <span class="text-slate-800 font-medium">{{ site.domain }}</span>
+            </div>
+            <h2 class="text-xl font-bold text-slate-900 flex items-center gap-2">
+                {{ site.domain }}
+                {% if site.is_active %}
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                    <span class="size-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Active
+                </span>
+                {% else %}
+                <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full">
+                    Disabled
+                </span>
+                {% endif %}
+            </h2>
+        </div>
+        <div class="flex items-center gap-2 flex-wrap">
+            <a href="http://{{ site.domain }}" target="_blank" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold uppercase tracking-wider transition">
+                <i class="ti ti-external-link"></i> Visit
+            </a>
+            <a href="{% url 'user_website_vhost' site.id %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:border-[#ff6c2c] text-slate-700 hover:text-[#ff6c2c] rounded-lg text-xs font-semibold uppercase tracking-wider shadow-2xs transition">
+                <i class="ti ti-code"></i> VHost Editor
+            </a>
+            <a href="{% url 'user_website_logs' site.id %}" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 hover:border-[#ff6c2c] text-slate-700 hover:text-[#ff6c2c] rounded-lg text-xs font-semibold uppercase tracking-wider shadow-2xs transition">
+                <i class="ti ti-file-text"></i> Logs
+            </a>
+            <a href="/filemanager/?path={{ site.domain }}" class="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm transition">
+                <i class="ti ti-folder"></i> File Manager
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <!-- Left Column: Settings & Process Daemon -->
+        <div class="lg:col-span-7 space-y-6">
+            <!-- Website Settings Card -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="size-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-base">
+                            <i class="ti ti-settings"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">Site Configuration</h3>
+                            <p class="text-xs text-slate-400">Framework settings, daemon port, and runtime configuration</p>
+                        </div>
+                    </div>
+                    <span class="text-xs font-semibold uppercase tracking-wider px-2 py-1 rounded bg-slate-100 text-slate-600">
+                        {{ site.framework|upper }}
+                    </span>
+                </div>
+
+                <form method="post" action="{% url 'user_website_manage' site.id %}" class="p-5 space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_settings">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Domain</label>
+                            <input type="text" value="{{ site.domain }}" disabled class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-500 cursor-not-allowed">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Document Root</label>
+                            <input type="text" value="{{ site.doc_root }}" disabled class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-mono text-slate-500 truncate cursor-not-allowed" title="{{ site.doc_root }}">
+                        </div>
+                    </div>
+
+                    {% if site.framework == 'nodejs' %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Internal Port</label>
+                            <input type="number" name="port" value="{{ site.port|default:3000 }}" required class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 outline-none focus:border-blue-600">
+                            <span class="text-[11px] text-slate-400">Nginx proxies incoming traffic to this port</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Application Entrypoint</label>
+                            <input type="text" name="app_entrypoint" value="{{ site.app_entrypoint|default:'app.js' }}" placeholder="app.js or server.js" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-mono text-slate-800 outline-none focus:border-blue-600">
+                            <span class="text-[11px] text-slate-400">Script executed by supervisor</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Environment Variables (KEY=VALUE per line)</label>
+                        <textarea name="app_env_vars" rows="3" placeholder="NODE_ENV=production&#10;PORT=3000&#10;API_KEY=secret" class="w-full bg-white border border-slate-300 rounded-lg p-2.5 text-xs font-mono text-slate-800 outline-none focus:border-blue-600">{{ site.app_env_vars }}</textarea>
+                    </div>
+                    {% else %}
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">PHP Version</label>
+                            <select name="php_version" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-2 text-xs font-medium text-slate-800 outline-none focus:border-blue-600">
+                                <option value="8.3" {% if site.php_version == '8.3' %}selected{% endif %}>PHP 8.3 (Production Recommended)</option>
+                                <option value="8.2" {% if site.php_version == '8.2' %}selected{% endif %}>PHP 8.2</option>
+                                <option value="8.1" {% if site.php_version == '8.1' %}selected{% endif %}>PHP 8.1</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700 mb-1">Tenant Pool Isolation</label>
+                            <div class="p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 flex items-center justify-between">
+                                <span>pool-{{ site.owner.username }}</span>
+                                <span class="text-emerald-600 font-sans font-semibold text-[11px]">Jailed</span>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <div class="flex justify-end pt-3 border-t border-slate-100">
+                        <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                            <i class="ti ti-check"></i> Save Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Process Daemon Supervisor Card (Node.js / Daemon mode) -->
+            {% if site.framework == 'nodejs' %}
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="size-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-base">
+                            <i class="ti ti-cpu"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">Daemon Supervisor (Systemd)</h3>
+                            <p class="text-xs text-slate-400">Lightweight native process management & auto-restart</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        {% if app_status.is_running %}
+                        <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+                            <span class="size-2 rounded-full bg-emerald-500 animate-pulse"></span> Running (PID {{ app_status.pid|default:"Active" }})
+                        </span>
+                        {% else %}
+                        <span class="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full">
+                            <span class="size-2 rounded-full bg-slate-400"></span> Stopped
+                        </span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="p-5 space-y-4">
+                    <div class="flex items-center gap-3">
+                        <form method="post" action="{% url 'user_website_app_action' site.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="start">
+                            <button type="submit" {% if app_status.is_running %}disabled{% endif %} class="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                                <i class="ti ti-player-play"></i> Start Daemon
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'user_website_app_action' site.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="restart">
+                            <button type="submit" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                                <i class="ti ti-rotate-clockwise"></i> Restart
+                            </button>
+                        </form>
+                        <form method="post" action="{% url 'user_website_app_action' site.id %}" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="stop">
+                            <button type="submit" {% if not app_status.is_running %}disabled{% endif %} class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-600 disabled:opacity-50 rounded-lg text-xs font-semibold transition">
+                                <i class="ti ti-player-stop"></i> Stop
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- Journald Logs Console -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <span class="text-xs font-semibold text-slate-700 flex items-center gap-1">
+                                <i class="ti ti-terminal text-slate-400"></i> Recent Journald Application Logs
+                            </span>
+                            <span class="text-[11px] text-slate-400">Last 50 lines</span>
+                        </div>
+                        <div class="bg-slate-950 text-slate-200 rounded-xl p-3 text-xs font-mono overflow-x-auto max-h-56 leading-relaxed border border-slate-800 shadow-inner">
+                            <pre class="whitespace-pre-wrap">{{ app_logs|default:"No log output available." }}</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Atomic Releases & Hardening -->
+        <div class="lg:col-span-5 space-y-6">
+            <!-- Atomic Zero-Downtime Releases Card -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="size-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center text-base">
+                            <i class="ti ti-rocket"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-slate-900 text-sm">Atomic Deployments</h3>
+                            <p class="text-xs text-slate-400">Zero-downtime symlink swapping & instant rollback</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-5 space-y-5">
+                    <!-- Deploy New Release Form -->
+                    <form method="post" action="{% url 'user_website_deploy_release' site.id %}" class="space-y-3 p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        {% csrf_token %}
+                        <h4 class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="ti ti-plus text-indigo-600"></i> Deploy New Release
+                        </h4>
+                        <div>
+                            <input type="text" name="commit_version" placeholder="Version tag (e.g. v1.2.0 or git commit)" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 outline-none focus:border-indigo-600">
+                        </div>
+                        <div>
+                            <input type="text" name="notes" placeholder="Release notes (optional)" class="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-800 outline-none focus:border-indigo-600">
+                        </div>
+                        <button type="submit" class="w-full inline-flex justify-center items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                            <i class="ti ti-upload"></i> Deploy Release Atomically
+                        </button>
+                    </form>
+
+                    <!-- Releases History List -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Release History</span>
+                            {% if releases|length > 1 %}
+                            <form method="post" action="{% url 'user_website_rollback_release' site.id %}" onsubmit="return confirm('Rollback to previous release?');">
+                                {% csrf_token %}
+                                <button type="submit" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2 py-1 rounded-lg transition" title="Rollback to previous release">
+                                    <i class="ti ti-history"></i> Rollback
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+
+                        <div class="space-y-2">
+                            {% for rel in releases %}
+                            <div class="p-3 rounded-lg border {% if rel.is_current %}border-emerald-300 bg-emerald-50/50{% else %}border-slate-200 bg-white{% endif %} flex items-center justify-between text-xs">
+                                <div>
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-mono font-bold text-slate-900">{{ rel.release_id }}</span>
+                                        {% if rel.is_current %}
+                                        <span class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">CURRENT</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-slate-400 text-[11px] mt-0.5">
+                                        {{ rel.commit_or_version|default:"Release" }} • {{ rel.created_at|date:"M d, H:i" }}
+                                    </div>
+                                    {% if rel.notes %}
+                                    <div class="text-slate-600 text-[11px] italic mt-0.5">{{ rel.notes }}</div>
+                                    {% endif %}
+                                </div>
+                                {% if not rel.is_current %}
+                                <form method="post" action="{% url 'user_website_rollback_release' site.id %}" onsubmit="return confirm('Rollback to release {{ rel.release_id }}?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="target_release_id" value="{{ rel.release_id }}">
+                                    <button type="submit" class="px-2 py-1 bg-slate-100 hover:bg-amber-100 hover:text-amber-800 text-slate-600 rounded text-[11px] font-semibold transition" title="Rollback to this release">
+                                        Activate
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                            {% empty %}
+                            <div class="p-4 rounded-lg bg-slate-50 border border-slate-200 text-center text-xs text-slate-400">
+                                No releases deployed yet. Deploy a release above to activate atomic versioning.
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network & Security Card -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 space-y-4">
+                <div class="flex items-center gap-2.5">
+                    <div class="size-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-base">
+                        <i class="ti ti-shield-check"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-sm">Security & Headers</h3>
+                        <p class="text-xs text-slate-400">Defense-in-depth protection and real-IP mapping</p>
+                    </div>
+                </div>
+
+                <div class="space-y-2.5 text-xs">
+                    <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-50 border border-slate-200">
+                        <div>
+                            <span class="font-semibold text-slate-800">Reverse Proxy Client IP</span>
+                            <p class="text-[11px] text-slate-400">Restores genuine visitor IPs behind Cloudflare / Proxy</p>
+                        </div>
+                        <form method="post" action="{% url 'user_website_toggle_proxy' site.id %}">
+                            {% csrf_token %}
+                            {% if site.proxy_real_ip %}
+                            <button type="submit" class="px-2.5 py-1 bg-blue-100 text-blue-800 font-semibold rounded-lg hover:bg-blue-200 transition">
+                                Enabled
+                            </button>
+                            {% else %}
+                            <button type="submit" class="px-2.5 py-1 bg-slate-200 text-slate-700 font-semibold rounded-lg hover:bg-slate-300 transition">
+                                Disabled
+                            </button>
+                            {% endif %}
+                        </form>
+                    </div>
+
+                    <div class="p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-slate-600 space-y-1 text-[11px]">
+                        <div class="flex items-center gap-1 text-emerald-700 font-semibold">
+                            <i class="ti ti-check"></i> Defense-in-Depth Security Active
+                        </div>
+                        <div>• X-Frame-Options SAMEORIGIN</div>
+                        <div>• Sensitive files (.env, .git, composer.json) blocked with 404</div>
+                        <div>• Static assets cached for 30 days without disk access logging</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

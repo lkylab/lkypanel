@@ -1,0 +1,162 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Setup Wizards — W3Panel{% endblock %}
+{% block page_title %}Setup Wizards{% endblock %}
+
+{% block content %}
+<div x-data="{ wpModal: false, lvModal: false }" class="space-y-6">
+    <div>
+        <h2 class="text-lg font-bold text-gray-900">One-Shot Setup Wizards</h2>
+        <p class="text-xs text-gray-500">Automate application deployments and stacks with single-click wizards</p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <!-- 1-Click WordPress Setup Wizard -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between hover:border-blue-500/50 transition">
+            <div>
+                <div class="size-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl mb-4">
+                    <i class="ti ti-brand-wordpress"></i>
+                </div>
+                <h3 class="font-bold text-gray-900 text-base">WordPress Installer</h3>
+                <p class="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    Downloads official WordPress release, creates MySQL database, configures wp-config.php and Nginx rewrites.
+                </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <button @click="wpModal = true" class="w-full inline-flex justify-center items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                    <i class="ti ti-player-play"></i> Launch Installer
+                </button>
+            </div>
+        </div>
+
+        <!-- 1-Click Laravel Setup Wizard -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between hover:border-red-500/50 transition">
+            <div>
+                <div class="size-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-2xl mb-4">
+                    <i class="ti ti-brand-laravel"></i>
+                </div>
+                <h3 class="font-bold text-gray-900 text-base">Laravel Framework</h3>
+                <p class="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    Provisions modern Laravel scaffolding, database, secure APP_KEY, storage permissions, and /public Nginx rules.
+                </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <button @click="lvModal = true" class="w-full inline-flex justify-center items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                    <i class="ti ti-player-play"></i> Launch Laravel
+                </button>
+            </div>
+        </div>
+
+        <!-- Node.js Daemon Supervisor Wizard -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between hover:border-emerald-500/50 transition">
+            <div>
+                <div class="size-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl mb-4">
+                    <i class="ti ti-brand-nodejs"></i>
+                </div>
+                <h3 class="font-bold text-gray-900 text-base">Node.js Daemon</h3>
+                <p class="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    Native Systemd daemon supervisor, zero idle RAM overhead, WebSocket proxying, and static caching.
+                </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <a href="{% url 'admin_websites' %}" class="w-full inline-flex justify-center items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                    <i class="ti ti-player-play"></i> Setup Node App
+                </a>
+            </div>
+        </div>
+
+        <!-- Email Stack Wizard -->
+        <div class="bg-white rounded-xl border border-gray-200 p-5 shadow-sm flex flex-col justify-between hover:border-indigo-500/50 transition">
+            <div>
+                <div class="size-11 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center text-2xl mb-4">
+                    <i class="ti ti-mail"></i>
+                </div>
+                <h3 class="font-bold text-gray-900 text-base">Email Stack Wizard</h3>
+                <p class="text-xs text-gray-500 mt-1.5 leading-relaxed">
+                    Configure Postfix, Dovecot, virtual mailboxes, and automated DKIM DNS record generation.
+                </p>
+            </div>
+            <div class="mt-6 pt-4 border-t border-gray-100">
+                <a href="{% url 'admin_email_accounts' %}" class="w-full inline-flex justify-center items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                    <i class="ti ti-player-play"></i> Manage Email
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- WordPress Modal -->
+    <div x-show="wpModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div @click.away="wpModal = false" class="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                    <i class="ti ti-brand-wordpress"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Install WordPress</h3>
+                    <p class="text-xs text-slate-500">Select target domain for WordPress setup</p>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'admin_wizards' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="install_wordpress">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">Target Website Domain</label>
+                    <select name="website_id" required class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white outline-none focus:border-blue-600">
+                        {% for w in websites %}
+                        <option value="{{ w.id }}">{{ w.domain }} ({{ w.owner.username }})</option>
+                        {% empty %}
+                        <option disabled>No websites created yet. Create a website first.</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="wpModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
+                    <button type="submit" {% if not websites %}disabled{% endif %} class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                        <i class="ti ti-check"></i> Install WordPress Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Laravel Modal -->
+    <div x-show="lvModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4">
+        <div @click.away="lvModal = false" class="bg-white rounded-2xl p-6 max-w-md w-full shadow-xl space-y-4">
+            <div class="flex items-center gap-3">
+                <div class="size-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl">
+                    <i class="ti ti-brand-laravel"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-900 text-base">Setup Laravel Application</h3>
+                    <p class="text-xs text-slate-500">Configure production Laravel environment and database</p>
+                </div>
+            </div>
+
+            <form method="post" action="{% url 'admin_wizards' %}" class="space-y-4">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="install_laravel">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">Target Website Domain</label>
+                    <select name="website_id" required class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white outline-none focus:border-red-600">
+                        {% for w in websites %}
+                        <option value="{{ w.id }}">{{ w.domain }} ({{ w.owner.username }})</option>
+                        {% empty %}
+                        <option disabled>No websites created yet. Create a website first.</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                    <button type="button" @click="lvModal = false" class="px-4 py-2 text-xs font-semibold text-slate-600">Cancel</button>
+                    <button type="submit" {% if not websites %}disabled{% endif %} class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold shadow-sm transition">
+                        <i class="ti ti-check"></i> Launch Laravel Now
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

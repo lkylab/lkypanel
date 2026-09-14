@@ -1,0 +1,129 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Domains — cPanel{% endblock %}
+{% block header_title %}Domains{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Domains & Hosted Applications</h2>
+            <p class="text-xs text-slate-500">Manage virtual hosts, document roots, PHP versions, and SSL certificates</p>
+        </div>
+        <a href="{% url 'user_website_create' %}" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded-lg text-xs font-bold uppercase tracking-wider transition shadow-sm">
+            <i class="ti ti-plus text-sm"></i> Create a New Domain
+        </a>
+    </div>
+
+    {% if not is_nginx_installed %}
+    <div class="rounded-xl border border-amber-200 bg-amber-50 p-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="size-9 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-lg shrink-0">
+                <i class="ti ti-alert-triangle"></i>
+            </div>
+            <div>
+                <h4 class="text-xs font-bold text-amber-900">Nginx Web Server is Inactive</h4>
+                <p class="text-xs text-amber-700 mt-0.5">Your domains and configurations are preserved, but require the server administrator to start Nginx via WHM Service Manager.</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-700">Configured Domains ({{ websites|length }})</h3>
+            <span class="text-xs text-slate-400">Web Server: Nginx (Ports 80 / 443)</span>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/70 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Domain</th>
+                        <th class="px-5 py-3.5">Document Root</th>
+                        <th class="px-5 py-3.5">Stack</th>
+                        <th class="px-5 py-3.5">PHP</th>
+                        <th class="px-5 py-3.5">SSL Status</th>
+                        <th class="px-5 py-3.5">Proxy Mode</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for w in websites %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <td class="px-5 py-3.5 font-medium text-slate-900">
+                            <div class="flex items-center gap-2.5">
+                                <div class="size-7 rounded-lg bg-orange-50 text-[#ff6c2c] flex items-center justify-center text-sm font-semibold">
+                                    <i class="ti ti-world"></i>
+                                </div>
+                                <div>
+                                    <a href="http://{{ w.domain }}" target="_blank" class="hover:text-[#ff6c2c] font-semibold text-slate-900 flex items-center gap-1">
+                                        {{ w.domain }} <i class="ti ti-external-link text-xs text-slate-400"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-5 py-3.5 text-xs font-mono text-slate-500">{{ w.doc_root }}</td>
+                        <td class="px-5 py-3.5 text-xs text-slate-600 capitalize">
+                            <span class="px-2 py-0.5 rounded bg-slate-100 text-slate-700 font-medium">{{ w.framework|default:"Standard" }}</span>
+                        </td>
+                        <td class="px-5 py-3.5 text-xs font-mono font-semibold text-slate-700">PHP {{ w.php_version }}</td>
+                        <td class="px-5 py-3.5">
+                            {% if w.ssl_enabled %}
+                            <span class="inline-flex items-center gap-1 text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200"><i class="ti ti-lock"></i> SSL Active</span>
+                            {% else %}
+                            <span class="inline-flex items-center gap-1 text-xs font-medium text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">No SSL</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-5 py-3.5">
+                            <form method="post" action="{% url 'user_website_toggle_proxy' w.id %}" class="inline">
+                                {% csrf_token %}
+                                {% if w.proxy_real_ip %}
+                                <button type="submit" class="inline-flex items-center gap-1 text-xs font-semibold text-amber-800 bg-amber-50 hover:bg-amber-100 border border-amber-200 px-2.5 py-1 rounded-md transition" title="Click to disable reverse proxy mode">
+                                    <i class="ti ti-shield-check text-amber-600"></i> Cloudflare / Proxy
+                                </button>
+                                {% else %}
+                                <button type="submit" class="inline-flex items-center gap-1 text-xs font-medium text-slate-500 bg-slate-50 hover:bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-md transition" title="Click to enable reverse proxy mode">
+                                    <i class="ti ti-plug"></i> Direct IP
+                                </button>
+                                {% endif %}
+                            </form>
+                        </td>
+                        <td class="px-5 py-3.5 text-right">
+                            <div class="flex items-center justify-end gap-1.5">
+                                <a href="{% url 'user_website_manage' w.id %}" class="px-2.5 py-1 bg-orange-50 hover:bg-orange-100 text-[#ff6c2c] border border-orange-200 rounded-lg text-xs font-semibold transition flex items-center gap-1" title="Manage Domain & Stack">
+                                    <i class="ti ti-adjustments"></i> Manage
+                                </a>
+                                <a href="/filemanager/?path={{ w.domain }}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition flex items-center gap-1" title="File Manager">
+                                    <i class="ti ti-folder"></i> Files
+                                </a>
+                                <form method="post" action="{% url 'user_website_delete' w.id %}" onsubmit="return confirm('Permanently remove domain {{ w.domain }}?');" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete Domain">
+                                        <i class="ti ti-trash text-base"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-12 text-center text-slate-400">
+                            <div class="size-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3 text-2xl">
+                                <i class="ti ti-world"></i>
+                            </div>
+                            <p class="text-sm font-medium text-slate-600">No domains configured yet</p>
+                            <p class="text-xs text-slate-400 mt-1">Click "Create a New Domain" to host your first website on Nginx.</p>
+                            <a href="{% url 'user_website_create' %}" class="inline-flex items-center gap-1.5 mt-4 px-4 py-2 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded-lg text-xs font-bold uppercase tracking-wider transition">
+                                <i class="ti ti-plus"></i> Create a New Domain
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

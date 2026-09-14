@@ -1,0 +1,96 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Email Accounts — W3Panel{% endblock %}
+{% block header_title %}Email Accounts{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Email Mailboxes</h2>
+            <p class="text-xs text-slate-500">Create and manage email addresses for your domains</p>
+        </div>
+        <a href="/snappymail/" target="_blank" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+            <i class="ti ti-brand-chrome text-base"></i> Open Webmail
+        </a>
+    </div>
+
+    <!-- Create Mailbox Form -->
+    <div class="bg-white rounded-xl border border-slate-200/80 p-6 shadow-sm">
+        <h3 class="font-semibold text-slate-900 mb-4 text-sm flex items-center gap-2">
+            <i class="ti ti-mail-plus text-indigo-600"></i> Add Mail Account
+        </h3>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">Username *</label>
+                    <input type="text" name="username" required placeholder="contact" class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">Domain *</label>
+                    <select name="domain" required class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm bg-white outline-none focus:border-blue-600">
+                        {% for w in websites %}
+                        <option value="{{ w.domain }}">@{{ w.domain }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">Quota (MB)</label>
+                    <input type="number" name="quota" value="1024" class="mt-1.5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none">
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full inline-flex justify-center items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+                        <i class="ti ti-check"></i> Create Mailbox
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Mailboxes Table -->
+    <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/70 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Email Address</th>
+                        <th class="px-5 py-3.5">Quota Usage</th>
+                        <th class="px-5 py-3.5">Created</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for m in mailboxes %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <td class="px-5 py-3.5 font-medium text-slate-900 flex items-center gap-2">
+                            <i class="ti ti-mail text-indigo-600"></i> {{ m.email }}
+                        </td>
+                        <td class="px-5 py-3.5 text-xs text-slate-600">{{ m.used_mb }} / {{ m.quota_mb }} MB</td>
+                        <td class="px-5 py-3.5 text-xs text-slate-500">{{ m.created_at|date:"M d, Y" }}</td>
+                        <td class="px-5 py-3.5 text-right">
+                            <div class="flex items-center justify-end gap-1">
+                                <a href="/snappymail/" target="_blank" class="p-1.5 text-indigo-600 hover:text-indigo-800 rounded-lg hover:bg-indigo-50 transition" title="Open in SnappyMail">
+                                    <i class="ti ti-brand-chrome text-base"></i>
+                                </a>
+                                <form method="post" action="{% url 'user_email_delete' m.id %}" onsubmit="return confirm('Delete mailbox {{ m.email }}?');" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete Mailbox">
+                                        <i class="ti ti-trash text-base"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-5 py-8 text-center text-slate-400 text-sm">No email accounts created yet.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

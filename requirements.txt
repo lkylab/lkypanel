@@ -1,0 +1,25 @@
+# W3Panel v2 — Python Dependencies
+
+# Django
+Django>=4.2,<5.0
+
+# WSGI server
+gunicorn>=21.2.0
+
+# Static files
+whitenoise>=6.5.0
+
+# HTTP client (for license server)
+requests>=2.31.0
+
+# 2FA
+pyotp>=2.9.0
+
+# Password hashing
+argon2-cffi>=23.1.0
+
+# Process management
+psutil>=5.9.0
+
+# Scheduler
+django-apscheduler>=0.6.2

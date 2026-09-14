@@ -1,0 +1,146 @@
+{% extends "base_user.html" %}
+{% load static %}
+
+{% block title %}Zone Editor — cPanel{% endblock %}
+{% block header_title %}Zone Editor{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-slate-900">Zone Editor</h2>
+            <p class="text-xs text-slate-500">Manage DNS zone files and create custom A, CNAME, TXT, and MX records</p>
+        </div>
+        <div>
+            <!-- Domain Selector -->
+            {% if websites %}
+            <form method="get" class="flex items-center gap-2">
+                <label for="domainSelect" class="text-xs font-bold uppercase tracking-wider text-slate-600">Domain:</label>
+                <select id="domainSelect" name="domain_id" onchange="this.form.submit()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-800 bg-white outline-none focus:border-[#ff6c2c]">
+                    {% for w in websites %}
+                    <option value="{{ w.id }}" {% if selected_domain and selected_domain.id == w.id %}selected{% endif %}>{{ w.domain }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if selected_domain %}
+    <!-- Add Record Card -->
+    <div class="bg-white rounded-xl border border-slate-200/80 p-5 shadow-sm">
+        <h3 class="font-bold text-slate-900 mb-3 text-xs uppercase tracking-wider flex items-center gap-2">
+            <i class="ti ti-plus text-[#ff6c2c]"></i> Add Record for {{ selected_domain.domain }}
+        </h3>
+        <form method="post" action="{% url 'user_dns' %}?domain_id={{ selected_domain.id }}" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" name="action" value="add_record">
+
+            <div class="grid grid-cols-1 sm:grid-cols-6 gap-3">
+                <div class="sm:col-span-1">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Type</label>
+                    <select name="record_type" id="recordTypeSelect" onchange="togglePriority(this.value)" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-bold text-slate-800 bg-white outline-none focus:border-[#ff6c2c]">
+                        <option value="A">A</option>
+                        <option value="AAAA">AAAA</option>
+                        <option value="CNAME">CNAME</option>
+                        <option value="TXT">TXT</option>
+                        <option value="MX">MX</option>
+                    </select>
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Name (Host)</label>
+                    <input type="text" name="name" required placeholder="@ or sub" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#ff6c2c]">
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">Record Value / Destination</label>
+                    <input type="text" name="value" required placeholder="192.0.2.1 or mail.server.com" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono text-slate-900 outline-none focus:border-[#ff6c2c]">
+                </div>
+                <div class="sm:col-span-1">
+                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">TTL (Seconds)</label>
+                    <input type="number" name="ttl" value="3600" required class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono text-slate-900 outline-none focus:border-[#ff6c2c]">
+                </div>
+            </div>
+
+            <div id="priorityField" class="hidden sm:w-1/3">
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-1">MX Priority (0-65535)</label>
+                <input type="number" name="priority" value="10" placeholder="10" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-xs font-mono text-slate-900 outline-none focus:border-[#ff6c2c]">
+            </div>
+
+            <div class="flex justify-end pt-1">
+                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded-lg text-xs font-bold uppercase tracking-wider shadow-sm transition">
+                    <i class="ti ti-check"></i> Add Record
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Records Table -->
+    <div class="bg-white rounded-xl border border-slate-200/80 overflow-hidden shadow-sm">
+        <div class="px-5 py-3.5 bg-slate-50/70 border-b border-slate-200 flex items-center justify-between">
+            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">Configured Records for {{ selected_domain.domain }} ({{ records|length }})</h3>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-slate-50/50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Type</th>
+                        <th class="px-5 py-3.5">Name</th>
+                        <th class="px-5 py-3.5">TTL</th>
+                        <th class="px-5 py-3.5">Record Value</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for r in records %}
+                    <tr class="hover:bg-slate-50/60 transition">
+                        <td class="px-5 py-3.5">
+                            <span class="inline-flex px-2 py-0.5 rounded text-[11px] font-bold font-mono bg-slate-100 text-slate-800">
+                                {{ r.record_type }}
+                            </span>
+                        </td>
+                        <td class="px-5 py-3.5 font-mono text-xs font-semibold text-slate-900">{{ r.name }}</td>
+                        <td class="px-5 py-3.5 font-mono text-xs text-slate-500">{{ r.ttl }}</td>
+                        <td class="px-5 py-3.5 font-mono text-xs text-slate-700 break-all">
+                            {% if r.priority %}<span class="text-slate-400 mr-1.5 font-sans">Priority: {{ r.priority }}</span>{% endif %}
+                            {{ r.value }}
+                        </td>
+                        <td class="px-5 py-3.5 text-right">
+                            <form method="post" action="{% url 'user_dns_delete' r.id %}" onsubmit="return confirm('Delete DNS record?');" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="p-1.5 text-slate-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete Record">
+                                    <i class="ti ti-trash text-base"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="px-5 py-10 text-center text-slate-400 text-sm">
+                            No custom DNS records added for this domain yet.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400 text-sm">
+        No domains configured yet. <a href="{% url 'user_website_create' %}" class="text-[#ff6c2c] font-semibold hover:underline">Create a Domain</a> first to manage DNS records.
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function togglePriority(val) {
+    const f = document.getElementById('priorityField');
+    if (val === 'MX') {
+        f.classList.remove('hidden');
+    } else {
+        f.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,118 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Hosting Packages — W3Panel{% endblock %}
+{% block page_title %}Hosting Packages{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900">Hosting Packages</h2>
+            <p class="text-xs text-gray-500">Define quota packages with website, database, disk, and bandwidth limits</p>
+        </div>
+        <button @click="showModal = true" x-data="{ showModal: false }" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium transition shadow-sm">
+            <i class="ti ti-plus text-base"></i> Add New Package
+        </button>
+    </div>
+
+    <!-- Create Package Form -->
+    <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+        <h3 class="font-semibold text-gray-900 mb-4 text-sm flex items-center gap-2">
+            <i class="ti ti-package text-blue-600"></i> Create Hosting Plan
+        </h3>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Package Name *</label>
+                    <input type="text" name="name" required placeholder="Standard Plan" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-600">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-700">Description</label>
+                    <input type="text" name="description" placeholder="Ideal for small businesses" class="mt-1.5 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm outline-none focus:border-blue-600">
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Websites</label>
+                    <input type="number" name="websites_limit" value="5" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Databases</label>
+                    <input type="number" name="databases_limit" value="5" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">FTP Users</label>
+                    <input type="number" name="ftp_limit" value="5" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Emails</label>
+                    <input type="number" name="email_limit" value="10" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Disk (MB)</label>
+                    <input type="number" name="disk_limit_mb" value="10240" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-gray-600">Bandwidth (GB)</label>
+                    <input type="number" name="bandwidth_limit_gb" value="100" class="mt-1 w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-sm outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-semibold shadow-sm transition">
+                    <i class="ti ti-check"></i> Save Package
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Package Table -->
+    <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-gray-50/70 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                    <tr>
+                        <th class="px-5 py-3.5">Plan Name</th>
+                        <th class="px-5 py-3.5">Websites</th>
+                        <th class="px-5 py-3.5">Databases</th>
+                        <th class="px-5 py-3.5">Emails</th>
+                        <th class="px-5 py-3.5">Disk Quota</th>
+                        <th class="px-5 py-3.5">Bandwidth</th>
+                        <th class="px-5 py-3.5 text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {% for p in plans %}
+                    <tr class="hover:bg-gray-50/60 transition">
+                        <td class="px-5 py-3.5 font-semibold text-gray-900">
+                            <div>{{ p.name }}</div>
+                            <div class="text-xs text-gray-400 font-normal">{{ p.description|default:"No description" }}</div>
+                        </td>
+                        <td class="px-5 py-3.5 text-gray-600">{% if p.websites_limit == -1 %}Unlimited{% else %}{{ p.websites_limit }}{% endif %}</td>
+                        <td class="px-5 py-3.5 text-gray-600">{% if p.databases_limit == -1 %}Unlimited{% else %}{{ p.databases_limit }}{% endif %}</td>
+                        <td class="px-5 py-3.5 text-gray-600">{% if p.email_limit == -1 %}Unlimited{% else %}{{ p.email_limit }}{% endif %}</td>
+                        <td class="px-5 py-3.5 text-gray-600">{{ p.disk_limit_mb }} MB</td>
+                        <td class="px-5 py-3.5 text-gray-600">{{ p.bandwidth_limit_gb }} GB</td>
+                        <td class="px-5 py-3.5 text-right">
+                            <form method="post" action="{% url 'admin_plan_delete' p.id %}" onsubmit="return confirm('Delete plan {{ p.name }}?');" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition">
+                                    <i class="ti ti-trash text-base"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-5 py-8 text-center text-gray-400 text-sm">No custom packages created. Use the form above to add one.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

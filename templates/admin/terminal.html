@@ -1,0 +1,171 @@
+{% extends "base_admin.html" %}
+{% load static %}
+
+{% block title %}Web Terminal — W3Panel{% endblock %}
+{% block page_title %}Web Terminal & System Console{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <i class="ti ti-terminal-2 text-blue-600"></i> Administrator System Terminal
+            </h2>
+            <p class="text-xs text-gray-500">Root-level interactive command execution, system diagnostics, and service inspection</p>
+        </div>
+        <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg text-xs font-semibold">
+                <span class="size-2 rounded-full bg-emerald-500 animate-pulse"></span> Root Shell Active
+            </span>
+        </div>
+    </div>
+
+    <!-- Web Terminal Console Card -->
+    <div x-data="adminTerminal()" class="bg-gray-950 rounded-2xl shadow-xl border border-gray-800 overflow-hidden flex flex-col">
+        <!-- Terminal Titlebar -->
+        <div class="px-4 py-3 bg-gray-900/90 border-b border-gray-800 flex items-center justify-between text-xs">
+            <div class="flex items-center gap-2">
+                <span class="size-3 rounded-full bg-red-500/80 inline-block"></span>
+                <span class="size-3 rounded-full bg-amber-500/80 inline-block"></span>
+                <span class="size-3 rounded-full bg-emerald-500/80 inline-block"></span>
+                <span class="ml-2 font-mono text-gray-400">root@w3panel: <span x-text="cwd"></span></span>
+            </div>
+            <div class="flex items-center gap-2">
+                <button @click="clearConsole()" class="px-2.5 py-1 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 text-[11px] transition">
+                    Clear Console
+                </button>
+            </div>
+        </div>
+
+        <!-- Terminal Output Screen -->
+        <div id="terminal-screen" class="p-4 font-mono text-xs text-gray-200 overflow-y-auto space-y-2 h-[460px] bg-gray-950/95 leading-relaxed selection:bg-blue-600 selection:text-white">
+            <div class="text-gray-500 text-[11px] border-b border-gray-800 pb-2">
+                W3Panel Administrator System Terminal [Linux x86_64]<br>
+                Type commands below or click the quick diagnostic shortcuts. Destructive commands are restricted.
+            </div>
+
+            <template x-for="(entry, index) in history" :key="index">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 text-gray-400">
+                        <span class="text-red-400 font-bold">root@w3panel</span>:<span class="text-blue-400 font-semibold" x-text="entry.cwd || '/root'"></span>#
+                        <span class="text-white font-semibold" x-text="entry.cmd"></span>
+                    </div>
+                    <pre x-show="entry.output" class="whitespace-pre-wrap text-gray-300 pl-4 border-l border-gray-800 text-xs font-mono" x-text="entry.output"></pre>
+                    <pre x-show="entry.error" class="whitespace-pre-wrap text-red-400 pl-4 border-l border-red-500/40 text-xs font-mono" x-text="entry.error"></pre>
+                </div>
+            </template>
+
+            <div x-show="loading" class="flex items-center gap-2 text-gray-500">
+                <span class="animate-spin text-sm"><i class="ti ti-loader-2"></i></span> Executing command...
+            </div>
+        </div>
+
+        <!-- Quick Admin Diagnostics Bar -->
+        <div class="px-4 py-2 bg-gray-900/60 border-t border-gray-800/80 flex items-center gap-2 overflow-x-auto text-[11px]">
+            <span class="text-gray-500 uppercase tracking-wider text-[10px] font-bold shrink-0">Quick Diagnostics:</span>
+            <button @click="runQuick('uptime')" class="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition whitespace-nowrap">uptime</button>
+            <button @click="runQuick('free -m')" class="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition whitespace-nowrap">free -m</button>
+            <button @click="runQuick('df -h')" class="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition whitespace-nowrap">df -h</button>
+            <button @click="runQuick('systemctl status nginx --no-pager')" class="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition whitespace-nowrap">nginx status</button>
+            <button @click="runQuick('systemctl status w3panel-admin --no-pager')" class="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition whitespace-nowrap">w3panel status</button>
+            <button @click="runQuick('ss -tulpn | head -n 25')" class="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition whitespace-nowrap">listening ports</button>
+            <button @click="runQuick('tail -n 20 /var/log/nginx/error.log')" class="px-2 py-0.5 rounded bg-gray-800 hover:bg-gray-700 text-gray-300 transition whitespace-nowrap">nginx error log</button>
+        </div>
+
+        <!-- Terminal Input Line -->
+        <form @submit.prevent="executeCommand()" class="p-3 bg-gray-900 border-t border-gray-800 flex items-center gap-2">
+            {% csrf_token %}
+            <span class="text-red-400 font-bold font-mono text-xs pl-2">root@w3panel:#</span>
+            <input type="text" x-model="currentCommand" @keydown.up.prevent="prevHistory()" @keydown.down.prevent="nextHistory()"
+                   placeholder="Type root shell command..." autofocus
+                   class="flex-1 bg-transparent text-gray-100 font-mono text-xs outline-none placeholder:text-gray-600">
+            <button type="submit" :disabled="loading || !currentCommand.trim()"
+                    class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1">
+                <span>Run</span> <i class="ti ti-arrow-right"></i>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function adminTerminal() {
+    return {
+        currentCommand: '',
+        loading: false,
+        cwd: '/root',
+        history: [],
+        cmdList: [],
+        cmdIndex: -1,
+
+        async executeCommand() {
+            const cmd = this.currentCommand.trim();
+            if (!cmd || this.loading) return;
+
+            this.cmdList.push(cmd);
+            this.cmdIndex = this.cmdList.length;
+            this.loading = true;
+            this.currentCommand = '';
+
+            try {
+                const formData = new FormData();
+                formData.append('command', cmd);
+                formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+
+                const resp = await fetch('{% url "admin_terminal_exec" %}', {
+                    method: 'POST',
+                    body: formData,
+                });
+                const data = await resp.json();
+
+                this.history.push({
+                    cmd: cmd,
+                    cwd: this.cwd,
+                    output: data.stdout || '',
+                    error: data.stderr || (data.error || ''),
+                });
+                if (data.cwd) this.cwd = data.cwd;
+            } catch (err) {
+                this.history.push({
+                    cmd: cmd,
+                    cwd: this.cwd,
+                    output: '',
+                    error: 'Network or execution error: ' + err.message,
+                });
+            } finally {
+                this.loading = false;
+                this.$nextTick(() => {
+                    const screen = document.getElementById('terminal-screen');
+                    if (screen) screen.scrollTop = screen.scrollHeight;
+                });
+            }
+        },
+
+        runQuick(cmd) {
+            this.currentCommand = cmd;
+            this.executeCommand();
+        },
+
+        prevHistory() {
+            if (this.cmdList.length === 0) return;
+            if (this.cmdIndex > 0) this.cmdIndex--;
+            this.currentCommand = this.cmdList[this.cmdIndex] || '';
+        },
+
+        nextHistory() {
+            if (this.cmdIndex < this.cmdList.length - 1) {
+                this.cmdIndex++;
+                this.currentCommand = this.cmdList[this.cmdIndex] || '';
+            } else {
+                this.cmdIndex = this.cmdList.length;
+                this.currentCommand = '';
+            }
+        },
+
+        clearConsole() {
+            this.history = [];
+        }
+    }
+}
+</script>
+{% endblock %}

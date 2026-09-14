@@ -1,0 +1,20 @@
+<div class="sidebar-section relative" data-section-id="{{ id }}">
+    <button type="button" class="sidebar-section-toggle flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-xs font-semibold uppercase tracking-wider transition outline-none cursor-pointer text-slate-400 hover:text-white hover:bg-slate-800 text-left">
+        <span class="flex items-center gap-2 pointer-events-none text-left min-w-0"><i class="{{ icon }} text-sm text-slate-400 shrink-0"></i> <span class="truncate">{{ title }}</span></span>
+        <i class="ti ti-chevron-down sidebar-arrow text-slate-500 text-xs shrink-0 transition-transform duration-150 pointer-events-none {% if active_section == id %}rotate-180{% endif %}"></i>
+    </button>
+    <ul class="sidebar-section-menu relative ml-3 mt-1 space-y-0.5 border-l border-slate-700/60 pl-2 {% if active_section != id %}hidden{% endif %}">
+        {% for item in items %}
+        <li class="relative">
+            <a href="{{ item.url }}" class="relative flex items-center gap-2 rounded-md py-1.5 px-2.5 text-xs font-medium transition outline-none text-left
+                {% if active_page == item.active %}
+                    text-white bg-blue-600 font-semibold shadow-sm
+                {% else %}
+                    text-slate-300 hover:text-white hover:bg-slate-800/80
+                {% endif %}">
+                {{ item.label }}
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</div>
