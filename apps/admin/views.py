@@ -68,7 +68,7 @@ def _sidebar_context(active_page=''):
 # ===========================================================================
 
 def admin_login(request):
-    """Admin login page (WHM / WebHost Manager style)."""
+    """Admin login page (W3Host Manager style)."""
     if request.method == 'POST':
         from packages.core.auth import authenticate_user, create_session
         username = request.POST.get('username', '').strip()
@@ -77,14 +77,14 @@ def admin_login(request):
         try:
             user, is_2fa_required = authenticate_user(username, password, request.META.get('REMOTE_ADDR', ''))
             if user.role != 'admin':
-                return render(request, 'login.html', {'error': 'Administrator access only on WebHost Manager (port 2087).', 'username': username, 'panel_type': 'whm'})
+                return render(request, 'login.html', {'error': 'Administrator access only on W3Host Manager (port 2087).', 'username': username, 'panel_type': 'host'})
             
             create_session(request, user)
             return redirect('admin_dashboard')
         except ValueError as e:
-            return render(request, 'login.html', {'error': str(e), 'username': username, 'panel_type': 'whm'})
+            return render(request, 'login.html', {'error': str(e), 'username': username, 'panel_type': 'host'})
     
-    return render(request, 'login.html', {'panel_type': 'whm'})
+    return render(request, 'login.html', {'panel_type': 'host'})
 
 
 def admin_logout(request):
@@ -330,7 +330,7 @@ def admin_user_toggle_shell(request, user_id):
 
 
 def admin_user_autologin(request, user_id):
-    """WHM-style 1-click autologin into User Portal (cPanel) in a new tab."""
+    """W3Host-style 1-click autologin into W3Client Portal in a new tab."""
     target_user = get_object_or_404(User, id=user_id)
     from packages.core.models import LoginToken
     token_obj = LoginToken.create_for_user(target_user, created_by=request.panel_user, validity_seconds=120)
@@ -534,7 +534,7 @@ def admin_website_delete(request, website_id):
 
 
 def admin_website_vhost(request, website_id):
-    """WHM VirtualHost (Nginx configuration) editor with safety check and rollback."""
+    """Host VirtualHost (Nginx configuration) editor with safety check and rollback."""
     site = get_object_or_404(Website, id=website_id)
     from services.webserver import get_vhost_content, save_custom_vhost, reset_vhost_to_default
 
@@ -744,8 +744,8 @@ def admin_services_status(request):
     db_tuning = get_database_tuning_status()
 
     services_list = [
-        {'name': 'w3panel-admin', 'display': 'W3Panel WHM Admin (Port 2087)', 'icon': 'ti ti-shield-check', 'cmd': 'gunicorn', 'desc': 'Core WebHost Manager Administrative Server'},
-        {'name': 'w3panel-user', 'display': 'W3Panel cPanel Portal (Port 2083)', 'icon': 'ti ti-user-check', 'cmd': 'gunicorn', 'desc': 'End-User Hosting Control Panel Server'},
+        {'name': 'w3panel-admin', 'display': 'W3Host Manager (Port 2087)', 'icon': 'ti ti-shield-check', 'cmd': 'gunicorn', 'desc': 'Core Host Manager Administrative Server'},
+        {'name': 'w3panel-user', 'display': 'W3Client Portal (Port 2083)', 'icon': 'ti ti-user-check', 'cmd': 'gunicorn', 'desc': 'End-User Client Hosting Portal Server'},
         {'name': 'nginx', 'display': 'Nginx Web Server', 'icon': 'ti ti-world', 'cmd': 'nginx', 'desc': 'High-Performance Web Server for User Websites (Ports 80 & 443)'},
         {'name': 'mariadb', 'display': 'MariaDB Database Server', 'icon': 'ti ti-database', 'cmd': 'mariadbd', 'desc': 'Relational MySQL Database Engine'},
         {'name': 'postgresql', 'display': 'PostgreSQL Database Server', 'icon': 'ti ti-database-import', 'cmd': 'psql', 'desc': 'Advanced Object-Relational SQL Database Engine'},
@@ -824,7 +824,7 @@ def admin_system_logs(request):
 
 
 def admin_cron(request):
-    """WHM Scheduled Tasks & Cron Jobs manager across all accounts."""
+    """Host Scheduled Tasks & Cron Jobs manager across all accounts."""
     cron_jobs = CronJob.objects.select_related('owner').all().order_by('-created_at')
     
     system_cron_files = []

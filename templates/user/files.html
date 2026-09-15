@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}File Manager — cPanel{% endblock %}
+{% block title %}W3File Manager — W3Client Portal{% endblock %}
 
 {% block extra_css %}
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -804,11 +804,11 @@ function fileManagerApp() {
     <header class="h-11 bg-[#1b2733] text-white flex items-center justify-between px-4 border-b border-slate-700 shrink-0 z-30 shadow-xs">
         <!-- Left: File Manager linked to Panel URL & Tree Toggle -->
         <div class="flex items-center gap-2.5 shrink-0">
-            <a href="/" class="flex items-center gap-2 text-white hover:text-[#ff6c2c] transition group" title="Return to Control Panel">
+            <a href="/" class="flex items-center gap-2 text-white hover:text-[#ff6c2c] transition group" title="Return to W3Client Dashboard">
                 <div class="size-6 rounded bg-[#ff6c2c] flex items-center justify-center text-white font-bold text-xs shadow-xs group-hover:scale-105 transition">
                     <i class="ti ti-folder text-sm"></i>
                 </div>
-                <span class="text-xs font-bold tracking-tight text-white group-hover:text-[#ff6c2c] transition">File Manager</span>
+                <span class="text-xs font-bold tracking-tight text-white group-hover:text-[#ff6c2c] transition">W3File Manager</span>
             </a>
             <button type="button" @click="folderTreeOpen = !folderTreeOpen"
                     class="ml-1 p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition"
@@ -819,9 +819,9 @@ function fileManagerApp() {
 
         <!-- Right: Return to User Panel & Logout -->
         <div class="flex items-center gap-2 shrink-0">
-            <a href="/" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition" title="Return to cPanel Dashboard">
+            <a href="/" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition" title="Return to W3Client Dashboard">
                 <i class="ti ti-home text-sm text-[#ff6c2c]"></i>
-                <span class="hidden sm:inline">cPanel Dashboard</span>
+                <span class="hidden sm:inline">W3Client Dashboard</span>
             </a>
             <a href="/logout/" class="text-slate-400 hover:text-red-400 transition p-1" title="Sign Out">
                 <i class="ti ti-logout text-base"></i>

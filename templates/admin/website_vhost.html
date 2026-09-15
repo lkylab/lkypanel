@@ -1,7 +1,7 @@
 {% extends "base_admin.html" %}
 {% load static %}
 
-{% block title %}VirtualHost Editor: {{ site.domain }} — WHM{% endblock %}
+{% block title %}VirtualHost Editor: {{ site.domain }} — W3Host Manager{% endblock %}
 {% block page_title %}VirtualHost Configuration{% endblock %}
 
 {% block content %}
@@ -33,7 +33,7 @@
             <i class="ti ti-shield-check text-lg"></i>
         </div>
         <div class="text-xs text-blue-900 space-y-1">
-            <p class="font-bold">WHM Administrator Protection & Automated Syntax Verification</p>
+            <p class="font-bold">Host Administrator Protection & Automated Syntax Verification</p>
             <p class="text-blue-700 leading-relaxed">
                 Modifications to this virtual host are atomically validated with <code class="bg-blue-100/80 px-1.5 py-0.5 rounded font-mono font-bold">sudo nginx -t</code> prior to applying. If a syntax mistake is encountered, changes are rolled back immediately without interrupting active Nginx workers.
             </p>

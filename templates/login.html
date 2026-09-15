@@ -2,10 +2,10 @@
 {% load static %}
 
 {% block title %}
-{% if panel_type == 'whm' or request.resolver_match.url_name == 'admin_login' %}
-Sign In — WebHost Manager (WHM)
+{% if panel_type == 'whm' or panel_type == 'host' or request.resolver_match.url_name == 'admin_login' %}
+Sign In — W3Host Manager
 {% else %}
-Sign In — cPanel
+Sign In — W3Client Portal
 {% endif %}
 {% endblock %}
 
@@ -15,18 +15,18 @@ Sign In — cPanel
 {% endblock %}
 
 {% block body %}
-{% if panel_type == 'whm' or request.resolver_match.url_name == 'admin_login' %}
-{# ==================== WHM (Web Host Manager) LOGIN ==================== #}
+{% if panel_type == 'whm' or panel_type == 'host' or request.resolver_match.url_name == 'admin_login' %}
+{# ==================== W3Host Manager (Server Admin) LOGIN ==================== #}
 <div class="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
     <!-- Subtle background pattern -->
     <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
 
     <div class="sm:mx-auto sm:w-full sm:max-w-md text-center relative z-10">
         <div class="inline-flex items-center justify-center gap-2 mb-3">
-            <span class="bg-[#ff6c2c] text-white font-black text-sm px-3 py-1 rounded-md tracking-wider shadow-sm uppercase">WHM</span>
-            <span class="text-white font-bold tracking-tight text-2xl">WebHost Manager</span>
+            <span class="bg-[#ff6c2c] text-white font-black text-sm px-3 py-1 rounded-md tracking-wider shadow-sm uppercase">W3Host</span>
+            <span class="text-white font-bold tracking-tight text-2xl">Host Manager</span>
         </div>
-        <p class="text-xs text-slate-400 font-medium">Server Infrastructure & Administrator Console</p>
+        <p class="text-xs text-slate-400 font-medium">Server Infrastructure &amp; Administrator Console</p>
         <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
             <span class="size-1.5 rounded-full bg-emerald-500"></span> Port 2087 (HTTPS)
         </div>
@@ -47,8 +47,8 @@ Sign In — cPanel
                     <label for="username" class="block text-xs font-bold uppercase tracking-wider text-slate-300">Root / Admin Username</label>
                     <div class="mt-1.5 relative">
                         <input id="username" name="username" type="text" autocomplete="username" required value="{{ username|default:'' }}"
-                               placeholder="root or admin"
-                               class="block w-full rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2.5 pl-10 text-white placeholder:text-slate-600 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
+                                placeholder="root or admin"
+                                class="block w-full rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2.5 pl-10 text-white placeholder:text-slate-600 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
                         <i class="ti ti-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
                     </div>
                 </div>
@@ -57,8 +57,8 @@ Sign In — cPanel
                     <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-300">Password</label>
                     <div class="mt-1.5 relative">
                         <input id="password" name="password" type="password" autocomplete="current-password" required
-                               placeholder="••••••••••••"
-                               class="block w-full rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2.5 pl-10 text-white placeholder:text-slate-600 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
+                                placeholder="••••••••••••"
+                                class="block w-full rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2.5 pl-10 text-white placeholder:text-slate-600 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
                         <i class="ti ti-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
                     </div>
                 </div>
@@ -73,23 +73,24 @@ Sign In — cPanel
 
             <div class="mt-6 border-t border-slate-800 pt-4 text-center">
                 <p class="text-xs text-slate-400">
-                    Need cPanel website access? 
-                    <a href="javascript:void(0)" onclick="window.location.href = window.location.protocol + '//' + window.location.hostname + (window.location.port == '12087' ? ':12083' : ':2083') + '/login/';" class="text-[#ff6c2c] hover:underline font-medium">Log in to cPanel</a>
+                    Need client website access? 
+                    <a href="javascript:void(0)" onclick="window.location.href = window.location.protocol + '//' + window.location.hostname + (window.location.port == '12087' ? ':12083' : ':2083') + '/login/';" class="text-[#ff6c2c] hover:underline font-medium">Log in to W3Client Portal</a>
                 </p>
-                <p class="text-[11px] text-slate-600 mt-2">W3Panel WHM v2.0 • Independent Server Engine</p>
+                <p class="text-[11px] text-slate-600 mt-2">W3Panel Host Manager v2.0 • Independent Server Engine</p>
             </div>
         </div>
     </div>
 </div>
 
 {% else %}
-{# ==================== cPanel (User Panel) LOGIN ==================== #}
+{# ==================== W3Client Portal (User Panel) LOGIN ==================== #}
 <div class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
     <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div class="inline-flex items-center justify-center mb-2">
-            <span class="text-[#ff6c2c] font-black text-4xl italic tracking-tight drop-shadow-sm">cPanel</span>
+        <div class="inline-flex items-center justify-center gap-2 mb-2">
+            <span class="bg-[#ff6c2c] text-white font-black text-sm px-3 py-1 rounded-md tracking-wider shadow-sm uppercase">W3Client</span>
+            <span class="text-slate-900 font-bold tracking-tight text-2xl">Client Portal</span>
         </div>
-        <h2 class="text-base font-semibold tracking-tight text-slate-700">Web Hosting Control Panel</h2>
+        <h2 class="text-xs font-semibold tracking-tight text-slate-500">Web Hosting &amp; Account Control Panel</h2>
         <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-mono text-slate-500">
             <span class="size-1.5 rounded-full bg-emerald-500"></span> Port 2083 (HTTPS)
         </div>
@@ -137,9 +138,9 @@ Sign In — cPanel
             <div class="mt-6 border-t border-slate-100 pt-4 text-center">
                 <p class="text-xs text-slate-500">
                     Server Administrator? 
-                    <a href="javascript:void(0)" onclick="window.location.href = window.location.protocol + '//' + window.location.hostname + (window.location.port == '12083' ? ':12087' : ':2087') + '/login/';" class="text-slate-800 hover:text-[#ff6c2c] font-semibold hover:underline">Access WebHost Manager (WHM)</a>
+                    <a href="javascript:void(0)" onclick="window.location.href = window.location.protocol + '//' + window.location.hostname + (window.location.port == '12083' ? ':12087' : ':2087') + '/login/';" class="text-slate-800 hover:text-[#ff6c2c] font-semibold hover:underline">Access W3Host Manager</a>
                 </p>
-                <p class="text-[11px] text-slate-400 mt-2">W3Panel cPanel v2.0 • Container-Native Cloud Hosting</p>
+                <p class="text-[11px] text-slate-400 mt-2">W3Panel Client Portal v2.0 • Container-Native Cloud Hosting</p>
             </div>
         </div>
     </div>

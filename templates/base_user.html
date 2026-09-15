@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{% block page_title %}cPanel{% endblock %} — W3Panel{% endblock %}
+{% block title %}{% block page_title %}Dashboard{% endblock %} — W3Client Portal{% endblock %}
 
 {% block extra_css %}
 <script src="https://cdn.tailwindcss.com"></script>
@@ -10,8 +10,8 @@
 <style>
 [x-cloak]{display:none!important}
 :root {
-    --cpanel-orange: #ff6c2c;
-    --cpanel-dark: #1f2937;
+    --w3-orange: #ff6c2c;
+    --w3-dark: #1f2937;
 }
 </style>
 {% endblock %}
@@ -20,14 +20,14 @@
 <div x-data="{ sidebarOpen: true, toolSearch: '' }" class="flex min-h-screen bg-slate-100/70 text-slate-800 flex-col">
 
     <div class="flex flex-1 min-h-0">
-        <!-- cPanel Sidebar Navigation -->
+        <!-- W3Client Sidebar Navigation -->
         <aside class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-slate-200 bg-white transition-all duration-200" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
             <div class="flex h-14 items-center justify-between border-b border-slate-200 px-5">
                 <a href="/" class="flex items-center gap-2 font-black text-slate-900 tracking-tight text-base">
                     <div class="size-7 rounded-lg bg-[#ff6c2c] flex items-center justify-center text-white font-black text-xs shadow-xs">
-                        cP
+                        W3
                     </div>
-                    <span>cPanel</span>
+                    <span>W3Client</span>
                 </a>
             </div>
 

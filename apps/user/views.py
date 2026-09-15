@@ -39,7 +39,7 @@ def _user_sidebar_context(request, active_page=''):
 
 
 def user_login(request):
-    """User login page (cPanel style)."""
+    """User login page (W3Client Portal style)."""
     if request.method == 'POST':
         from packages.core.auth import authenticate_user, create_session
         username = request.POST.get('username', '').strip()
@@ -50,9 +50,9 @@ def user_login(request):
             create_session(request, user)
             return redirect('user_dashboard')
         except ValueError as e:
-            return render(request, 'login.html', {'error': str(e), 'username': username, 'panel_type': 'cpanel'})
+            return render(request, 'login.html', {'error': str(e), 'username': username, 'panel_type': 'client'})
     
-    return render(request, 'login.html', {'panel_type': 'cpanel'})
+    return render(request, 'login.html', {'panel_type': 'client'})
 
 
 def user_logout(request):
@@ -63,7 +63,7 @@ def user_logout(request):
 
 
 def user_dashboard(request):
-    """cPanel-style user dashboard with categorized tool groups and statistics."""
+    """Client-style user dashboard with categorized tool groups and statistics."""
     user = request.panel_user
     if not user:
         return redirect('user_login')
@@ -333,7 +333,7 @@ def user_website_logs(request, website_id):
 
 
 def user_databases(request):
-    """cPanel-style database management for MariaDB and PostgreSQL."""
+    """Client database management for MariaDB and PostgreSQL."""
     from services.database import (
         create_database, delete_database,
         create_database_user, grant_user_privileges,
@@ -1141,7 +1141,7 @@ def user_backup_delete(request, backup_id):
 
 
 def user_php(request):
-    """cPanel-style MultiPHP INI & Version Editor."""
+    """Client MultiPHP INI & Version Editor."""
     user = request.panel_user
     websites = Website.objects.filter(owner=user)
     selected_domain_id = request.GET.get('domain_id')
@@ -1215,7 +1215,7 @@ display_errors = {errors}
 
 
 def user_cron(request):
-    """cPanel-style Cron Jobs manager with presets and 5-field crontab syntax."""
+    """Client Cron Jobs manager with presets and 5-field crontab syntax."""
     user = request.panel_user
     if request.method == 'POST':
         schedule = request.POST.get('schedule', '').strip()
@@ -1274,7 +1274,7 @@ def user_cron_delete(request, cron_id):
 
 
 def user_dns(request):
-    """cPanel-style DNS Zone Editor for domain records."""
+    """Client DNS Zone Editor for domain records."""
     user = request.panel_user
     websites = Website.objects.filter(owner=user)
     selected_domain_id = request.GET.get('domain_id')
@@ -1367,7 +1367,7 @@ def user_sso(request):
     token_obj.is_used = True
     token_obj.save(update_fields=['is_used'])
 
-    # Authenticate user session (fresh cPanel session)
+    # Authenticate user session (fresh client session)
     user = token_obj.user
     request.session.flush()
     create_session(request, user)

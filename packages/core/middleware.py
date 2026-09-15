@@ -127,9 +127,9 @@ def get_session_cookie_name(request):
     from django.conf import settings
     port = get_request_port(request)
     if port in (USER_PORT, 12083):
-        return 'w3p_cpanel_session'
+        return 'w3p_client_session'
     elif port in (ADMIN_PORT, 12087):
-        return 'w3p_whm_session'
+        return 'w3p_host_session'
     return getattr(settings, 'SESSION_COOKIE_NAME', 'w3p_session')
 
 
@@ -140,8 +140,8 @@ def get_session_cookie_name(request):
 class PortSessionMiddleware:
     """
     Port-isolated Session Middleware.
-    Ensures Port 2083 (cPanel) and Port 2087 (WHM) use completely independent session cookies
-    (w3p_cpanel_session vs w3p_whm_session) so they never collide or overwrite each other in the browser.
+    Ensures Port 2083 (W3Client) and Port 2087 (W3Host) use completely independent session cookies
+    (w3p_client_session vs w3p_host_session) so they never collide or overwrite each other in the browser.
     """
     def __init__(self, get_response):
         self.get_response = get_response

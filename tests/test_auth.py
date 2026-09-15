@@ -19,16 +19,17 @@ class AuthAndRoleTests(TestCase):
         self.assertTrue(self.user.check_password('Pass123!'))
 
     def test_login_page_renders(self):
-        # Admin / WHM login
+        # Admin / Host Manager login
         response = self.client.get('/login/')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'WebHost Manager')
-        self.assertContains(response, 'WHM')
+        self.assertContains(response, 'W3Host')
+        self.assertContains(response, 'Host Manager')
 
-        # User / cPanel login
+        # User / Client Portal login
         user_resp = self.client.get('/user/login/')
         self.assertEqual(user_resp.status_code, 200)
-        self.assertContains(user_resp, 'cPanel')
+        self.assertContains(user_resp, 'W3Client')
+        self.assertContains(user_resp, 'Client Portal')
         self.assertContains(user_resp, 'Port 2083')
 
     def test_admin_login_success(self):
@@ -86,7 +87,7 @@ class AuthAndRoleTests(TestCase):
         self.assertTrue(self.user.shell_enabled)
 
     def test_impersonation_sso_flow(self):
-        # Admin initiates WHM autologin in new tab
+        # Admin initiates autologin in new tab
         self.client.post('/login/', {'username': 'admin_test', 'password': 'Pass123!'})
         resp_autologin = self.client.get(f'/users/{self.user.id}/autologin/')
         self.assertEqual(resp_autologin.status_code, 302)
@@ -107,9 +108,9 @@ class AuthAndRoleTests(TestCase):
         sso_client = Client()
         resp_sso = sso_client.get(f'/sso/?token={token_str}', follow=True, SERVER_PORT='2083')
         self.assertEqual(resp_sso.status_code, 200)
-        cpanel_session = SessionStore(sso_client.cookies['w3p_cpanel_session'].value)
-        self.assertEqual(cpanel_session.get('user_id'), self.user.id)
-        self.assertEqual(cpanel_session.get('impersonated_by'), self.admin.username)
+        client_session = SessionStore(sso_client.cookies['w3p_client_session'].value)
+        self.assertEqual(client_session.get('user_id'), self.user.id)
+        self.assertEqual(client_session.get('impersonated_by'), self.admin.username)
         # Verify no banner is shown to user
         self.assertNotContains(resp_sso, 'Auto-Login:')
         self.assertNotContains(resp_sso, 'Impersonation Mode')

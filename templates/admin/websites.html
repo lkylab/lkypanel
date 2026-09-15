@@ -67,8 +67,8 @@
                                 <span>{{ w.owner.username }}</span>
                                 <a href="{% url 'admin_user_autologin' w.owner.id %}" target="_blank" rel="noopener noreferrer"
                                    class="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-orange-50 hover:bg-orange-100 text-[#ff6c2c] border border-orange-200 rounded text-[10px] font-bold transition"
-                                   title="Auto-Login to cPanel for {{ w.owner.username }} in new tab">
-                                    <span>cPanel</span>
+                                   title="Auto-Login to W3Client Portal for {{ w.owner.username }} in new tab">
+                                    <span>W3Client</span>
                                     <i class="ti ti-external-link text-[9px]"></i>
                                 </a>
                             </div>
@@ -117,8 +117,8 @@
                         </td>
                         <td class="px-5 py-3.5 text-right">
                             <div class="flex items-center justify-end gap-1">
-                                <a href="{% url 'admin_user_autologin' w.owner.id %}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded text-[10px] font-bold shadow-2xs transition" title="Log in to cPanel for {{ w.owner.username }}">
-                                    <span>cPanel</span>
+                                <a href="{% url 'admin_user_autologin' w.owner.id %}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 px-2 py-0.5 bg-[#ff6c2c] hover:bg-[#e0561b] text-white rounded text-[10px] font-bold shadow-2xs transition" title="Log in to W3Client Portal for {{ w.owner.username }}">
+                                    <span>W3Client</span>
                                     <i class="ti ti-external-link text-[9px]"></i>
                                 </a>
                                 <a href="{% url 'admin_website_vhost' w.id %}" class="p-1.5 text-gray-400 hover:text-blue-600 rounded-lg hover:bg-blue-50 transition" title="Edit VirtualHost">
