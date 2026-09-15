@@ -22,13 +22,13 @@ class AuthAndRoleTests(TestCase):
         # Admin / Host Manager login
         response = self.client.get('/login/')
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'W3Host')
+        self.assertContains(response, 'W3Host Manager')
         self.assertContains(response, 'Host Manager')
 
         # User / Client Portal login
         user_resp = self.client.get('/user/login/')
         self.assertEqual(user_resp.status_code, 200)
-        self.assertContains(user_resp, 'W3Client')
+        self.assertContains(user_resp, 'W3Client Portal')
         self.assertContains(user_resp, 'Client Portal')
         self.assertContains(user_resp, 'Port 2083')
 
