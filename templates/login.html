@@ -12,71 +12,203 @@ Sign In — W3Client Portal
 {% block extra_css %}
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+html, body { margin: 0; padding: 0; }
+html.dark, html.dark body { background-color: #0b0d14; color: #f8fafc; }
+html.light, html.light body { background-color: #f8fafc; color: #0f172a; }
+
+.login-theme-dark { background-color: #0b0d14; color: #f8fafc; }
+.login-theme-light { background-color: #f8fafc; color: #0f172a; }
+
+/* Dark theme card & form */
+.login-theme-dark .login-card {
+    background-color: #151726;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.6);
+}
+.login-theme-dark .login-title { color: #ffffff !important; }
+.login-theme-dark .login-card .footer-border { border-color: rgba(255, 255, 255, 0.08) !important; }
+.login-theme-dark .login-label { color: #e2e8f0 !important; font-weight: 600; }
+.login-theme-dark .login-input {
+    background-color: #0f121f !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+.login-theme-dark .login-input:focus { border-color: #ff6c2c !important; }
+.login-theme-dark .login-input::placeholder { color: #64748b !important; }
+.login-theme-dark .login-icon { color: #94a3b8 !important; }
+.login-theme-dark .login-subtitle { color: #94a3b8 !important; }
+.login-theme-dark .login-link-text { color: #94a3b8 !important; }
+.login-theme-dark .login-footer-text { color: #94a3b8 !important; }
+.login-theme-dark .login-error {
+    background-color: rgba(248, 81, 73, 0.15);
+    border: 1px solid rgba(248, 81, 73, 0.35);
+    color: #ff7b72;
+}
+.login-theme-dark .login-error-icon { color: #ff7b72; }
+.login-theme-dark .login-error-msg { color: #ff7b72; font-weight: 500; }
+
+/* Light theme card & form */
+.login-theme-light .login-card {
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.08);
+}
+.login-theme-light .login-title { color: #0f172a !important; }
+.login-theme-light .login-card .footer-border { border-color: #f1f5f9 !important; }
+.login-theme-light .login-label { color: #1e293b !important; font-weight: 600; }
+.login-theme-light .login-input {
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #0f172a !important;
+}
+.login-theme-light .login-input:focus { border-color: #ff6c2c !important; }
+.login-theme-light .login-input::placeholder { color: #94a3b8 !important; }
+.login-theme-light .login-icon { color: #64748b !important; }
+.login-theme-light .login-subtitle { color: #475569 !important; }
+.login-theme-light .login-link-text { color: #475569 !important; }
+.login-theme-light .login-footer-text { color: #64748b !important; }
+.login-theme-light .login-error {
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+.login-theme-light .login-error-icon { color: #dc2626; }
+.login-theme-light .login-error-msg { color: #b91c1c; font-weight: 500; }
+
+.theme-toggle {
+    position: fixed; top: 16px; right: 16px; z-index: 50;
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all 0.2s ease;
+    border: none; outline: none;
+}
+.login-theme-dark .theme-toggle { background-color: #151726; color: #a5adc7; border: 1px solid rgba(255,255,255,0.12); }
+.login-theme-dark .theme-toggle:hover { background-color: #1c2031; color: #e8eaf2; }
+.login-theme-light .theme-toggle { background-color: #ffffff; color: #64748b; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.login-theme-light .theme-toggle:hover { background-color: #f8fafc; color: #334155; }
+
+/* Left brand panel — always dark & rich */
+.login-brand {
+    background:
+        radial-gradient(760px 420px at 18% -6%, rgba(99,102,241,0.28), transparent 60%),
+        radial-gradient(640px 460px at 105% 108%, rgba(252,109,38,0.16), transparent 55%),
+        radial-gradient(500px 320px at -5% 110%, rgba(56,189,248,0.10), transparent 55%),
+        linear-gradient(165deg, #10121f 0%, #141627 55%, #0b0d14 100%);
+    color: #f8fafc;
+}
+.login-brand .login-brand-feature { color: #e2e8f0; }
+.login-brand .login-brand-feature i { color: #ff6c2c; }
+@keyframes loginGlow {
+    0%, 100% { opacity: 0.55; transform: translate3d(0,0,0) scale(1); }
+    50%      { opacity: 0.85; transform: translate3d(12px,-10px,0) scale(1.06); }
+}
+.login-brand .glow { animation: loginGlow 7s ease-in-out infinite; border-radius: 9999px; filter: blur(70px); }
+</style>
 {% endblock %}
 
 {% block body %}
 {% if panel_type == 'whm' or panel_type == 'host' or request.resolver_match.url_name == 'admin_login' %}
 {# ==================== W3Host Manager (Server Admin) LOGIN ==================== #}
-<div class="min-h-screen bg-slate-950 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-    <!-- Subtle background pattern -->
-    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none"></div>
+<div id="loginWrapper" class="login-theme-dark min-h-screen relative overflow-hidden">
+    <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Switch theme">
+        <i id="themeIcon" class="ti ti-moon text-lg"></i>
+    </button>
 
-    <div class="sm:mx-auto sm:w-full sm:max-w-md text-center relative z-10">
-        <div class="inline-flex items-center justify-center gap-2 mb-3">
-            <span class="bg-[#ff6c2c] text-white font-black text-sm px-2.5 py-1 rounded-md tracking-wider shadow-sm uppercase">W3</span>
-            <span class="text-white font-bold tracking-tight text-2xl">Host Manager</span>
-        </div>
-        <p class="text-xs text-slate-400 font-medium">Server Infrastructure &amp; Administrator Console</p>
-        <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-900 border border-slate-800 text-[11px] font-mono text-slate-400">
-            <span class="size-1.5 rounded-full bg-emerald-500"></span> Port 2087 (HTTPS)
-        </div>
-    </div>
+    <div class="relative z-10 flex min-h-screen flex-col lg:flex-row">
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 relative z-10">
-        <div class="bg-slate-900 border border-slate-800 py-8 px-6 shadow-2xl rounded-2xl sm:px-10">
-            {% if error %}
-            <div class="mb-5 rounded-xl bg-red-950/60 p-4 border border-red-800/80 flex items-start gap-3">
-                <i class="ti ti-alert-circle text-red-400 text-lg shrink-0 mt-0.5"></i>
-                <div class="text-xs text-red-200 font-medium">{{ error }}</div>
+        {# -------- LEFT: Branding panel (always dark) -------- #}
+        <div class="login-brand relative hidden lg:flex lg:w-[46%] flex-col justify-between overflow-hidden p-14">
+            <div class="glow absolute -top-16 -left-20 h-72 w-72 bg-indigo-500/40 pointer-events-none"></div>
+            <div class="glow absolute bottom-0 right-0 h-80 w-80 bg-orange-500/25 pointer-events-none" style="animation-delay:-3.5s"></div>
+
+            <div class="relative flex flex-col gap-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="bg-[#ff6c2c] text-white font-black text-sm px-2.5 py-1 rounded-md tracking-wider shadow-sm uppercase">W3Host</span>
+                    <span class="font-bold tracking-tight text-2xl text-white">Manager</span>
+                </div>
+                <p class="text-xs font-medium text-slate-300">Server Infrastructure &amp; Administrator Console</p>
             </div>
-            {% endif %}
 
-            <form method="post" class="space-y-5">
-                {% csrf_token %}
-                <div>
-                    <label for="username" class="block text-xs font-bold uppercase tracking-wider text-slate-300">Root / Admin Username</label>
-                    <div class="mt-1.5 relative">
-                        <input id="username" name="username" type="text" autocomplete="username" required value="{{ username|default:'' }}"
-                                placeholder="root or admin"
-                                class="block w-full rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2.5 pl-10 text-white placeholder:text-slate-600 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
-                        <i class="ti ti-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-300">Password</label>
-                    <div class="mt-1.5 relative">
-                        <input id="password" name="password" type="password" autocomplete="current-password" required
-                                placeholder="••••••••••••"
-                                class="block w-full rounded-lg border border-slate-700 bg-slate-950 px-3.5 py-2.5 pl-10 text-white placeholder:text-slate-600 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
-                        <i class="ti ti-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"></i>
-                    </div>
-                </div>
-
-                <div class="pt-1">
-                    <button type="submit"
-                            class="flex w-full justify-center items-center gap-2 rounded-lg bg-[#ff6c2c] hover:bg-[#e0561b] px-4 py-2.5 text-sm font-bold text-white shadow-md transition">
-                        <i class="ti ti-login text-base"></i> Log in
-                    </button>
-                </div>
-            </form>
-
-            <div class="mt-6 border-t border-slate-800 pt-4 text-center">
-                <p class="text-xs text-slate-400">
-                    Need client website access? 
-                    <a href="javascript:void(0)" onclick="window.location.href = window.location.protocol + '//' + window.location.hostname + (window.location.port == '12087' ? ':12083' : ':2083') + '/login/';" class="text-[#ff6c2c] hover:underline font-medium">Log in to W3Client Portal</a>
+            <div class="relative space-y-5">
+                <p class="text-xl font-black leading-snug tracking-tight text-white">
+                    Own your server.<br>
+                    <span class="text-[#a5b4fc]">Run the entire stack.</span>
                 </p>
-                <p class="text-[11px] text-slate-600 mt-2">W3Panel Host Manager v2.0 • Independent Server Engine</p>
+                <ul class="space-y-2.5 text-sm login-brand-feature">
+                    <li class="flex items-center gap-3"><i class="ti ti-server-cog text-base shrink-0 w-5"></i> Nginx, MariaDB &amp; PostgreSQL control</li>
+                    <li class="flex items-center gap-3"><i class="ti ti-file-text text-base shrink-0 w-5"></i> VirtualHosts, DNS editor &amp; SSL</li>
+                    <li class="flex items-center gap-3"><i class="ti ti-building-community text-base shrink-0 w-5"></i> Reseller &amp; account provisioning</li>
+                    <li class="flex items-center gap-3"><i class="ti ti-shield-lock text-base shrink-0 w-5"></i> Firewall, 2FA &amp; audit trail</li>
+                </ul>
+            </div>
+
+            <p class="relative text-[11px] text-slate-400">W3Panel v2.0 — Dedicated Hosting</p>
+        </div>
+
+        {# -------- RIGHT: Login form (left-aligned) -------- #}
+        <div class="relative flex flex-1 items-center justify-center px-6 py-14">
+            <div class="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] opacity-10 dark:opacity-15 pointer-events-none"></div>
+
+            <div class="relative z-10 w-full max-w-sm">
+
+                {# Compact brand for mobile #}
+                <div class="lg:hidden flex flex-col items-start gap-2 mb-8">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-[#ff6c2c] text-white font-black text-sm px-2.5 py-1 rounded-md tracking-wider uppercase">W3Host</span>
+                        <span class="font-bold tracking-tight text-2xl login-title">Manager</span>
+                    </div>
+                    <p class="text-xs login-subtitle">Server Infrastructure &amp; Administrator Console</p>
+                </div>
+
+                <div class="login-card border py-8 px-7 shadow-2xl rounded-2xl">
+                    <h2 class="text-xl font-bold tracking-tight login-title">Sign in to console</h2>
+                    <p class="text-xs login-subtitle mt-1">Enter your administrator credentials below.</p>
+
+                    {% if error %}
+                    <div class="mt-5 rounded-xl login-error p-3.5 flex items-start gap-3">
+                        <i class="ti ti-alert-circle text-lg shrink-0 mt-0.5 login-error-icon"></i>
+                        <div class="text-xs font-medium login-error-msg">{{ error }}</div>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="mt-6 space-y-4 text-left" novalidate>
+                        {% csrf_token %}
+                        <div>
+                            <label for="username" class="block text-xs font-bold uppercase tracking-wider login-label">Username</label>
+                            <div class="mt-1.5 relative">
+                                <input id="username" name="username" type="text" autocomplete="username" required value="{{ username|default:'' }}"
+                                        placeholder="admin"
+                                        class="block w-full rounded-lg border login-input px-3.5 py-2.5 pl-10 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
+                                <i class="ti ti-user-shield absolute left-3.5 top-1/2 -translate-y-1/2 login-icon text-base"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-xs font-bold uppercase tracking-wider login-label">Password</label>
+                            <div class="mt-1.5 relative">
+                                <input id="password" name="password" type="password" autocomplete="current-password" required
+                                       placeholder="••••••••••••"
+                                       class="block w-full rounded-lg border login-input px-3.5 py-2.5 pl-10 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
+                                <i class="ti ti-lock absolute left-3.5 top-1/2 -translate-y-1/2 login-icon text-base"></i>
+                            </div>
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="submit"
+                                    class="flex w-full justify-center items-center gap-2 rounded-lg bg-[#ff6c2c] hover:bg-[#e0561b] px-4 py-2.5 text-sm font-bold text-white shadow-md transition">
+                                <i class="ti ti-login text-base"></i> Log in
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-6 border-t footer-border pt-4 text-center">
+                        <p class="text-xs login-link-text">
+                            Need client website access?
+                            <a href="javascript:void(0)" onclick="window.location.href = window.location.protocol + '//' + window.location.hostname + (window.location.port == '12087' ? ':12083' : ':2083') + '/login/';" class="text-[#ff6c2c] hover:underline font-bold">Log in to W3Client Portal</a>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -84,66 +216,117 @@ Sign In — W3Client Portal
 
 {% else %}
 {# ==================== W3Client Portal (User Panel) LOGIN ==================== #}
-<div class="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div class="inline-flex items-center justify-center gap-2 mb-2">
-            <span class="bg-[#ff6c2c] text-white font-black text-sm px-2.5 py-1 rounded-md tracking-wider shadow-sm uppercase">W3</span>
-            <span class="text-slate-900 font-bold tracking-tight text-2xl">Client Portal</span>
-        </div>
-        <h2 class="text-xs font-semibold tracking-tight text-slate-500">Web Hosting &amp; Account Control Panel</h2>
-        <div class="mt-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-[11px] font-mono text-slate-500">
-            <span class="size-1.5 rounded-full bg-emerald-500"></span> Port 2083 (HTTPS)
-        </div>
-    </div>
+<div id="loginWrapper" class="login-theme-dark min-h-screen relative overflow-hidden">
+    <button type="button" class="theme-toggle" onclick="toggleTheme()" title="Switch theme">
+        <i id="themeIcon" class="ti ti-moon text-lg"></i>
+    </button>
 
-    <div class="mt-7 sm:mx-auto sm:w-full sm:max-w-md px-4">
-        <div class="bg-white py-8 px-6 shadow-sm ring-1 ring-slate-900/5 rounded-2xl sm:px-10 border border-slate-200/80">
-            {% if error %}
-            <div class="mb-5 rounded-xl bg-red-50 p-4 border border-red-200/80 flex items-start gap-3">
-                <i class="ti ti-alert-circle text-red-600 text-lg shrink-0 mt-0.5"></i>
-                <div class="text-xs text-red-700 font-medium">{{ error }}</div>
+    <div class="relative z-10 flex min-h-screen flex-col lg:flex-row">
+
+        {# -------- LEFT: Branding panel (always dark) -------- #}
+        <div class="login-brand relative hidden lg:flex lg:w-[46%] flex-col justify-between overflow-hidden p-14">
+            <div class="glow absolute -top-16 -left-20 h-72 w-72 bg-indigo-500/40 pointer-events-none"></div>
+            <div class="glow absolute bottom-0 right-0 h-80 w-80 bg-orange-500/25 pointer-events-none" style="animation-delay:-3.5s"></div>
+
+            <div class="relative flex flex-col gap-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="bg-[#ff6c2c] text-white font-black text-sm px-2.5 py-1 rounded-md tracking-wider shadow-sm uppercase">W3Client</span>
+                    <span class="font-bold tracking-tight text-2xl text-white">Portal</span>
+                </div>
+                <p class="text-xs font-medium text-slate-300">Web Hosting &amp; Websites Control Panel • Port 2083</p>
             </div>
-            {% endif %}
 
-            <form method="post" class="space-y-5">
-                {% csrf_token %}
-                <div>
-                    <label for="username" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Username</label>
-                    <div class="mt-1.5 relative">
-                        <input id="username" name="username" type="text" autocomplete="username" required value="{{ username|default:'' }}"
-                               placeholder="user"
-                               class="block w-full rounded-lg border border-slate-300 px-3.5 py-2.5 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
-                        <i class="ti ti-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="password" class="block text-xs font-bold uppercase tracking-wider text-slate-600">Password</label>
-                    <div class="mt-1.5 relative">
-                        <input id="password" name="password" type="password" autocomplete="current-password" required
-                               placeholder="••••••••••••"
-                               class="block w-full rounded-lg border border-slate-300 px-3.5 py-2.5 pl-10 text-slate-900 placeholder:text-slate-400 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
-                        <i class="ti ti-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    </div>
-                </div>
-
-                <div class="pt-1">
-                    <button type="submit"
-                            class="flex w-full justify-center items-center gap-2 rounded-lg bg-[#ff6c2c] hover:bg-[#e0561b] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition">
-                        <i class="ti ti-login text-base"></i> Log in
-                    </button>
-                </div>
-            </form>
-
-            <div class="mt-6 border-t border-slate-100 pt-4 text-center">
-                <p class="text-xs text-slate-500">
-                    Server Administrator? 
-                    <a href="javascript:void(0)" onclick="window.location.href = window.location.protocol + '//' + window.location.hostname + (window.location.port == '12083' ? ':12087' : ':2087') + '/login/';" class="text-slate-800 hover:text-[#ff6c2c] font-semibold hover:underline">Access W3Host Manager</a>
+            <div class="relative space-y-5">
+                <p class="text-xl font-black leading-snug tracking-tight text-white">
+                    Your websites.<br>
+                    <span class="text-[#a5b4fc]">Under your control.</span>
                 </p>
-                <p class="text-[11px] text-slate-400 mt-2">W3Panel Client Portal v2.0 • Container-Native Cloud Hosting</p>
+                <ul class="space-y-2.5 text-sm login-brand-feature">
+                    <li class="flex items-center gap-3"><i class="ti ti-world text-base shrink-0 w-5"></i> Websites, domains &amp; SSL certificates</li>
+                    <li class="flex items-center gap-3"><i class="ti ti-database text-base shrink-0 w-5"></i> MariaDB &amp; PostgreSQL databases</li>
+                    <li class="flex items-center gap-3"><i class="ti ti-folder text-base shrink-0 w-5"></i> Full file manager with editor</li>
+                    <li class="flex items-center gap-3"><i class="ti ti-mail text-base shrink-0 w-5"></i> Emails, FTP, cron &amp; backups</li>
+                </ul>
+            </div>
+
+            <p class="relative text-[11px] text-slate-400">W3Panel v2.0 — Managed Hosting (Port 2083)</p>
+        </div>
+
+        {# -------- RIGHT: Login form (left-aligned) -------- #}
+        <div class="relative flex flex-1 items-center justify-center px-6 py-14">
+            <div class="absolute inset-0 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px] opacity-10 dark:opacity-15 pointer-events-none"></div>
+
+            <div class="relative z-10 w-full max-w-sm">
+
+                {# Compact brand for mobile #}
+                <div class="lg:hidden flex flex-col items-start gap-2 mb-8">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-[#ff6c2c] text-white font-black text-sm px-2.5 py-1 rounded-md tracking-wider uppercase">W3Client</span>
+                        <span class="font-bold tracking-tight text-2xl login-title">Portal</span>
+                    </div>
+                    <p class="text-xs login-subtitle">Web Hosting &amp; Websites Control Panel (Port 2083)</p>
+                </div>
+
+                <div class="login-card border py-8 px-7 shadow-2xl rounded-2xl">
+                    <h2 class="text-xl font-bold tracking-tight login-title">Sign in to panel</h2>
+                    <p class="text-xs login-subtitle mt-1">Enter your account credentials below.</p>
+
+                    {% if error %}
+                    <div class="mt-5 rounded-xl login-error p-3.5 flex items-start gap-3">
+                        <i class="ti ti-alert-circle text-lg shrink-0 mt-0.5 login-error-icon"></i>
+                        <div class="text-xs font-medium login-error-msg">{{ error }}</div>
+                    </div>
+                    {% endif %}
+
+                    <form method="post" class="mt-6 space-y-4 text-left" novalidate>
+                        {% csrf_token %}
+                        <div>
+                            <label for="username" class="block text-xs font-bold uppercase tracking-wider login-label">Username</label>
+                            <div class="mt-1.5 relative">
+                                <input id="username" name="username" type="text" autocomplete="username" required value="{{ username|default:'' }}"
+                                       placeholder="Your account username"
+                                       class="block w-full rounded-lg border login-input px-3.5 py-2.5 pl-10 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
+                                <i class="ti ti-user absolute left-3.5 top-1/2 -translate-y-1/2 login-icon text-base"></i>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label for="password" class="block text-xs font-bold uppercase tracking-wider login-label">Password</label>
+                            <div class="mt-1.5 relative">
+                                <input id="password" name="password" type="password" autocomplete="current-password" required
+                                       placeholder="••••••••••••"
+                                       class="block w-full rounded-lg border login-input px-3.5 py-2.5 pl-10 focus:border-[#ff6c2c] focus:outline-none focus:ring-2 focus:ring-[#ff6c2c]/20 sm:text-sm">
+                                <i class="ti ti-lock absolute left-3.5 top-1/2 -translate-y-1/2 login-icon text-base"></i>
+                            </div>
+                        </div>
+
+                        <div class="pt-1">
+                            <button type="submit"
+                                    class="flex w-full justify-center items-center gap-2 rounded-lg bg-[#ff6c2c] hover:bg-[#e0561b] px-4 py-2.5 text-sm font-bold text-white shadow-md transition">
+                                <i class="ti ti-login text-base"></i> Log in
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="mt-6 border-t footer-border pt-4 text-center">
+                        <p class="text-xs login-link-text">
+                            Server Administrator?
+                            <a href="javascript:void(0)" onclick="window.location.href = window.location.protocol + '//' + window.location.hostname + (window.location.port == '12083' ? ':12087' : ':2087') + '/login/';" class="text-[#ff6c2c] hover:underline font-bold">Access W3Host Manager</a>
+                        </p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 {% endif %}
+
+<script>
+(function() {
+    var saved = localStorage.getItem('w3panel-theme') || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    if (typeof updateThemeUI === 'function') {
+        updateThemeUI(saved);
+    }
+})();
+</script>
 {% endblock %}

@@ -111,11 +111,11 @@ class AuthAndRoleTests(TestCase):
         client_session = SessionStore(sso_client.cookies['w3p_client_session'].value)
         self.assertEqual(client_session.get('user_id'), self.user.id)
         self.assertEqual(client_session.get('impersonated_by'), self.admin.username)
-        # Verify no banner is shown to user
-        self.assertNotContains(resp_sso, 'Auto-Login:')
-        self.assertNotContains(resp_sso, 'Impersonation Mode')
-        self.assertNotContains(resp_sso, 'WHM Impersonation')
-        self.assertNotContains(resp_sso, 'Return to WHM')
+        # Verify no impersonation banner is shown to user
+        self.assertNotContains(resp_sso, 'Administrator Single Sign-On')
+        self.assertNotContains(resp_sso, 'Impersonation')
+        self.assertNotContains(resp_sso, 'Return to Host Manager')
+        self.assertContains(resp_sso, 'client_test')
 
         # Verify token cannot be reused
         token_obj.refresh_from_db()
@@ -123,6 +123,24 @@ class AuthAndRoleTests(TestCase):
         resp_reuse = sso_client.get(f'/sso/?token={token_str}', SERVER_PORT='2083')
         self.assertEqual(resp_reuse.status_code, 302)
         self.assertEqual(resp_reuse.url, '/login/')
+
+    def test_reseller_autologin_scoping(self):
+        reseller = User.objects.create_user('reseller_1', 'reseller@local.test', 'Pass123!', role='reseller')
+        sub_user = User.objects.create_user('sub_user_1', 'sub@local.test', 'Pass123!', role='user', parent_reseller=reseller)
+        other_user = User.objects.create_user('other_user', 'other@local.test', 'Pass123!', role='user')
+
+        reseller_client = Client()
+        reseller_client.post('/login/', {'username': 'reseller_1', 'password': 'Pass123!'})
+
+        # Reseller can autologin to owned sub-user
+        resp_allowed = reseller_client.get(f'/users/{sub_user.id}/autologin/')
+        self.assertEqual(resp_allowed.status_code, 302)
+        self.assertIn('/sso/?token=', resp_allowed.url)
+
+        # Reseller blocked from autologin to unowned user
+        resp_blocked = reseller_client.get(f'/users/{other_user.id}/autologin/')
+        self.assertEqual(resp_blocked.status_code, 302)
+        self.assertEqual(resp_blocked.url, '/users/')
 
     def test_terminal_admin_and_user_access(self):
         # 1. Admin terminal

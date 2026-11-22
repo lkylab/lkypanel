@@ -76,8 +76,8 @@ def admin_login(request):
         
         try:
             user, is_2fa_required = authenticate_user(username, password, request.META.get('REMOTE_ADDR', ''))
-            if user.role != 'admin':
-                return render(request, 'login.html', {'error': 'Administrator access only on W3Host Manager (port 2087).', 'username': username, 'panel_type': 'host'})
+            if user.role not in ('admin', 'reseller'):
+                return render(request, 'login.html', {'error': 'Administrator / Reseller access only on W3Host Manager (port 2087).', 'username': username, 'panel_type': 'host'})
             
             create_session(request, user)
             return redirect('admin_dashboard')
@@ -331,20 +331,42 @@ def admin_user_toggle_shell(request, user_id):
 
 def admin_user_autologin(request, user_id):
     """W3Host-style 1-click autologin into W3Client Portal in a new tab."""
+    admin_user = getattr(request, 'panel_user', None)
+    if not admin_user:
+        uid = request.session.get('user_id')
+        if uid:
+            admin_user = User.objects.filter(pk=uid, is_active=True).first()
+
+    if not admin_user or admin_user.role not in ('admin', 'reseller'):
+        messages.error(request, 'Unauthorized: Administrator access required.')
+        return redirect('admin_login')
+
     target_user = get_object_or_404(User, id=user_id)
+
+    # If reseller, restrict to accounts under their delegation
+    if admin_user.role == 'reseller' and target_user.parent_reseller_id != admin_user.id and target_user.id != admin_user.id:
+        messages.error(request, 'Permission denied: Cannot access accounts outside your reseller scope.')
+        return redirect('admin_users')
+
     from packages.core.models import LoginToken
-    token_obj = LoginToken.create_for_user(target_user, created_by=request.panel_user, validity_seconds=120)
+    token_obj = LoginToken.create_for_user(target_user, created_by=admin_user, validity_seconds=120)
 
     host = request.get_host()
-    scheme = request.scheme or 'https'
+    scheme = 'https' if request.is_secure() or request.META.get('HTTP_X_FORWARDED_PROTO') == 'https' else (request.scheme or 'http')
 
     if ':12087' in host:
         user_host = host.replace(':12087', ':12083')
     elif ':2087' in host:
         user_host = host.replace(':2087', ':2083')
+    elif ':' in host:
+        # Development / custom port (e.g. localhost:8000)
+        user_host = host
     else:
-        server_name = request.META.get('SERVER_NAME', '127.0.0.1')
-        user_host = f"{server_name}:2083"
+        server_port = request.META.get('SERVER_PORT', '')
+        if server_port in ('2087', '12087'):
+            user_host = f"{host}:2083"
+        else:
+            user_host = host
 
     sso_url = f"{scheme}://{user_host}/sso/?token={token_obj.token}"
     return redirect(sso_url)

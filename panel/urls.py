@@ -4,6 +4,8 @@ W3Panel v2 — URL Configuration
 from django.urls import path, include
 from django.shortcuts import redirect
 
+from apps.user import views as user_views
+
 def root_redirect(request):
     """Redirect root to appropriate login page."""
     import os
@@ -25,13 +27,11 @@ urlpatterns = [
     # Root redirect
     path('', root_redirect),
     
+    # Direct SSO endpoint (WHM to cPanel 1-click autologin)
+    path('sso/', user_views.user_sso, name='sso_direct'),
+
     # Admin
     path('', include('apps.admin.urls')),
-    
-    # SSO
-    path('sso/', include([
-        path('', include('apps.user.urls')),
-    ])),
     
     # User
     path('user/', include('apps.user.urls')),

@@ -7,8 +7,32 @@ from packages.core.models import SystemSetting
 
 def panel_context(request):
     """Globally inject panel_user and common state."""
+    impersonated_by = None
+    admin_panel_url = '/users/'
+
+    if hasattr(request, 'session'):
+        impersonated_by = request.session.get('impersonated_by', None)
+
+    try:
+        host = request.get_host()
+        scheme = 'https' if request.is_secure() or request.META.get('HTTP_X_FORWARDED_PROTO') == 'https' else (request.scheme or 'http')
+        if ':2083' in host:
+            admin_host = host.replace(':2083', ':2087')
+            admin_panel_url = f"{scheme}://{admin_host}/users/"
+        elif ':12083' in host:
+            admin_host = host.replace(':12083', ':12087')
+            admin_panel_url = f"{scheme}://{admin_host}/users/"
+        elif ':2087' in host or ':12087' in host:
+            admin_panel_url = f"{scheme}://{host}/users/"
+        else:
+            admin_panel_url = '/users/'
+    except Exception:
+        admin_panel_url = '/users/'
+
     return {
         'panel_user': getattr(request, 'panel_user', None),
+        'impersonated_by': impersonated_by,
+        'admin_panel_url': admin_panel_url,
     }
 
 

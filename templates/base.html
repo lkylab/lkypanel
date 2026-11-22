@@ -17,7 +17,25 @@
     
     <!-- Theme CSS -->
     <link rel="stylesheet" href="{% static 'css/theme.css' %}">
-    
+
+    <script>
+    (function() {
+        var stored = localStorage.getItem('w3panel-theme');
+        var theme = stored;
+        if (theme !== 'light' && theme !== 'dark') {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                theme = 'dark';
+            } else {
+                theme = 'light';
+            }
+            localStorage.setItem('w3panel-theme', theme);
+        }
+        var root = document.documentElement;
+        root.classList.remove('dark', 'light');
+        root.classList.add(theme);
+    })();
+    </script>
+
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -25,6 +43,46 @@
     
     <!-- JavaScript -->
     <script>
+        // Sync UI for theme state
+        function updateThemeUI(theme) {
+            var isDark = (theme === 'dark');
+            var root = document.documentElement;
+            root.classList.remove('dark', 'light');
+            root.classList.add(theme);
+            
+            document.querySelectorAll('.theme-toggle-btn, .theme-toggle').forEach(function(btn) {
+                btn.setAttribute('title', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+                var icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = isDark ? 'ti ti-sun text-base' : 'ti ti-moon text-base';
+                }
+            });
+
+            var loginWrapper = document.getElementById('loginWrapper');
+            if (loginWrapper) {
+                loginWrapper.classList.remove('login-theme-dark', 'login-theme-light');
+                loginWrapper.classList.add('login-theme-' + theme);
+            }
+            var themeIcon = document.getElementById('themeIcon');
+            if (themeIcon) {
+                themeIcon.className = isDark ? 'ti ti-sun text-lg' : 'ti ti-moon text-lg';
+            }
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            var current = localStorage.getItem('w3panel-theme') || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            var next = (current === 'dark') ? 'light' : 'dark';
+            localStorage.setItem('w3panel-theme', next);
+            updateThemeUI(next);
+        }
+
+        // Initialize toggle button icons on load
+        document.addEventListener('DOMContentLoaded', function() {
+            var current = localStorage.getItem('w3panel-theme') || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+            updateThemeUI(current);
+        });
+
         // Sidebar toggle
         function toggleSidebar() {
             const sidebar = document.querySelector('.sidebar');

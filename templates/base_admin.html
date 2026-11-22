@@ -4,6 +4,9 @@
 {% block title %}{% block page_title %}Dashboard{% endblock %} — W3Host Manager{% endblock %}
 
 {% block extra_css %}
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
@@ -11,7 +14,7 @@
 {% endblock %}
 
 {% block body %}
-<div x-data="{ sidebarOpen: true, searchFilter: '' }" class="flex min-h-screen bg-slate-100 text-slate-800">
+<div x-data="{ sidebarOpen: true, searchFilter: '' }" class="flex min-h-screen bg-slate-100 dark:bg-[#0b0d14] text-slate-800 dark:text-[#e8eaf2] transition-colors duration-200">
 
     <!-- W3Host Sidebar -->
     <aside class="fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-slate-800 bg-slate-900 text-slate-300 transition-all duration-200" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
@@ -32,8 +35,8 @@
         <!-- Search Features Input -->
         <div class="p-2.5 border-b border-slate-800/80 bg-slate-950/30">
             <div class="relative">
-                <input type="search" placeholder="Search features..." x-model="searchFilter" class="w-full rounded-lg border border-slate-700 bg-slate-800/90 px-3 py-1.5 pl-8 text-xs text-slate-200 placeholder-slate-400 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition">
-                <i class="ti ti-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                <input type="search" placeholder="Search features..." x-model="searchFilter" class="w-full rounded-lg border border-slate-700 dark:border-[#262b42] bg-slate-800/90 dark:bg-[#101322] px-3 py-1.5 pl-8 text-xs text-slate-200 dark:text-[#e8eaf2] placeholder-slate-400 dark:placeholder-[#70789a] focus:border-blue-500 dark:focus:border-[#6366f1] focus:ring-1 focus:ring-blue-500 dark:focus:ring-[#6366f1] outline-none transition">
+                <i class="ti ti-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#a5adc7] text-xs"></i>
             </div>
         </div>
 
@@ -42,9 +45,9 @@
             <!-- Home / Dashboard -->
             <a href="/dashboard" class="relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-medium transition outline-none
                 {% if active_page == 'dashboard' %}
-                    text-white bg-blue-600 font-semibold shadow-sm
+                    text-white bg-blue-600 dark:bg-[#6366f1] font-semibold shadow-sm
                 {% else %}
-                    text-slate-300 hover:text-white hover:bg-slate-800
+                    text-slate-300 dark:text-[#e8eaf2] hover:text-white hover:bg-slate-800 dark:hover:bg-[#1c2031]
                 {% endif %}">
                 <i class="ti ti-home text-sm shrink-0"></i>
                 <span>Server Dashboard</span>
@@ -53,12 +56,12 @@
             <!-- Notifications -->
             <a href="/notifications" class="relative flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium transition outline-none
                 {% if active_page == 'notifications' %}
-                    text-white bg-blue-600 font-semibold shadow-sm
+                    text-white bg-blue-600 dark:bg-[#6366f1] font-semibold shadow-sm
                 {% else %}
-                    text-slate-300 hover:text-white hover:bg-slate-800
+                    text-slate-300 dark:text-[#e8eaf2] hover:text-white hover:bg-slate-800 dark:hover:bg-[#1c2031]
                 {% endif %}">
                 <span class="flex items-center gap-2.5"><i class="ti ti-bell text-sm shrink-0"></i> Notifications</span>
-                <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-800 px-1 text-[10px] font-medium text-slate-300">0</span>
+                <span class="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-slate-800 dark:bg-[#242845] px-1 text-[10px] font-medium text-slate-300 dark:text-[#a5adc7]">0</span>
             </a>
 
             <div class="my-2 h-px bg-slate-800/80"></div>
@@ -87,19 +90,24 @@
     <!-- Main Content Area -->
     <div class="flex-1 ml-64 flex flex-col min-w-0">
         <!-- Top Host Header -->
-        <header class="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
+        <header class="sticky top-0 z-40 border-b border-slate-200 dark:border-[#262b42] bg-white/95 dark:bg-[#171a2b]/95 backdrop-blur transition-colors duration-200">
             <div class="flex h-14 items-center justify-between gap-4 px-6">
                 <div class="flex items-center gap-3">
-                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100">
+                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-1.5 rounded-lg border border-slate-200 dark:border-[#262b42] text-slate-500 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031]">
                         <i class="ti ti-menu-2 text-base"></i>
                     </button>
                     <div class="flex items-center gap-2 text-xs">
-                        <span class="font-bold text-slate-900 text-sm tracking-tight">{% block header_title %}W3Host Manager{% endblock %}</span>
+                        <span class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm tracking-tight">{% block header_title %}W3Host Manager{% endblock %}</span>
                     </div>
                 </div>
 
                 <!-- Host Server Metrics & Controls -->
                 <div class="flex items-center gap-3 sm:gap-5 text-xs">
+                    <!-- Theme Toggle -->
+                    <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle dark/light theme">
+                        <i class="ti ti-moon text-base"></i>
+                    </button>
+
                     <!-- Quick Switch to Client Accounts -->
                     <a href="/users/" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-xs font-bold transition shadow-xs" title="View all accounts and launch W3Client Portal">
                         <i class="ti ti-layout-grid"></i>
@@ -108,31 +116,31 @@
 
                     <!-- Server Load Average -->
                     {% if metrics %}
-                    <div class="hidden md:flex items-center gap-1.5 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg" title="Server Load (1m, 5m, 15m)">
-                        <i class="ti ti-activity text-slate-400"></i>
-                        <span class="text-slate-500 font-semibold">Load:</span>
-                        <span id="m-load-val" class="font-mono font-medium text-slate-800">{{ metrics.load|default:'0.00' }}</span>
-                        <span id="m-load5-val" class="font-mono text-slate-500">{{ metrics.load5|default:'0.00' }}</span>
-                        <span id="m-load15-val" class="font-mono text-slate-400">{{ metrics.load15|default:'0.00' }}</span>
+                    <div class="hidden md:flex items-center gap-1.5 bg-slate-50 dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] px-2.5 py-1 rounded-lg" title="Server Load (1m, 5m, 15m)">
+                        <i class="ti ti-activity text-slate-400 dark:text-[#a5adc7]"></i>
+                        <span class="text-slate-500 dark:text-[#a5adc7] font-semibold">Load:</span>
+                        <span id="m-load-val" class="font-mono font-medium text-slate-800 dark:text-[#e8eaf2]">{{ metrics.load|default:'0.00' }}</span>
+                        <span id="m-load5-val" class="font-mono text-slate-500 dark:text-[#a5adc7]">{{ metrics.load5|default:'0.00' }}</span>
+                        <span id="m-load15-val" class="font-mono text-slate-400 dark:text-[#70789a]">{{ metrics.load15|default:'0.00' }}</span>
                     </div>
 
                     <!-- RAM Usage Meter -->
                     <div class="hidden lg:flex items-center gap-2">
-                        <span class="text-slate-500 text-[11px] font-medium">RAM</span>
-                        <div class="w-16 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
+                        <span class="text-slate-500 dark:text-[#a5adc7] text-[11px] font-medium">RAM</span>
+                        <div class="w-16 h-1.5 bg-slate-100 dark:bg-[#242845] rounded-full overflow-hidden border border-slate-200 dark:border-[#262b42]">
                             <div id="m-ram-bar" class="h-full rounded-full transition-all bg-blue-500" style="width: {{ metrics.ram_percent|default:'0' }}%"></div>
                         </div>
-                        <span id="m-ram-val" class="font-mono font-medium text-slate-700 text-[11px]">{{ metrics.ram_used|default:'0' }}MB</span>
+                        <span id="m-ram-val" class="font-mono font-medium text-slate-700 dark:text-[#c9d1d9] text-[11px]">{{ metrics.ram_used|default:'0' }}MB</span>
                     </div>
                     {% endif %}
 
                     <!-- Admin User Dropdown / Logout -->
-                    <div class="flex items-center gap-2 border-l border-slate-200 pl-3">
-                        <div class="size-7 rounded-lg bg-slate-800 text-white flex items-center justify-center font-bold text-xs uppercase">
+                    <div class="flex items-center gap-2 border-l border-slate-200 dark:border-[#262b42] pl-3">
+                        <div class="size-7 rounded-lg bg-slate-800 dark:bg-[#242845] text-white flex items-center justify-center font-bold text-xs uppercase">
                             {{ panel_user.username|default:'A'|slice:':1' }}
                         </div>
-                        <span class="font-semibold text-slate-700 hidden sm:inline text-xs">{{ panel_user.username|default:'root' }}</span>
-                        <a href="/logout/" class="text-slate-400 hover:text-red-600 transition p-1" title="Sign Out">
+                        <span class="font-semibold text-slate-700 dark:text-[#c9d1d9] hidden sm:inline text-xs">{{ panel_user.username|default:'root' }}</span>
+                        <a href="/logout/" class="text-slate-400 dark:text-[#a5adc7] hover:text-red-600 dark:hover:text-[#ff7b72] transition p-1" title="Sign Out">
                             <i class="ti ti-logout text-sm"></i>
                         </a>
                     </div>
@@ -145,10 +153,10 @@
             {% if messages %}
             <div class="space-y-3 mb-6">
                 {% for msg in messages %}
-                <div class="rounded-xl p-3.5 border flex items-center justify-between gap-3 text-xs sm:text-sm font-medium
-                    {% if msg.tags == 'error' %}bg-red-50 border-red-200 text-red-700
-                    {% elif msg.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-700
-                    {% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+                <div class="rounded-xl p-3.5 border flex items-center justify-between gap-3 text-xs sm:text-sm font-medium transition
+                    {% if msg.tags == 'error' %}bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-[#ff7b72]
+                    {% elif msg.tags == 'success' %}bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-[#7ee787]
+                    {% else %}bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-[#79c0ff]{% endif %}">
                     <div class="flex items-center gap-2">
                         <i class="ti {% if msg.tags == 'error' %}ti-alert-triangle{% elif msg.tags == 'success' %}ti-circle-check{% else %}ti-info-circle{% endif %} text-base"></i>
                         <span>{{ msg }}</span>

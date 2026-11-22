@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
@@ -15,8 +18,8 @@
 body, html {
     font-family: 'Open Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     font-size: 13px;
-    color: #333333;
-    background-color: #f5f5f5;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
 }
 .font-mono {
     font-family: 'JetBrains Mono', monospace;
@@ -77,6 +80,30 @@ body, html {
 }
 .cpanel-row:hover:not(.cpanel-row-selected) {
     background-color: #f2f7fb;
+}
+
+/* === Dark mode overrides for cPanel-classic palette (matches panel theme) === */
+html.dark .cpanel-toolbar-btn { color: #c4c9e0; }
+html.dark .cpanel-toolbar-btn:hover:not(:disabled) {
+    background-color: #1c2031;
+    border-color: #262b42;
+    color: #e8eaf2;
+}
+html.dark .cpanel-nav-btn { color: #a5adc7; }
+html.dark .cpanel-nav-btn:hover {
+    color: #e8eaf2;
+    background-color: #1c2031;
+}
+html.dark .cpanel-table th {
+    color: #79c0ff;
+    border-color: #262b42;
+    background-color: #151726;
+}
+html.dark .cpanel-row-selected {
+    background-color: rgba(99,102,241,0.25) !important;
+}
+html.dark .cpanel-row:hover:not(.cpanel-row-selected) {
+    background-color: #1c2031;
 }
 </style>
 {% endblock %}
@@ -798,65 +825,72 @@ function fileManagerApp() {
 </script>
 
 <!-- Full-Window Layout Container -->
-<div x-data="fileManagerApp()" class="flex flex-col h-screen w-screen overflow-hidden bg-[#f0f2f5] text-slate-800 select-none">
+<div x-data="fileManagerApp()" class="flex flex-col h-screen w-screen overflow-hidden bg-[#f0f2f5] dark:bg-[#0b0d14] text-slate-800 dark:text-[#e8eaf2] select-none">
     
-    <!-- TOP HEADER BAR: Logo & Title (Left) | Dashboard & Logout (Right) -->
-    <header class="h-11 bg-[#1b2733] text-white flex items-center justify-between px-4 border-b border-slate-700 shrink-0 z-30 shadow-xs">
+    <!-- TOP HEADER BAR: Logo & Title (Left) | Dashboard, Theme Toggle & Logout (Right) -->
+    <header class="h-11 bg-white dark:bg-[#101322] text-slate-800 dark:text-white flex items-center justify-between px-4 border-b border-slate-200 dark:border-[#262b42] shrink-0 z-30 shadow-xs transition-colors duration-150">
         <!-- Left: File Manager linked to Panel URL & Tree Toggle -->
         <div class="flex items-center gap-2.5 shrink-0">
-            <a href="/" class="flex items-center gap-2 text-white hover:text-[#ff6c2c] transition group" title="Return to W3Client Dashboard">
+            <a href="/" class="flex items-center gap-2 text-slate-900 dark:text-white hover:text-[#ff6c2c] dark:hover:text-[#ff6c2c] transition group" title="Return to W3Client Dashboard">
                 <div class="size-6 rounded bg-[#ff6c2c] flex items-center justify-center text-white font-bold text-xs shadow-xs group-hover:scale-105 transition">
                     <i class="ti ti-folder text-sm"></i>
                 </div>
-                <span class="text-xs font-bold tracking-tight text-white group-hover:text-[#ff6c2c] transition">W3File Manager</span>
+                <span class="text-xs font-bold tracking-tight text-slate-900 dark:text-white group-hover:text-[#ff6c2c] transition">W3File Manager</span>
             </a>
             <button type="button" @click="folderTreeOpen = !folderTreeOpen"
-                    class="ml-1 p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition"
+                    class="ml-1 p-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white rounded hover:bg-slate-100 dark:hover:bg-slate-800 transition"
                     :title="folderTreeOpen ? 'Hide Directory Tree' : 'Show Directory Tree'">
                 <i class="ti" :class="folderTreeOpen ? 'ti-layout-sidebar-left-collapse' : 'ti-layout-sidebar-left-expand'"></i>
             </button>
         </div>
 
-        <!-- Right: Return to User Panel & Logout -->
-        <div class="flex items-center gap-2 shrink-0">
-            <a href="/" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold transition" title="Return to W3Client Dashboard">
+        <!-- Right: Theme Toggle, Return to User Panel & Logout -->
+        <div class="flex items-center gap-2.5 shrink-0 text-xs">
+            <!-- Theme Toggle Button -->
+            <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle dark/light theme">
+                <i class="ti ti-moon text-base"></i>
+            </button>
+
+            <div class="h-4 w-px bg-slate-200 dark:bg-[#262b42]"></div>
+
+            <a href="/" class="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition" title="Return to W3Client Dashboard">
                 <i class="ti ti-home text-sm text-[#ff6c2c]"></i>
                 <span class="hidden sm:inline">W3Client Dashboard</span>
             </a>
-            <a href="/logout/" class="text-slate-400 hover:text-red-400 transition p-1" title="Sign Out">
+            <a href="/logout/" class="text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition p-1" title="Sign Out">
                 <i class="ti ti-logout text-base"></i>
             </a>
         </div>
     </header>
 
     <!-- CLASSIC CPANEL ACTION TOOLBAR (EXACT MATCH TO CPANEL SCREENSHOT) -->
-    <div class="bg-[#f0f0f0] border-b border-[#d1d5db] px-2 py-1 flex items-center justify-between gap-1 overflow-x-auto shrink-0 z-20 shadow-2xs">
+    <div class="bg-[#f0f0f0] dark:bg-[#151726] border-b border-[#d1d5db] dark:border-[#262b42] px-2 py-1 flex items-center justify-between gap-1 overflow-x-auto shrink-0 z-20 shadow-2xs">
         {% if current_path == '.trash' %}
         <div class="flex items-center gap-1">
             <!-- Restore -->
-            <button type="button" @click="restoreSelected()" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn text-emerald-800 font-bold bg-emerald-50/60 hover:bg-emerald-100" title="Restore Selected Items to Original Location">
-                <i class="ti ti-rotate-clockwise-2 font-bold text-emerald-600 text-sm"></i>
+            <button type="button" @click="restoreSelected()" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn text-emerald-800 dark:text-emerald-400 font-bold bg-emerald-50/60 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60" title="Restore Selected Items to Original Location">
+                <i class="ti ti-rotate-clockwise-2 font-bold text-emerald-600 dark:text-emerald-400 text-sm"></i>
                 <span>Restore</span>
             </button>
 
             <!-- Empty Trash -->
-            <button type="button" @click="emptyTrashModal = true" class="cpanel-toolbar-btn text-red-800 font-bold bg-red-50/60 hover:bg-red-100" title="Empty Trash (Purge All Items Permanently)">
-                <i class="ti ti-trash-x font-bold text-red-600 text-sm"></i>
+            <button type="button" @click="emptyTrashModal = true" class="cpanel-toolbar-btn text-red-800 dark:text-red-400 font-bold bg-red-50/60 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60" title="Empty Trash (Purge All Items Permanently)">
+                <i class="ti ti-trash-x font-bold text-red-600 dark:text-red-400 text-sm"></i>
                 <span>Empty Trash</span>
             </button>
 
             <!-- Delete Permanently -->
-            <button type="button" @click="openDelete(selectedItems)" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn text-red-700" title="Delete Selected Items Permanently">
-                <i class="ti ti-x font-bold text-red-600 text-sm"></i>
+            <button type="button" @click="openDelete(selectedItems)" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn text-red-700 dark:text-red-400" title="Delete Selected Items Permanently">
+                <i class="ti ti-x font-bold text-red-600 dark:text-red-400 text-sm"></i>
                 <span>Delete</span>
             </button>
 
             <!-- Vertical Separator -->
-            <div class="h-4 w-px bg-slate-300 mx-1 shrink-0"></div>
+            <div class="h-4 w-px bg-slate-300 dark:bg-[#262b42] mx-1 shrink-0"></div>
 
             <!-- View -->
             <button type="button" @click="viewSelected()" :disabled="selectedItems.length !== 1 || (selectedFirstItem() && selectedFirstItem().is_dir)" class="cpanel-toolbar-btn" title="View File">
-                <i class="ti ti-eye text-slate-800 text-sm"></i>
+                <i class="ti ti-eye text-sm"></i>
                 <span>View</span>
             </button>
         </div>
@@ -864,94 +898,94 @@ function fileManagerApp() {
         <div class="flex items-center gap-0.5">
             <!-- + File -->
             <button type="button" @click="newFileModal = true" class="cpanel-toolbar-btn" title="Create New File">
-                <i class="ti ti-plus font-bold text-slate-900 text-sm"></i>
+                <i class="ti ti-plus font-bold text-sm"></i>
                 <span>File</span>
             </button>
 
             <!-- + Folder -->
             <button type="button" @click="newFolderModal = true" class="cpanel-toolbar-btn" title="Create New Folder">
-                <i class="ti ti-plus font-bold text-slate-900 text-sm"></i>
+                <i class="ti ti-plus font-bold text-sm"></i>
                 <span>Folder</span>
             </button>
 
             <!-- Copy -->
             <button type="button" @click="openCopyMove('copy', selectedItems)" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn" title="Copy Selected Items">
-                <i class="ti ti-copy text-slate-800 text-sm"></i>
+                <i class="ti ti-copy text-sm"></i>
                 <span>Copy</span>
             </button>
 
             <!-- Move -->
             <button type="button" @click="openCopyMove('move', selectedItems)" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn" title="Move Selected Items">
-                <i class="ti ti-arrows-move text-slate-800 text-sm"></i>
+                <i class="ti ti-arrows-move text-sm"></i>
                 <span>Move</span>
             </button>
 
             <!-- Upload -->
             <button type="button" @click="uploadModal = true" class="cpanel-toolbar-btn" title="Upload Files">
-                <i class="ti ti-upload text-slate-800 text-sm"></i>
+                <i class="ti ti-upload text-sm"></i>
                 <span>Upload</span>
             </button>
 
             <!-- Download -->
             <button type="button" @click="downloadSelected()" :disabled="selectedItems.length !== 1 || (selectedFirstItem() && selectedFirstItem().is_dir)" class="cpanel-toolbar-btn" title="Download Selected File">
-                <i class="ti ti-download text-slate-800 text-sm"></i>
+                <i class="ti ti-download text-sm"></i>
                 <span>Download</span>
             </button>
 
             <!-- Delete -->
-            <button type="button" @click="openDelete(selectedItems)" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn text-red-700" title="Delete Selected Items">
-                <i class="ti ti-x font-bold text-red-600 text-sm"></i>
+            <button type="button" @click="openDelete(selectedItems)" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn text-red-700 dark:text-red-400" title="Delete Selected Items">
+                <i class="ti ti-x font-bold text-red-600 dark:text-red-400 text-sm"></i>
                 <span>Delete</span>
             </button>
 
             <!-- Fix Permissions -->
-            <button type="button" @click="openFixPerm(selectedFirstItem() && selectedFirstItem().is_dir ? selectedFirstItem().rel_path : '{{ current_path }}')" class="cpanel-toolbar-btn text-emerald-800 font-semibold" title="1-Click Fix Permissions (Dirs: 0755, Files: 0644, Owner: {{ panel_user.username }})">
-                <i class="ti ti-shield-check font-bold text-emerald-600 text-sm"></i>
+            <button type="button" @click="openFixPerm(selectedFirstItem() && selectedFirstItem().is_dir ? selectedFirstItem().rel_path : '{{ current_path }}')" class="cpanel-toolbar-btn text-emerald-800 dark:text-emerald-400 font-semibold" title="1-Click Fix Permissions (Dirs: 0755, Files: 0644, Owner: {{ panel_user.username }})">
+                <i class="ti ti-shield-check font-bold text-emerald-600 dark:text-emerald-400 text-sm"></i>
                 <span>Fix Permissions</span>
             </button>
 
             <!-- Vertical Separator -->
-            <div class="h-4 w-px bg-slate-300 mx-1 shrink-0"></div>
+            <div class="h-4 w-px bg-slate-300 dark:bg-[#262b42] mx-1 shrink-0"></div>
 
             <!-- Rename -->
             <button type="button" @click="renameSelected()" :disabled="selectedItems.length !== 1" class="cpanel-toolbar-btn" title="Rename Selected Item">
-                <i class="ti ti-file-description text-slate-800 text-sm"></i>
+                <i class="ti ti-file-description text-sm"></i>
                 <span>Rename</span>
             </button>
 
             <!-- Edit -->
             <button type="button" @click="editSelected()" :disabled="selectedItems.length !== 1 || (selectedFirstItem() && selectedFirstItem().is_dir)" class="cpanel-toolbar-btn" title="Edit File">
-                <i class="ti ti-pencil text-slate-800 text-sm"></i>
+                <i class="ti ti-pencil text-sm"></i>
                 <span>Edit</span>
             </button>
 
             <!-- HTML Editor -->
             <button type="button" @click="editSelected()" :disabled="selectedItems.length !== 1 || (selectedFirstItem() && selectedFirstItem().is_dir)" class="cpanel-toolbar-btn" title="HTML / Code Editor">
-                <i class="ti ti-edit text-slate-800 text-sm"></i>
+                <i class="ti ti-edit text-sm"></i>
                 <span>HTML Editor</span>
             </button>
 
             <!-- Permissions -->
             <button type="button" @click="chmodSelected()" :disabled="selectedItems.length !== 1" class="cpanel-toolbar-btn" title="Change Permissions">
-                <i class="ti ti-key text-slate-800 text-sm"></i>
+                <i class="ti ti-key text-sm"></i>
                 <span>Permissions</span>
             </button>
 
             <!-- View -->
             <button type="button" @click="viewSelected()" :disabled="selectedItems.length !== 1 || (selectedFirstItem() && selectedFirstItem().is_dir)" class="cpanel-toolbar-btn" title="View File">
-                <i class="ti ti-eye text-slate-800 text-sm"></i>
+                <i class="ti ti-eye text-sm"></i>
                 <span>View</span>
             </button>
 
             <!-- Extract -->
             <button type="button" @click="extractSelected()" :disabled="selectedItems.length !== 1 || (selectedFirstItem() && !selectedFirstItem().is_archive)" class="cpanel-toolbar-btn" title="Extract Archive">
-                <i class="ti ti-archive text-slate-800 text-sm"></i>
+                <i class="ti ti-archive text-sm"></i>
                 <span>Extract</span>
             </button>
 
             <!-- Compress -->
             <button type="button" @click="openCompress(selectedItems)" :disabled="selectedItems.length === 0" class="cpanel-toolbar-btn" title="Compress Selected Items">
-                <i class="ti ti-file-zip text-slate-800 text-sm"></i>
+                <i class="ti ti-file-zip text-sm"></i>
                 <span>Compress</span>
             </button>
         </div>
@@ -959,13 +993,13 @@ function fileManagerApp() {
     </div>
 
     <!-- SECONDARY NAVIGATION SUB-BAR (SPLIT: LEFT PATH & GO WITH TAB AUTOCOMPLETE | RIGHT NAV & TOOLS) -->
-    <div class="bg-white border-b border-[#d1d5db] flex flex-col md:flex-row items-stretch shrink-0 z-10 shadow-2xs">
+    <div class="bg-white dark:bg-[#101322] border-b border-[#d1d5db] dark:border-[#262b42] flex flex-col md:flex-row items-stretch shrink-0 z-10 shadow-2xs transition-colors duration-150">
         
         <!-- LEFT SUB-BAR: Path Input & Go Button with Tab Suggestions & Validation -->
-        <div class="w-full md:w-64 border-r border-[#d1d5db] p-1.5 flex items-center gap-1.5 bg-[#fbfbfb] shrink-0 relative" @click.away="showSuggestions = false">
-            <div class="relative flex items-center flex-1 bg-white border rounded px-2 py-1 text-xs focus-within:border-[#2b78b8] transition"
-                 :class="pathError ? 'border-red-500 ring-1 ring-red-400' : 'border-[#cccccc]'">
-                <a href="/filemanager/" class="text-slate-500 hover:text-slate-900 mr-1.5" title="Root Home">
+        <div class="w-full md:w-64 border-r border-[#d1d5db] dark:border-[#262b42] p-1.5 flex items-center gap-1.5 bg-[#fbfbfb] dark:bg-[#151726] shrink-0 relative" @click.away="showSuggestions = false">
+            <div class="relative flex items-center flex-1 bg-white dark:bg-[#101322] border rounded px-2 py-1 text-xs focus-within:border-[#2b78b8] dark:focus-within:border-[#6366f1] transition"
+                 :class="pathError ? 'border-red-500 ring-1 ring-red-400' : 'border-[#cccccc] dark:border-[#262b42]'">
+                <a href="/filemanager/" class="text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white mr-1.5" title="Root Home">
                     <i class="ti ti-home text-sm"></i>
                 </a>
                 <input type="text" x-model="jumpPath"
@@ -975,31 +1009,31 @@ function fileManagerApp() {
                        placeholder="/public_html"
                        autocomplete="off"
                        spellcheck="false"
-                       class="w-full text-xs text-slate-800 font-mono outline-none bg-transparent">
+                       class="w-full text-xs text-slate-800 dark:text-[#e8eaf2] font-mono outline-none bg-transparent">
                 
                 <!-- 1-Click Copy path icon inside input box -->
-                <button type="button" @click="copyCurrentPath(jumpPath || '/')" class="p-0.5 text-slate-400 hover:text-[#2b78b8] transition shrink-0" title="Copy path">
-                    <i class="ti text-xs" :class="pathCopied ? 'ti-check text-emerald-600' : 'ti-copy text-slate-400'"></i>
+                <button type="button" @click="copyCurrentPath(jumpPath || '/')" class="p-0.5 text-slate-400 dark:text-[#70789a] hover:text-[#2b78b8] dark:hover:text-[#6366f1] transition shrink-0" title="Copy path">
+                    <i class="ti text-xs" :class="pathCopied ? 'ti-check text-emerald-600' : 'ti-copy text-slate-400 dark:text-[#70789a]'"></i>
                 </button>
             </div>
             
             <button type="button" @click="goToJumpPath()"
-                    class="px-2.5 py-1 bg-[#ffffff] hover:bg-[#f0f0f0] border border-[#cccccc] rounded text-xs font-semibold text-slate-700 shadow-2xs transition shrink-0">
+                    class="px-2.5 py-1 bg-white dark:bg-[#1c2031] hover:bg-[#f0f0f0] dark:hover:bg-[#242845] border border-[#cccccc] dark:border-[#262b42] rounded text-xs font-semibold text-slate-700 dark:text-[#e8eaf2] shadow-2xs transition shrink-0">
                 Go
             </button>
 
             <!-- Autocomplete / Suggestions Dropdown Panel -->
             <div x-show="showSuggestions && matchingDirectories.length > 0" x-cloak
-                 class="absolute left-1.5 right-12 top-full mt-1 bg-white border border-slate-300 rounded shadow-lg max-h-48 overflow-y-auto z-50 text-xs py-1">
-                <div class="px-2 py-1 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-100 flex items-center justify-between">
+                 class="absolute left-1.5 right-12 top-full mt-1 bg-white dark:bg-[#151726] border border-slate-300 dark:border-[#262b42] rounded shadow-lg max-h-48 overflow-y-auto z-50 text-xs py-1">
+                <div class="px-2 py-1 text-[10px] uppercase font-bold text-slate-400 dark:text-[#70789a] border-b border-slate-100 dark:border-[#262b42] flex items-center justify-between">
                     <span>Directories (Tab ⇥ to complete)</span>
-                    <span class="text-[9px] text-slate-400 font-normal">Esc to close</span>
+                    <span class="text-[9px] text-slate-400 dark:text-[#70789a] font-normal">Esc to close</span>
                 </div>
                 <template x-for="(dir, idx) in matchingDirectories" :key="dir">
                     <div @click="selectSuggestion(dir); goToJumpPath()"
                          @mouseenter="selectedSuggestionIndex = idx"
                          class="px-2.5 py-1 flex items-center gap-1.5 cursor-pointer font-mono text-xs transition"
-                         :class="selectedSuggestionIndex === idx ? 'bg-[#d8ecf8] text-[#2b78b8] font-semibold' : 'text-slate-700 hover:bg-slate-50'">
+                         :class="selectedSuggestionIndex === idx ? 'bg-[#d8ecf8] dark:bg-[#242845] text-[#2b78b8] dark:text-[#79c0ff] font-semibold' : 'text-slate-700 dark:text-[#a5adc7] hover:bg-slate-50 dark:hover:bg-[#1c2031]'">
                         <i class="ti ti-folder text-amber-500 text-sm shrink-0"></i>
                         <span class="truncate" x-text="'/' + dir"></span>
                     </div>
@@ -1016,19 +1050,19 @@ function fileManagerApp() {
         </div>
 
         <!-- RIGHT SUB-BAR: Navigation Buttons + Column Controls + Search -->
-        <div class="flex-1 p-1.5 flex flex-wrap items-center justify-between gap-1 px-3 bg-white">
+        <div class="flex-1 p-1.5 flex flex-wrap items-center justify-between gap-1 px-3 bg-white dark:bg-[#101322]">
             <!-- Navigation Toolbar Buttons -->
             <div class="flex items-center gap-1 text-xs">
                 <!-- Home -->
                 <a href="/filemanager/" class="cpanel-nav-btn" title="Go to User Home Directory">
-                    <i class="ti ti-home text-sm text-slate-600"></i>
+                    <i class="ti ti-home text-sm text-slate-600 dark:text-[#a5adc7]"></i>
                     <span>Home</span>
                 </a>
 
                 <!-- Up One Level -->
                 {% if current_path %}
                 <a href="/filemanager/?path={{ parent_path }}" class="cpanel-nav-btn" title="Up One Level">
-                    <i class="ti ti-arrow-up text-sm text-slate-600"></i>
+                    <i class="ti ti-arrow-up text-sm text-slate-600 dark:text-[#a5adc7]"></i>
                     <span>Up One Level</span>
                 </a>
                 {% else %}
@@ -1040,44 +1074,44 @@ function fileManagerApp() {
 
                 <!-- Back -->
                 <button type="button" @click="window.history.back()" class="cpanel-nav-btn" title="Back">
-                    <i class="ti ti-arrow-left text-sm text-slate-600"></i>
+                    <i class="ti ti-arrow-left text-sm text-slate-600 dark:text-[#a5adc7]"></i>
                     <span>Back</span>
                 </button>
 
                 <!-- Forward -->
                 <button type="button" @click="window.history.forward()" class="cpanel-nav-btn" title="Forward">
-                    <i class="ti ti-arrow-right text-sm text-slate-600"></i>
+                    <i class="ti ti-arrow-right text-sm text-slate-600 dark:text-[#a5adc7]"></i>
                     <span>Forward</span>
                 </button>
 
                 <!-- Reload -->
                 <button type="button" @click="window.location.reload()" class="cpanel-nav-btn" title="Reload File Manager">
-                    <i class="ti ti-refresh text-sm text-[#2b78b8]"></i>
+                    <i class="ti ti-refresh text-sm text-[#2b78b8] dark:text-[#79c0ff]"></i>
                     <span>Reload</span>
                 </button>
 
                 <!-- Select All -->
                 <button type="button" @click="selectAll = true; toggleSelectAll()" class="cpanel-nav-btn" title="Select All Items">
-                    <i class="ti ti-checkbox text-sm text-[#2b78b8]"></i>
+                    <i class="ti ti-checkbox text-sm text-[#2b78b8] dark:text-[#79c0ff]"></i>
                     <span>Select All</span>
                 </button>
 
                 <!-- Unselect All -->
                 <button type="button" @click="unselectAll()" class="cpanel-nav-btn" title="Unselect All Items">
-                    <i class="ti ti-square text-sm text-slate-500"></i>
+                    <i class="ti ti-square text-sm text-slate-500 dark:text-[#a5adc7]"></i>
                     <span>Unselect All</span>
                 </button>
 
-                <div class="h-4 w-px bg-slate-200 mx-1 hidden sm:block"></div>
+                <div class="h-4 w-px bg-slate-200 dark:bg-[#262b42] mx-1 hidden sm:block"></div>
 
                 <!-- View Trash -->
                 {% if current_path == '.trash' %}
-                <span class="cpanel-nav-btn bg-blue-50 text-[#2b78b8] font-bold border border-blue-200" title="Currently Viewing Trash">
+                <span class="cpanel-nav-btn bg-blue-50 dark:bg-blue-950/50 text-[#2b78b8] dark:text-[#79c0ff] font-bold border border-blue-200 dark:border-blue-800" title="Currently Viewing Trash">
                     <i class="ti ti-trash text-sm"></i>
                     <span>Viewing Trash</span>
                 </span>
                 {% else %}
-                <a href="/filemanager/?path=.trash" class="cpanel-nav-btn text-[#2b78b8] font-medium" title="View Trash">
+                <a href="/filemanager/?path=.trash" class="cpanel-nav-btn text-[#2b78b8] dark:text-[#79c0ff] font-medium" title="View Trash">
                     <i class="ti ti-trash text-sm"></i>
                     <span>View Trash</span>
                 </a>
@@ -1087,25 +1121,25 @@ function fileManagerApp() {
             <!-- Right: Column Controls & Search -->
             <div class="flex items-center gap-2">
                 <!-- Column Width Presets -->
-                <div class="hidden lg:flex items-center bg-[#f0f2f5] border border-slate-200 rounded p-0.5 text-[11px] font-semibold text-slate-600">
-                    <span class="px-1.5 text-slate-400 font-normal">Cols:</span>
+                <div class="hidden lg:flex items-center bg-[#f0f2f5] dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] rounded p-0.5 text-[11px] font-semibold text-slate-600 dark:text-[#a5adc7]">
+                    <span class="px-1.5 text-slate-400 dark:text-[#70789a] font-normal">Cols:</span>
                     <button type="button" @click="setColPreset('double')"
-                            :class="colWidths.name >= 42 && colWidths.name <= 48 ? 'bg-[#2b78b8] text-white shadow-2xs' : 'hover:bg-slate-200 text-slate-700'"
+                            :class="colWidths.name >= 42 && colWidths.name <= 48 ? 'bg-[#2b78b8] text-white shadow-2xs' : 'hover:bg-slate-200 dark:hover:bg-[#1c2031] text-slate-700 dark:text-[#a5adc7]'"
                             class="px-1.5 py-0.5 rounded transition" title="Filename 2x width (Default)">
                         Name 2x
                     </button>
                     <button type="button" @click="setColPreset('wide')"
-                            :class="colWidths.name > 48 ? 'bg-[#2b78b8] text-white shadow-2xs' : 'hover:bg-slate-200 text-slate-700'"
+                            :class="colWidths.name > 48 ? 'bg-[#2b78b8] text-white shadow-2xs' : 'hover:bg-slate-200 dark:hover:bg-[#1c2031] text-slate-700 dark:text-[#a5adc7]'"
                             class="px-1.5 py-0.5 rounded transition" title="Extra wide filename">
                         Name 3x
                     </button>
                     <button type="button" @click="setColPreset('balanced')"
-                            :class="colWidths.name < 42 ? 'bg-[#2b78b8] text-white shadow-2xs' : 'hover:bg-slate-200 text-slate-700'"
+                            :class="colWidths.name < 42 ? 'bg-[#2b78b8] text-white shadow-2xs' : 'hover:bg-slate-200 dark:hover:bg-[#1c2031] text-slate-700 dark:text-[#a5adc7]'"
                             class="px-1.5 py-0.5 rounded transition" title="Balanced columns">
                         Balanced
                     </button>
                     <button type="button" @click="resetColWidths()"
-                            class="px-1 py-0.5 text-slate-400 hover:text-slate-700 rounded transition" title="Reset column widths">
+                            class="px-1 py-0.5 text-slate-400 hover:text-slate-700 dark:hover:text-[#e8eaf2] rounded transition" title="Reset column widths">
                         <i class="ti ti-restore text-xs"></i>
                     </button>
                 </div>
@@ -1114,7 +1148,7 @@ function fileManagerApp() {
                 <div class="flex items-center gap-1.5">
                     <!-- Scope Dropdown -->
                     <select x-model="searchScope" @change="onScopeChange()"
-                            class="rounded border border-slate-300 bg-white py-0.5 px-2 text-xs text-slate-700 focus:border-[#2b78b8] outline-none cursor-pointer font-medium shadow-2xs">
+                            class="rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#151726] py-0.5 px-2 text-xs text-slate-700 dark:text-[#e8eaf2] focus:border-[#2b78b8] dark:focus:border-[#6366f1] outline-none cursor-pointer font-medium shadow-2xs">
                         <option value="all">All Files (Recursive)</option>
                         <option value="public_html">public_html (Recursive)</option>
                         <option value="current">Current Dir (Recursive)</option>
@@ -1130,17 +1164,17 @@ function fileManagerApp() {
                                @keydown.escape="clearSearch()"
                                placeholder="Search files..."
                                spellcheck="false"
-                               class="w-full rounded border border-slate-300 bg-white px-2 py-0.5 pl-6 pr-6 text-xs text-slate-800 placeholder-slate-400 focus:border-[#2b78b8] outline-none transition">
+                               class="w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#151726] px-2 py-0.5 pl-6 pr-6 text-xs text-slate-800 dark:text-[#e8eaf2] placeholder-slate-400 dark:placeholder-[#70789a] focus:border-[#2b78b8] dark:focus:border-[#6366f1] outline-none transition">
                         
                         <!-- Search Icon or Loading Spinner -->
                         <div class="absolute left-1.5 top-1/2 -translate-y-1/2 pointer-events-none flex items-center">
-                            <i x-show="!isSearching" class="ti ti-search text-slate-400 text-xs"></i>
-                            <i x-show="isSearching" x-cloak class="ti ti-loader-2 animate-spin text-[#2b78b8] text-xs"></i>
+                            <i x-show="!isSearching" class="ti ti-search text-slate-400 dark:text-[#70789a] text-xs"></i>
+                            <i x-show="isSearching" x-cloak class="ti ti-loader-2 animate-spin text-[#2b78b8] dark:text-[#79c0ff] text-xs"></i>
                         </div>
 
                         <!-- Clear Button -->
                         <button type="button" x-show="searchQuery || activeFilterCount > 0" x-cloak @click="clearSearch()"
-                                class="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                                class="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-[#e8eaf2] p-0.5"
                                 title="Clear search & filters">
                             <i class="ti ti-x text-xs"></i>
                         </button>
@@ -1148,7 +1182,7 @@ function fileManagerApp() {
 
                     <!-- Filter Options Button with Active Badge -->
                     <button type="button" @click="searchFilterModal = true"
-                            :class="activeFilterCount > 0 ? 'bg-blue-50 border-[#2b78b8] text-[#2b78b8] font-bold' : 'bg-white hover:bg-[#f0f0f0] border-[#cccccc] text-slate-700'"
+                            :class="activeFilterCount > 0 ? 'bg-blue-50 dark:bg-blue-950/50 border-[#2b78b8] dark:border-[#6366f1] text-[#2b78b8] dark:text-[#79c0ff] font-bold' : 'bg-white dark:bg-[#151726] hover:bg-[#f0f0f0] dark:hover:bg-[#1c2031] border-[#cccccc] dark:border-[#262b42] text-slate-700 dark:text-[#e8eaf2]'"
                             class="relative inline-flex items-center gap-1 px-2 py-0.5 border rounded text-xs shadow-2xs transition"
                             title="Filter by Date/Hours, Type, or Size">
                         <i class="ti ti-adjustments-horizontal text-sm"></i>
@@ -1162,11 +1196,11 @@ function fileManagerApp() {
                     <!-- Search Button -->
                     <button type="button" @click="executeRecursiveSearch()"
                             :disabled="!hasAnySearchCriteria"
-                            class="px-2.5 py-0.5 bg-[#ffffff] hover:bg-[#f0f0f0] border border-[#cccccc] rounded text-xs font-semibold text-slate-700 shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
+                            class="px-2.5 py-0.5 bg-white dark:bg-[#151726] hover:bg-[#f0f0f0] dark:hover:bg-[#1c2031] border border-[#cccccc] dark:border-[#262b42] rounded text-xs font-semibold text-slate-700 dark:text-[#e8eaf2] shadow-2xs transition disabled:opacity-40 disabled:cursor-not-allowed shrink-0">
                         Search
                     </button>
 
-                    <span class="text-xs text-slate-400 font-mono whitespace-nowrap ml-0.5"
+                    <span class="text-xs text-slate-400 dark:text-[#70789a] font-mono whitespace-nowrap ml-0.5"
                           x-text="sortedFilteredItems.length + ' item(s)'"></span>
                 </div>
             </div>
@@ -1195,12 +1229,12 @@ function fileManagerApp() {
         
         <!-- LEFT PANE: Directory / Folder Tree (cPanel Style) -->
         <aside x-show="folderTreeOpen" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
-               class="w-64 bg-[#fbfbfb] border-r border-[#d1d5db] flex flex-col shrink-0 overflow-hidden select-none">
+               class="w-64 bg-[#fbfbfb] dark:bg-[#151726] border-r border-[#d1d5db] dark:border-[#262b42] flex flex-col shrink-0 overflow-hidden select-none">
             
             <!-- Collapse / Expand All Button Bar -->
-            <div class="p-2 border-b border-[#e5e7eb] flex items-center justify-center bg-white">
+            <div class="p-2 border-b border-[#e5e7eb] dark:border-[#262b42] flex items-center justify-center bg-white dark:bg-[#101322]">
                 <button type="button" @click="allFoldersExpanded = !allFoldersExpanded"
-                        class="w-full py-1 px-3 bg-white hover:bg-slate-50 border border-[#cccccc] rounded text-xs font-semibold text-slate-700 shadow-2xs text-center transition"
+                        class="w-full py-1 px-3 bg-white dark:bg-[#151726] hover:bg-slate-50 dark:hover:bg-[#1c2031] border border-[#cccccc] dark:border-[#262b42] rounded text-xs font-semibold text-slate-700 dark:text-[#e8eaf2] shadow-2xs text-center transition"
                         x-text="allFoldersExpanded ? 'Collapse All' : 'Expand All'">
                     Collapse All
                 </button>
@@ -1211,26 +1245,26 @@ function fileManagerApp() {
                 
                 <!-- Root User Home Folder: - 📁 🏠 (/home/username) -->
                 <div class="space-y-0.5">
-                    <div class="flex items-center gap-1.5 py-1 px-1 rounded transition {% if not current_path %}bg-[#d8ecf8] font-bold text-slate-900{% else %}text-slate-700 hover:bg-[#eef4f9]{% endif %}">
-                        <span class="font-mono text-slate-500 font-bold w-3 text-center">-</span>
+                    <div class="flex items-center gap-1.5 py-1 px-1 rounded transition {% if not current_path %}bg-[#d8ecf8] dark:bg-[#242845] font-bold text-slate-900 dark:text-[#e8eaf2]{% else %}text-slate-700 dark:text-[#a5adc7] hover:bg-[#eef4f9] dark:hover:bg-[#1c2031] hover:text-slate-900 dark:hover:text-[#e8eaf2]{% endif %}">
+                        <span class="font-mono text-slate-500 dark:text-[#70789a] font-bold w-3 text-center">-</span>
                         <i class="ti ti-folder-filled text-amber-500 text-base shrink-0"></i>
-                        <i class="ti ti-home text-slate-500 text-xs shrink-0"></i>
-                        <a href="/filemanager/" class="truncate font-semibold hover:text-[#2b78b8]">
+                        <i class="ti ti-home text-slate-500 dark:text-[#70789a] text-xs shrink-0"></i>
+                        <a href="/filemanager/" class="truncate font-semibold hover:text-[#2b78b8] dark:hover:text-[#79c0ff]">
                             (/home/{{ panel_user.username }})
                         </a>
                     </div>
 
                     <!-- Subdirectories in Tree -->
-                    <div class="pl-3 space-y-0.5 border-l border-slate-200 ml-2">
+                    <div class="pl-3 space-y-0.5 border-l border-slate-200 dark:border-[#262b42] ml-2">
                         {% for folder in folder_tree %}
                         <div x-data="{ expanded: {{ folder.is_active|yesno:'true,false' }} }"
                              x-init="$watch('allFoldersExpanded', val => expanded = val)"
                              class="space-y-0.5">
                             
-                            <div class="flex items-center gap-1 py-0.5 px-1 rounded transition group {% if current_path == folder.path %}bg-[#d8ecf8] font-bold text-slate-900{% elif folder.is_active %}bg-slate-100 font-semibold text-slate-900{% else %}text-slate-700 hover:bg-[#eef4f9]{% endif %}">
+                            <div class="flex items-center gap-1 py-0.5 px-1 rounded transition group {% if current_path == folder.path %}bg-[#d8ecf8] dark:bg-[#242845] font-bold text-slate-900 dark:text-[#e8eaf2]{% elif folder.is_active %}bg-slate-100 dark:bg-[#1c2031] font-semibold text-slate-900 dark:text-[#e8eaf2]{% else %}text-slate-700 dark:text-[#a5adc7] hover:bg-[#eef4f9] dark:hover:bg-[#1c2031] hover:text-slate-900 dark:hover:text-[#e8eaf2]{% endif %}">
                                 <!-- Plus/Minus toggle box -->
                                 {% if folder.subdirs %}
-                                <button type="button" @click.stop="expanded = !expanded" class="size-3.5 border border-slate-300 rounded-xs bg-white text-slate-600 flex items-center justify-center text-[10px] font-mono leading-none hover:border-slate-500 shrink-0">
+                                <button type="button" @click.stop="expanded = !expanded" class="size-3.5 border border-slate-300 dark:border-[#262b42] rounded-xs bg-white dark:bg-[#101322] text-slate-600 dark:text-[#a5adc7] flex items-center justify-center text-[10px] font-mono leading-none hover:border-slate-500 dark:hover:border-slate-400 shrink-0">
                                     <span x-text="expanded ? '-' : '+'"></span>
                                 </button>
                                 {% else %}
@@ -1241,19 +1275,19 @@ function fileManagerApp() {
                                 <i class="{% if folder.name == 'public_html' %}ti ti-world text-blue-500{% elif folder.name == 'mail' %}ti ti-mail text-blue-600{% elif folder.name == 'public_ftp' %}ti ti-arrows-exchange text-emerald-600{% elif folder.name == 'ssl' %}ti ti-folder text-amber-500{% else %}ti ti-folder-filled text-amber-500{% endif %} text-base shrink-0"></i>
 
                                 <!-- Folder Link -->
-                                <a href="/filemanager/?path={{ folder.path }}" class="flex-1 truncate hover:text-[#2b78b8]">
+                                <a href="/filemanager/?path={{ folder.path }}" class="flex-1 truncate hover:text-[#2b78b8] dark:hover:text-[#79c0ff]">
                                     {{ folder.name }}
                                 </a>
                             </div>
 
                             <!-- Nested Children Folders -->
                             {% if folder.subdirs %}
-                            <div x-show="expanded" class="pl-4 space-y-0.5 border-l border-slate-200 ml-2">
+                            <div x-show="expanded" class="pl-4 space-y-0.5 border-l border-slate-200 dark:border-[#262b42] ml-2">
                                 {% for sub in folder.subdirs %}
-                                <div class="flex items-center gap-1 py-0.5 px-1 rounded transition {% if current_path == sub.path %}bg-[#d8ecf8] font-bold text-slate-900{% elif sub.is_active %}bg-slate-100 font-semibold text-slate-900{% else %}text-slate-600 hover:bg-[#eef4f9]{% endif %}">
+                                <div class="flex items-center gap-1 py-0.5 px-1 rounded transition {% if current_path == sub.path %}bg-[#d8ecf8] dark:bg-[#242845] font-bold text-slate-900 dark:text-[#e8eaf2]{% elif sub.is_active %}bg-slate-100 dark:bg-[#1c2031] font-semibold text-slate-900 dark:text-[#e8eaf2]{% else %}text-slate-600 dark:text-[#a5adc7] hover:bg-[#eef4f9] dark:hover:bg-[#1c2031] hover:text-slate-900 dark:hover:text-[#e8eaf2]{% endif %}">
                                     <span class="w-3 shrink-0"></span>
                                     <i class="ti ti-folder-filled text-amber-500 text-sm shrink-0"></i>
-                                    <a href="/filemanager/?path={{ sub.path }}" class="flex-1 truncate text-xs hover:text-[#2b78b8]">
+                                    <a href="/filemanager/?path={{ sub.path }}" class="flex-1 truncate text-xs hover:text-[#2b78b8] dark:hover:text-[#79c0ff]">
                                         {{ sub.name }}
                                     </a>
                                 </div>
@@ -1262,7 +1296,7 @@ function fileManagerApp() {
                             {% endif %}
                         </div>
                         {% empty %}
-                        <div class="py-2 text-center text-xs text-slate-400">
+                        <div class="py-2 text-center text-xs text-slate-400 dark:text-[#70789a]">
                             No folders found
                         </div>
                         {% endfor %}
@@ -1273,7 +1307,7 @@ function fileManagerApp() {
         </aside>
 
         <!-- RIGHT PANE: Main Content (In-Browser Editor or File Explorer Table) -->
-        <main class="flex-1 flex flex-col min-w-0 overflow-y-auto bg-white">
+        <main class="flex-1 flex flex-col min-w-0 overflow-y-auto bg-white dark:bg-[#101322]">
             {% if editing_file %}
             <!-- In-Browser Code Editor -->
             <div class="flex-1 flex flex-col min-h-0 bg-slate-950 text-white">
@@ -1315,55 +1349,55 @@ function fileManagerApp() {
 
             <!-- Search Active Notification Banner -->
             <div x-show="isSearchActive" x-cloak
-                 class="bg-[#eef6fc] border-b border-[#c9d7e1] px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-800 shrink-0">
+                 class="bg-[#eef6fc] dark:bg-[#151726] border-b border-[#c9d7e1] dark:border-[#262b42] px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-800 dark:text-[#e8eaf2] shrink-0">
                 <div class="flex flex-wrap items-center gap-2 min-w-0">
-                    <i class="ti ti-search text-[#2b78b8] text-base font-bold shrink-0"></i>
+                    <i class="ti ti-search text-[#2b78b8] dark:text-[#79c0ff] text-base font-bold shrink-0"></i>
                     <div class="flex flex-wrap items-center gap-1.5">
-                        <span class="font-semibold text-slate-700">Results for</span>
+                        <span class="font-semibold text-slate-700 dark:text-[#a5adc7]">Results for</span>
                         <template x-if="searchQuery">
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white border border-slate-300 font-mono text-slate-900 font-bold text-[11px]">
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-white dark:bg-[#101322] border border-slate-300 dark:border-[#262b42] font-mono text-slate-900 dark:text-[#e8eaf2] font-bold text-[11px]">
                                 <span x-text="'&quot;' + searchQuery + '&quot;'"></span>
                                 <button type="button" @click="searchQuery = ''; onSearchInput()" class="hover:text-red-500" title="Remove name filter"><i class="ti ti-x text-[10px]"></i></button>
                             </span>
                         </template>
-                        <span class="text-slate-500">in</span>
-                        <span class="font-semibold text-[#2b78b8]"
+                        <span class="text-slate-500 dark:text-[#70789a]">in</span>
+                        <span class="font-semibold text-[#2b78b8] dark:text-[#79c0ff]"
                               x-text="searchScope === 'all' ? 'All User Files' : (searchScope === 'public_html' ? 'public_html' : (searchScope === 'current' ? 'Current Directory' : 'This Folder'))"></span>
 
                         <!-- Active Filter Badges -->
                         <template x-if="timeFilter && timeFilter !== 'all'">
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 border border-amber-300 text-amber-900 font-medium text-[11px]">
-                                <i class="ti ti-clock text-xs text-amber-600"></i>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800/60 text-amber-900 dark:text-amber-300 font-medium text-[11px]">
+                                <i class="ti ti-clock text-xs text-amber-600 dark:text-amber-400"></i>
                                 <span x-text="timeFilterLabel"></span>
                                 <button type="button" @click="timeFilter = 'all'; onFilterChange()" class="hover:text-red-600 ml-0.5" title="Remove date filter"><i class="ti ti-x text-[10px]"></i></button>
                             </span>
                         </template>
                         <template x-if="typeFilter && typeFilter !== 'all'">
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 border border-blue-300 text-blue-900 font-medium text-[11px]">
-                                <i class="ti ti-category text-xs text-blue-600"></i>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 border border-blue-300 dark:border-blue-800/60 text-blue-900 dark:text-blue-300 font-medium text-[11px]">
+                                <i class="ti ti-category text-xs text-blue-600 dark:text-blue-400"></i>
                                 <span x-text="typeFilterLabel"></span>
                                 <button type="button" @click="typeFilter = 'all'; onFilterChange()" class="hover:text-red-600 ml-0.5" title="Remove type filter"><i class="ti ti-x text-[10px]"></i></button>
                             </span>
                         </template>
                         <template x-if="sizeFilter && sizeFilter !== 'all'">
-                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 border border-emerald-300 text-emerald-900 font-medium text-[11px]">
-                                <i class="ti ti-database text-xs text-emerald-600"></i>
+                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800/60 text-emerald-900 dark:text-emerald-300 font-medium text-[11px]">
+                                <i class="ti ti-database text-xs text-emerald-600 dark:text-emerald-400"></i>
                                 <span x-text="sizeFilterLabel"></span>
                                 <button type="button" @click="sizeFilter = 'all'; onFilterChange()" class="hover:text-red-600 ml-0.5" title="Remove size filter"><i class="ti ti-x text-[10px]"></i></button>
                             </span>
                         </template>
 
-                        <span class="text-slate-500">— <strong class="font-mono text-slate-900" x-text="sortedFilteredItems.length"></strong> match(es)</span>
+                        <span class="text-slate-500 dark:text-[#70789a]">— <strong class="font-mono text-slate-900 dark:text-white" x-text="sortedFilteredItems.length"></strong> match(es)</span>
                     </div>
                 </div>
                 <div class="flex items-center gap-1.5 shrink-0">
                     <button type="button" @click="searchFilterModal = true"
-                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-slate-50 border border-slate-300 rounded text-xs font-semibold text-slate-700 shadow-2xs transition">
-                        <i class="ti ti-adjustments-horizontal text-slate-600"></i>
+                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-white dark:bg-[#101322] hover:bg-slate-50 dark:hover:bg-[#1c2031] border border-slate-300 dark:border-[#262b42] rounded text-xs font-semibold text-slate-700 dark:text-[#e8eaf2] shadow-2xs transition">
+                        <i class="ti ti-adjustments-horizontal text-slate-600 dark:text-[#a5adc7]"></i>
                         <span>Modify Filters</span>
                     </button>
                     <button type="button" @click="clearSearch()"
-                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-white hover:bg-red-50 border border-slate-300 hover:border-red-300 rounded text-xs font-semibold text-slate-700 hover:text-red-700 shadow-2xs transition">
+                            class="inline-flex items-center gap-1 px-2.5 py-1 bg-white dark:bg-[#101322] hover:bg-red-50 dark:hover:bg-red-950/40 border border-slate-300 dark:border-[#262b42] hover:border-red-300 dark:hover:border-red-800/60 rounded text-xs font-semibold text-slate-700 dark:text-[#e8eaf2] hover:text-red-700 dark:hover:text-red-400 shadow-2xs transition">
                         <i class="ti ti-x text-xs text-red-500"></i>
                         <span>Clear / Reset</span>
                     </button>
@@ -1372,9 +1406,9 @@ function fileManagerApp() {
 
             <!-- Trash View Notification Banner -->
             {% if current_path == '.trash' %}
-            <div class="bg-[#fef9c3] border-b border-[#fde047] px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[#713f12] shrink-0">
+            <div class="bg-[#fef9c3] dark:bg-amber-950/30 border-b border-[#fde047] dark:border-amber-800/50 px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-[#713f12] dark:text-amber-200 shrink-0">
                 <div class="flex items-center gap-2">
-                    <div class="size-6 rounded-full bg-amber-200 text-amber-900 flex items-center justify-center text-xs font-bold shrink-0">
+                    <div class="size-6 rounded-full bg-amber-200 dark:bg-amber-900/60 text-amber-900 dark:text-amber-200 flex items-center justify-center text-xs font-bold shrink-0">
                         <i class="ti ti-trash"></i>
                     </div>
                     <span><strong>Trash Directory:</strong> Files in Trash can be restored back to their original directory locations.</span>
@@ -1412,7 +1446,7 @@ function fileManagerApp() {
                             <!-- Checkbox -->
                             <th class="px-2 py-1.5 w-8 text-center">
                                 <input type="checkbox" x-model="selectAll" @change="toggleSelectAll()"
-                                       class="size-3.5 rounded border-slate-300 text-[#2b78b8] focus:ring-[#2b78b8] cursor-pointer">
+                                       class="size-3.5 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#101322] text-[#2b78b8] dark:text-[#6366f1] focus:ring-[#2b78b8] cursor-pointer">
                             </th>
 
                             <!-- Sortable & Resizable Name (Blue text matching screenshot) -->
@@ -1420,15 +1454,15 @@ function fileManagerApp() {
                                 <div class="flex items-center justify-between pr-2">
                                     <div class="flex items-center gap-1 min-w-0">
                                         <span class="truncate">Name</span>
-                                        <i :class="sortKey === 'name' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8]' : 'ti ti-arrow-down text-[#2b78b8]') : 'ti ti-arrows-sort text-slate-300 group-hover/col:text-slate-500'"></i>
+                                        <i :class="sortKey === 'name' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8] dark:text-[#79c0ff]' : 'ti ti-arrow-down text-[#2b78b8] dark:text-[#79c0ff]') : 'ti ti-arrows-sort text-slate-300 dark:text-slate-600 group-hover/col:text-slate-500 dark:group-hover/col:text-slate-400'"></i>
                                     </div>
                                     <div class="flex items-center gap-0.5 opacity-0 group-hover/col:opacity-100 transition" @click.stop>
-                                        <button type="button" @click="adjustCol('name', -3)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Shrink"><i class="ti ti-minus"></i></button>
-                                        <button type="button" @click="adjustCol('name', 3)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Expand"><i class="ti ti-plus"></i></button>
+                                        <button type="button" @click="adjustCol('name', -3)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Shrink"><i class="ti ti-minus"></i></button>
+                                        <button type="button" @click="adjustCol('name', 3)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Expand"><i class="ti ti-plus"></i></button>
                                     </div>
                                 </div>
-                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] transition z-20"
-                                     :class="resizingCol === 'name' ? 'bg-[#2b78b8]' : ''"
+                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] dark:hover:bg-[#6366f1] transition z-20"
+                                     :class="resizingCol === 'name' ? 'bg-[#2b78b8] dark:bg-[#6366f1]' : ''"
                                      @mousedown="startColResize($event, 'name')" @click.stop title="Drag to resize"></div>
                             </th>
 
@@ -1437,15 +1471,15 @@ function fileManagerApp() {
                                 <div class="flex items-center justify-between pr-2">
                                     <div class="flex items-center gap-1 min-w-0">
                                         <span class="truncate">Size</span>
-                                        <i :class="sortKey === 'size' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8]' : 'ti ti-arrow-down text-[#2b78b8]') : 'ti ti-arrows-sort text-slate-300 group-hover/col:text-slate-500'"></i>
+                                        <i :class="sortKey === 'size' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8] dark:text-[#79c0ff]' : 'ti ti-arrow-down text-[#2b78b8] dark:text-[#79c0ff]') : 'ti ti-arrows-sort text-slate-300 dark:text-slate-600 group-hover/col:text-slate-500 dark:group-hover/col:text-slate-400'"></i>
                                     </div>
                                     <div class="flex items-center gap-0.5 opacity-0 group-hover/col:opacity-100 transition" @click.stop>
-                                        <button type="button" @click="adjustCol('size', -2)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Shrink"><i class="ti ti-minus"></i></button>
-                                        <button type="button" @click="adjustCol('size', 2)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Expand"><i class="ti ti-plus"></i></button>
+                                        <button type="button" @click="adjustCol('size', -2)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Shrink"><i class="ti ti-minus"></i></button>
+                                        <button type="button" @click="adjustCol('size', 2)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Expand"><i class="ti ti-plus"></i></button>
                                     </div>
                                 </div>
-                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] transition z-20"
-                                     :class="resizingCol === 'size' ? 'bg-[#2b78b8]' : ''"
+                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] dark:hover:bg-[#6366f1] transition z-20"
+                                     :class="resizingCol === 'size' ? 'bg-[#2b78b8] dark:bg-[#6366f1]' : ''"
                                      @mousedown="startColResize($event, 'size')" @click.stop title="Drag to resize"></div>
                             </th>
 
@@ -1454,15 +1488,15 @@ function fileManagerApp() {
                                 <div class="flex items-center justify-between pr-2">
                                     <div class="flex items-center gap-1 min-w-0">
                                         <span class="truncate">Last Modified</span>
-                                        <i :class="sortKey === 'modified' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8]' : 'ti ti-arrow-down text-[#2b78b8]') : 'ti ti-arrows-sort text-slate-300 group-hover/col:text-slate-500'"></i>
+                                        <i :class="sortKey === 'modified' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8] dark:text-[#79c0ff]' : 'ti ti-arrow-down text-[#2b78b8] dark:text-[#79c0ff]') : 'ti ti-arrows-sort text-slate-300 dark:text-slate-600 group-hover/col:text-slate-500 dark:group-hover/col:text-slate-400'"></i>
                                     </div>
                                     <div class="flex items-center gap-0.5 opacity-0 group-hover/col:opacity-100 transition" @click.stop>
-                                        <button type="button" @click="adjustCol('modified', -2)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Shrink"><i class="ti ti-minus"></i></button>
-                                        <button type="button" @click="adjustCol('modified', 2)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Expand"><i class="ti ti-plus"></i></button>
+                                        <button type="button" @click="adjustCol('modified', -2)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Shrink"><i class="ti ti-minus"></i></button>
+                                        <button type="button" @click="adjustCol('modified', 2)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Expand"><i class="ti ti-plus"></i></button>
                                     </div>
                                 </div>
-                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] transition z-20"
-                                     :class="resizingCol === 'modified' ? 'bg-[#2b78b8]' : ''"
+                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] dark:hover:bg-[#6366f1] transition z-20"
+                                     :class="resizingCol === 'modified' ? 'bg-[#2b78b8] dark:bg-[#6366f1]' : ''"
                                      @mousedown="startColResize($event, 'modified')" @click.stop title="Drag to resize"></div>
                             </th>
 
@@ -1471,15 +1505,15 @@ function fileManagerApp() {
                                 <div class="flex items-center justify-between pr-2">
                                     <div class="flex items-center gap-1 min-w-0">
                                         <span class="truncate">Type</span>
-                                        <i :class="sortKey === 'type' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8]' : 'ti ti-arrow-down text-[#2b78b8]') : 'ti ti-arrows-sort text-slate-300 group-hover/col:text-slate-500'"></i>
+                                        <i :class="sortKey === 'type' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8] dark:text-[#79c0ff]' : 'ti ti-arrow-down text-[#2b78b8] dark:text-[#79c0ff]') : 'ti ti-arrows-sort text-slate-300 dark:text-slate-600 group-hover/col:text-slate-500 dark:group-hover/col:text-slate-400'"></i>
                                     </div>
                                     <div class="flex items-center gap-0.5 opacity-0 group-hover/col:opacity-100 transition" @click.stop>
-                                        <button type="button" @click="adjustCol('type', -2)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Shrink"><i class="ti ti-minus"></i></button>
-                                        <button type="button" @click="adjustCol('type', 2)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Expand"><i class="ti ti-plus"></i></button>
+                                        <button type="button" @click="adjustCol('type', -2)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Shrink"><i class="ti ti-minus"></i></button>
+                                        <button type="button" @click="adjustCol('type', 2)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Expand"><i class="ti ti-plus"></i></button>
                                     </div>
                                 </div>
-                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] transition z-20"
-                                     :class="resizingCol === 'type' ? 'bg-[#2b78b8]' : ''"
+                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] dark:hover:bg-[#6366f1] transition z-20"
+                                     :class="resizingCol === 'type' ? 'bg-[#2b78b8] dark:bg-[#6366f1]' : ''"
                                      @mousedown="startColResize($event, 'type')" @click.stop title="Drag to resize"></div>
                             </th>
 
@@ -1488,30 +1522,30 @@ function fileManagerApp() {
                                 <div class="flex items-center justify-between pr-2">
                                     <div class="flex items-center gap-1 min-w-0">
                                         <span class="truncate">Permissions</span>
-                                        <i :class="sortKey === 'perms' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8]' : 'ti ti-arrow-down text-[#2b78b8]') : 'ti ti-arrows-sort text-slate-300 group-hover/col:text-slate-500'"></i>
+                                        <i :class="sortKey === 'perms' ? (sortAsc ? 'ti ti-arrow-up text-[#2b78b8] dark:text-[#79c0ff]' : 'ti ti-arrow-down text-[#2b78b8] dark:text-[#79c0ff]') : 'ti ti-arrows-sort text-slate-300 dark:text-slate-600 group-hover/col:text-slate-500 dark:group-hover/col:text-slate-400'"></i>
                                     </div>
                                     <div class="flex items-center gap-0.5 opacity-0 group-hover/col:opacity-100 transition" @click.stop>
-                                        <button type="button" @click="adjustCol('perms', -2)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Shrink"><i class="ti ti-minus"></i></button>
-                                        <button type="button" @click="adjustCol('perms', 2)" class="p-0.5 hover:bg-slate-200 rounded text-[9px] text-slate-500" title="Expand"><i class="ti ti-plus"></i></button>
+                                        <button type="button" @click="adjustCol('perms', -2)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Shrink"><i class="ti ti-minus"></i></button>
+                                        <button type="button" @click="adjustCol('perms', 2)" class="p-0.5 hover:bg-slate-200 dark:hover:bg-[#1c2031] rounded text-[9px] text-slate-500 dark:text-[#a5adc7]" title="Expand"><i class="ti ti-plus"></i></button>
                                     </div>
                                 </div>
-                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] transition z-20"
-                                     :class="resizingCol === 'perms' ? 'bg-[#2b78b8]' : ''"
+                                <div class="absolute right-0 top-0 bottom-0 w-2 cursor-col-resize hover:bg-[#2b78b8] dark:hover:bg-[#6366f1] transition z-20"
+                                     :class="resizingCol === 'perms' ? 'bg-[#2b78b8] dark:bg-[#6366f1]' : ''"
                                      @mousedown="startColResize($event, 'perms')" @click.stop title="Drag to resize"></div>
                             </th>
                         </tr>
                     </thead>
 
-                    <tbody class="divide-y divide-[#edf1f5] text-[13px]">
+                    <tbody class="divide-y divide-[#edf1f5] dark:divide-[#262b42] text-[13px]">
                         {% if current_path %}
                         <!-- Parent Directory Row (Hidden when search is active) -->
-                        <tr x-show="!isSearchActive" class="cpanel-row hover:bg-[#f2f7fb] transition cursor-pointer" @dblclick="window.location.href='/filemanager/?path={{ parent_path }}'">
-                            <td class="px-2 py-1.5 text-center text-slate-400">
+                        <tr x-show="!isSearchActive" class="cpanel-row hover:bg-[#f2f7fb] dark:hover:bg-[#1c2031] transition cursor-pointer" @dblclick="window.location.href='/filemanager/?path={{ parent_path }}'">
+                            <td class="px-2 py-1.5 text-center text-slate-400 dark:text-[#70789a]">
                                 <i class="ti ti-corner-left-up text-sm"></i>
                             </td>
                             <td colspan="5" class="px-3 py-1.5 text-left">
-                                <a href="/filemanager/?path={{ parent_path }}" class="flex items-center gap-2 text-[#2b78b8] font-semibold hover:underline">
-                                    <i class="ti ti-folder-up text-slate-500 text-base"></i>
+                                <a href="/filemanager/?path={{ parent_path }}" class="flex items-center gap-2 text-[#2b78b8] dark:text-[#79c0ff] font-semibold hover:underline">
+                                    <i class="ti ti-folder-up text-slate-500 dark:text-[#70789a] text-base"></i>
                                     <span>.. (Up One Level)</span>
                                 </a>
                             </td>
@@ -1521,14 +1555,14 @@ function fileManagerApp() {
                         <!-- Dynamic Sorted & Filtered Rows via Alpine -->
                         <template x-for="it in sortedFilteredItems" :key="it.rel_path">
                             <tr class="cpanel-row transition cursor-pointer"
-                                :class="selectedItems.includes(it.rel_path) ? 'cpanel-row-selected font-medium text-slate-900' : 'text-slate-800'"
+                                :class="selectedItems.includes(it.rel_path) ? 'cpanel-row-selected font-medium text-slate-900 dark:text-white' : 'text-slate-800 dark:text-[#e8eaf2]'"
                                 @click="toggleRowSelect(it.rel_path, $event)"
                                 @dblclick="if(it.is_dir) { window.location.href='/filemanager/?path=' + encodeURIComponent(it.rel_path); } else { let p = it.rel_path.includes('/') ? it.rel_path.substring(0, it.rel_path.lastIndexOf('/')) : ''; if (it.is_code || it.is_archive) { window.location.href='/filemanager/?path=' + encodeURIComponent(p) + '&edit=' + encodeURIComponent(it.rel_path); } else { window.location.href='/filemanager/?path=' + encodeURIComponent(p); } }">
                                 
                                 <!-- Checkbox -->
                                 <td class="px-2 py-1.5 text-center" @click.stop>
                                     <input type="checkbox" :value="it.rel_path" x-model="selectedItems"
-                                           class="size-3.5 rounded border-slate-300 text-[#2b78b8] focus:ring-[#2b78b8] cursor-pointer">
+                                           class="size-3.5 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#101322] text-[#2b78b8] dark:text-[#6366f1] focus:ring-[#2b78b8] cursor-pointer">
                                 </td>
 
                                 <!-- Name & Icon -->
@@ -1538,13 +1572,13 @@ function fileManagerApp() {
                                         <div class="flex items-baseline gap-1.5 min-w-0 truncate">
                                             <template x-if="it.is_dir">
                                                 <a :href="'/filemanager/?path=' + encodeURIComponent(it.rel_path)"
-                                                   class="hover:text-[#2b78b8] hover:underline truncate"
+                                                   class="hover:text-[#2b78b8] dark:hover:text-[#79c0ff] hover:underline truncate"
                                                    :class="selectedItems.includes(it.rel_path) ? 'font-semibold' : ''"
                                                    x-text="it.name"></a>
                                             </template>
                                             <template x-if="!it.is_dir && (it.is_code || it.is_archive)">
                                                 <a :href="'/filemanager/?path=' + encodeURIComponent(it.rel_path.includes('/') ? it.rel_path.substring(0, it.rel_path.lastIndexOf('/')) : '') + '&edit=' + encodeURIComponent(it.rel_path)"
-                                                   class="hover:text-[#2b78b8] hover:underline truncate"
+                                                   class="hover:text-[#2b78b8] dark:hover:text-[#79c0ff] hover:underline truncate"
                                                    x-text="it.name"></a>
                                             </template>
                                             <template x-if="!it.is_dir && !it.is_code && !it.is_archive">
@@ -1552,11 +1586,11 @@ function fileManagerApp() {
                                             </template>
                                             <!-- Path badge in search mode -->
                                             <template x-if="isSearchActive && it.rel_path && it.rel_path.includes('/')">
-                                                <span class="text-[11px] text-slate-400 font-mono shrink-0" x-text="'in /' + it.rel_path.substring(0, it.rel_path.lastIndexOf('/'))"></span>
+                                                <span class="text-[11px] text-slate-400 dark:text-[#70789a] font-mono shrink-0" x-text="'in /' + it.rel_path.substring(0, it.rel_path.lastIndexOf('/'))"></span>
                                             </template>
                                             <!-- Original path badge in Trash mode -->
                                             <template x-if="it.original_path && it.original_path !== it.name">
-                                                <span class="text-[10px] text-amber-700 bg-amber-50 border border-amber-300/80 px-1.5 py-0.5 rounded font-mono shrink-0"
+                                                <span class="text-[10px] text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/50 border border-amber-300/80 dark:border-amber-800/80 px-1.5 py-0.5 rounded font-mono shrink-0"
                                                       x-text="'orig: ' + it.original_path"
                                                       :title="'Original location: ' + it.original_path"></span>
                                             </template>
@@ -1565,26 +1599,26 @@ function fileManagerApp() {
                                 </td>
 
                                 <!-- Size (e.g. 4 KB) -->
-                                <td class="px-3 py-1.5 text-left whitespace-nowrap text-slate-700" x-text="it.size_human"></td>
+                                <td class="px-3 py-1.5 text-left whitespace-nowrap text-slate-700 dark:text-[#a5adc7]" x-text="it.size_human"></td>
 
                                 <!-- Last Modified (e.g. Today, 12:20 PM) -->
-                                <td class="px-3 py-1.5 text-left whitespace-nowrap text-slate-600" x-text="it.modified"></td>
+                                <td class="px-3 py-1.5 text-left whitespace-nowrap text-slate-600 dark:text-[#70789a]" x-text="it.modified"></td>
 
                                 <!-- Type (e.g. httpd/unix-directory) -->
-                                <td class="px-3 py-1.5 text-left whitespace-nowrap text-slate-500 font-mono text-[11px] truncate" x-text="it.file_type"></td>
+                                <td class="px-3 py-1.5 text-left whitespace-nowrap text-slate-500 dark:text-[#70789a] font-mono text-[11px] truncate" x-text="it.file_type"></td>
 
                                 <!-- Permissions / Restore Action -->
                                 <td class="px-3 py-1.5 text-left whitespace-nowrap" @click.stop>
                                     {% if current_path == '.trash' %}
                                     <button type="button" @click="openRestore([it.rel_path])"
-                                            class="inline-flex items-center gap-1 font-sans text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 transition"
+                                            class="inline-flex items-center gap-1 font-sans text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-800/60 transition"
                                             title="Restore this item to its original location">
                                         <i class="ti ti-rotate-clockwise-2 text-xs"></i>
                                         <span>Restore</span>
                                     </button>
                                     {% else %}
                                     <button type="button" @click="openChmod(it.rel_path, it.name, it.perms, it.is_dir)"
-                                            class="font-mono text-xs px-1.5 py-0.5 rounded hover:bg-slate-200/80 hover:text-[#2b78b8] transition"
+                                            class="font-mono text-xs px-1.5 py-0.5 rounded hover:bg-slate-200/80 dark:hover:bg-[#1c2031] hover:text-[#2b78b8] dark:hover:text-[#79c0ff] text-slate-700 dark:text-[#a5adc7] transition"
                                             title="Click to change permissions (chmod)">
                                         <span x-text="it.perms"></span>
                                     </button>
@@ -1595,16 +1629,16 @@ function fileManagerApp() {
 
                         <!-- Empty state -->
                         <tr x-show="sortedFilteredItems.length === 0">
-                            <td colspan="6" class="px-5 py-14 text-center text-slate-400 text-sm">
+                            <td colspan="6" class="px-5 py-14 text-center text-slate-400 dark:text-[#70789a] text-sm">
                                 <div class="flex flex-col items-center justify-center gap-2">
                                     {% if current_path == '.trash' %}
-                                    <i class="ti ti-trash-off text-4xl text-slate-300"></i>
-                                    <span class="font-medium text-slate-600">Trash is currently empty.</span>
-                                    <span class="text-xs text-slate-400">Deleted files will appear here and can be restored anytime.</span>
+                                    <i class="ti ti-trash-off text-4xl text-slate-300 dark:text-slate-600"></i>
+                                    <span class="font-medium text-slate-600 dark:text-[#a5adc7]">Trash is currently empty.</span>
+                                    <span class="text-xs text-slate-400 dark:text-[#70789a]">Deleted files will appear here and can be restored anytime.</span>
                                     {% else %}
-                                    <i class="ti ti-folder-off text-4xl text-slate-300"></i>
-                                    <span class="font-medium text-slate-600" x-text="searchQuery ? 'No matching files found for \'' + searchQuery + '\'.' : 'Directory is currently empty.'"></span>
-                                    <span class="text-xs text-slate-400" x-show="!searchQuery">Use 'Upload' or '+ File' in the top toolbar to add content.</span>
+                                    <i class="ti ti-folder-off text-4xl text-slate-300 dark:text-slate-600"></i>
+                                    <span class="font-medium text-slate-600 dark:text-[#a5adc7]" x-text="searchQuery ? 'No matching files found for \'' + searchQuery + '\'.' : 'Directory is currently empty.'"></span>
+                                    <span class="text-xs text-slate-400 dark:text-[#70789a]" x-show="!searchQuery">Use 'Upload' or '+ File' in the top toolbar to add content.</span>
                                     {% endif %}
                                 </div>
                             </td>
@@ -1617,24 +1651,24 @@ function fileManagerApp() {
     </div>
 
     <!-- 1. Fix Permissions Modal -->
-    <div x-show="fixPermModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="fixPermModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-4">
+    <div x-show="fixPermModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="fixPermModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-4 text-slate-800 dark:text-[#e8eaf2]">
             <div class="flex items-center gap-3">
-                <div class="size-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                <div class="size-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0">
                     <i class="ti ti-shield-check"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-900 text-sm">1-Click Fix Permissions</h3>
-                    <p class="text-xs text-slate-500">Normalize file & directory permissions recursively</p>
+                    <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm">1-Click Fix Permissions</h3>
+                    <p class="text-xs text-slate-500 dark:text-[#a5adc7]">Normalize file & directory permissions recursively</p>
                 </div>
             </div>
 
-            <div class="bg-emerald-50/70 border border-emerald-200 rounded-lg p-3 text-xs text-emerald-950 space-y-1">
+            <div class="bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 rounded-lg p-3 text-xs text-emerald-950 dark:text-emerald-200 space-y-1">
                 <p class="font-semibold">This will recursively reset:</p>
-                <ul class="list-disc list-inside space-y-0.5 text-emerald-800">
-                    <li>All Directories to <strong class="font-mono text-emerald-700">0755</strong> (rwxr-xr-x)</li>
-                    <li>All Files to <strong class="font-mono text-emerald-700">0644</strong> (rw-r--r--)</li>
-                    <li>Ownership to <strong class="font-mono text-slate-800">{{ panel_user.username }}</strong></li>
+                <ul class="list-disc list-inside space-y-0.5 text-emerald-800 dark:text-emerald-300">
+                    <li>All Directories to <strong class="font-mono text-emerald-700 dark:text-emerald-400">0755</strong> (rwxr-xr-x)</li>
+                    <li>All Files to <strong class="font-mono text-emerald-700 dark:text-emerald-400">0644</strong> (rw-r--r--)</li>
+                    <li>Ownership to <strong class="font-mono text-slate-800 dark:text-[#e8eaf2]">{{ panel_user.username }}</strong></li>
                     <li>Resolves WordPress 403 Forbidden & Upload Errors</li>
                 </ul>
             </div>
@@ -1644,21 +1678,21 @@ function fileManagerApp() {
                 <input type="hidden" name="action" value="fix_permissions">
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Target Directory to Fix:</label>
-                    <div class="flex items-center rounded border border-slate-300 overflow-hidden bg-white focus-within:border-emerald-500">
-                        <span class="bg-slate-100 px-2.5 py-1 text-xs font-mono text-slate-500 border-r border-slate-200 shrink-0">/home/{{ panel_user.username }}/</span>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7] mb-1">Target Directory to Fix:</label>
+                    <div class="flex items-center rounded border border-slate-300 dark:border-[#262b42] overflow-hidden bg-white dark:bg-[#101322] focus-within:border-emerald-500">
+                        <span class="bg-slate-100 dark:bg-[#1c2031] px-2.5 py-1 text-xs font-mono text-slate-500 dark:text-[#a5adc7] border-r border-slate-200 dark:border-[#262b42] shrink-0">/home/{{ panel_user.username }}/</span>
                         <input type="text" name="target_path" x-model="targetFixPath" placeholder="Leave empty for whole home"
-                               class="w-full px-2.5 py-1 text-xs font-mono text-slate-800 outline-none">
+                               class="w-full px-2.5 py-1 text-xs font-mono text-slate-800 dark:text-[#e8eaf2] bg-transparent outline-none">
                     </div>
                     <div class="flex items-center gap-2 mt-1.5 text-[11px]">
-                        <button type="button" @click="targetFixPath = '{{ current_path }}'" class="text-[#2b78b8] hover:underline font-medium">Current Folder</button>
-                        <span class="text-slate-300">•</span>
-                        <button type="button" @click="targetFixPath = ''" class="text-emerald-700 hover:underline font-medium">Entire Home (/)</button>
+                        <button type="button" @click="targetFixPath = '{{ current_path }}'" class="text-[#2b78b8] dark:text-[#79c0ff] hover:underline font-medium">Current Folder</button>
+                        <span class="text-slate-300 dark:text-[#262b42]">•</span>
+                        <button type="button" @click="targetFixPath = ''" class="text-emerald-700 dark:text-emerald-400 hover:underline font-medium">Entire Home (/)</button>
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" @click="fixPermModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="fixPermModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold shadow-xs transition">
                         <i class="ti ti-check"></i> Fix Permissions Now
                     </button>
@@ -1668,13 +1702,13 @@ function fileManagerApp() {
     </div>
 
     <!-- 2. Change Permissions (Chmod) Modal -->
-    <div x-show="chmodModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="chmodModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                    <i class="ti ti-key text-[#2b78b8]"></i> Change Permissions
+    <div x-show="chmodModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="chmodModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-[#262b42] pb-2">
+                <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm flex items-center gap-1.5">
+                    <i class="ti ti-key text-[#2b78b8] dark:text-[#79c0ff]"></i> Change Permissions
                 </h3>
-                <span class="text-xs font-mono font-bold text-slate-800" x-text="chmodName"></span>
+                <span class="text-xs font-mono font-bold text-slate-800 dark:text-[#e8eaf2]" x-text="chmodName"></span>
             </div>
 
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
@@ -1683,48 +1717,48 @@ function fileManagerApp() {
                 <input type="hidden" name="item_path" :value="chmodPath">
 
                 <!-- Checkbox Grid -->
-                <div class="grid grid-cols-4 gap-2 text-xs text-center border border-slate-200 rounded-lg p-2.5 bg-slate-50">
-                    <div class="font-bold text-slate-500">Class</div>
-                    <div class="font-bold text-slate-700">Read (4)</div>
-                    <div class="font-bold text-slate-700">Write (2)</div>
-                    <div class="font-bold text-slate-700">Exec (1)</div>
+                <div class="grid grid-cols-4 gap-2 text-xs text-center border border-slate-200 dark:border-[#262b42] rounded-lg p-2.5 bg-slate-50 dark:bg-[#101322]">
+                    <div class="font-bold text-slate-500 dark:text-[#70789a]">Class</div>
+                    <div class="font-bold text-slate-700 dark:text-[#a5adc7]">Read (4)</div>
+                    <div class="font-bold text-slate-700 dark:text-[#a5adc7]">Write (2)</div>
+                    <div class="font-bold text-slate-700 dark:text-[#a5adc7]">Exec (1)</div>
 
                     <!-- Owner -->
-                    <div class="font-bold text-slate-800 text-left">Owner</div>
-                    <div><input type="checkbox" x-model="u_r" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
-                    <div><input type="checkbox" x-model="u_w" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
-                    <div><input type="checkbox" x-model="u_x" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
+                    <div class="font-bold text-slate-800 dark:text-[#e8eaf2] text-left">Owner</div>
+                    <div><input type="checkbox" x-model="u_r" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
+                    <div><input type="checkbox" x-model="u_w" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
+                    <div><input type="checkbox" x-model="u_x" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
 
                     <!-- Group -->
-                    <div class="font-bold text-slate-800 text-left">Group</div>
-                    <div><input type="checkbox" x-model="g_r" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
-                    <div><input type="checkbox" x-model="g_w" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
-                    <div><input type="checkbox" x-model="g_x" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
+                    <div class="font-bold text-slate-800 dark:text-[#e8eaf2] text-left">Group</div>
+                    <div><input type="checkbox" x-model="g_r" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
+                    <div><input type="checkbox" x-model="g_w" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
+                    <div><input type="checkbox" x-model="g_x" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
 
                     <!-- Public -->
-                    <div class="font-bold text-slate-800 text-left">Public</div>
-                    <div><input type="checkbox" x-model="o_r" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
-                    <div><input type="checkbox" x-model="o_w" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
-                    <div><input type="checkbox" x-model="o_x" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 text-[#2b78b8]"></div>
+                    <div class="font-bold text-slate-800 dark:text-[#e8eaf2] text-left">Public</div>
+                    <div><input type="checkbox" x-model="o_r" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
+                    <div><input type="checkbox" x-model="o_w" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
+                    <div><input type="checkbox" x-model="o_x" @change="updateOctalFromCheckboxes()" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]"></div>
                 </div>
 
                 <!-- Octal mode input & recursive -->
                 <div class="flex items-center justify-between gap-4">
                     <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">Octal Mode</label>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-[#a5adc7]">Octal Mode</label>
                         <input type="text" name="mode" x-model="chmodOctal" @input="updateCheckboxesFromOctal(chmodOctal)"
-                                class="mt-1 w-24 rounded border border-slate-300 px-2.5 py-1 font-mono text-sm font-bold text-slate-900 outline-none focus:border-[#2b78b8]">
+                                class="mt-1 w-24 rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#101322] px-2.5 py-1 font-mono text-sm font-bold text-slate-900 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
                     </div>
                     <div class="pt-3">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="recursive" value="1" x-model="chmodRecursive" class="rounded border-slate-300 text-[#2b78b8]">
-                            <span class="text-xs font-semibold text-slate-700">Recurse into subdirectories</span>
+                            <input type="checkbox" name="recursive" value="1" x-model="chmodRecursive" class="rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8]">
+                            <span class="text-xs font-semibold text-slate-700 dark:text-[#e8eaf2]">Recurse into subdirectories</span>
                         </label>
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" @click="chmodModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="chmodModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#2b78b8] hover:bg-[#236499] text-white rounded text-xs font-bold shadow-xs transition">
                         <i class="ti ti-check"></i> Apply Permissions
                     </button>
@@ -1734,22 +1768,22 @@ function fileManagerApp() {
     </div>
 
     <!-- 3. Upload Modal -->
-    <div x-show="uploadModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="uploadModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <i class="ti ti-upload text-[#2b78b8]"></i> Upload Files
+    <div x-show="uploadModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="uploadModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
+            <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm flex items-center gap-1.5">
+                <i class="ti ti-upload text-[#2b78b8] dark:text-[#79c0ff]"></i> Upload Files
             </h3>
             <form method="post" enctype="multipart/form-data" action="/filemanager/?path={{ current_path }}" class="space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="upload">
-                <div class="border-2 border-dashed border-slate-300 hover:border-[#2b78b8] rounded-xl p-5 text-center transition">
-                    <i class="ti ti-cloud-upload text-3xl text-slate-400 mb-1"></i>
-                    <p class="text-xs text-slate-600 mb-2">Select files to upload into <span class="font-mono font-bold">{{ base_path_display }}</span></p>
+                <div class="border-2 border-dashed border-slate-300 dark:border-[#262b42] hover:border-[#2b78b8] dark:hover:border-[#6366f1] rounded-xl p-5 text-center transition bg-slate-50/50 dark:bg-[#101322]/50">
+                    <i class="ti ti-cloud-upload text-3xl text-slate-400 dark:text-[#70789a] mb-1"></i>
+                    <p class="text-xs text-slate-600 dark:text-[#a5adc7] mb-2">Select files to upload into <span class="font-mono font-bold text-slate-900 dark:text-[#e8eaf2]">{{ base_path_display }}</span></p>
                     <input type="file" name="files" multiple required
-                           class="block w-full text-xs text-slate-500 file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-[#2b78b8] hover:file:bg-blue-100 cursor-pointer">
+                           class="block w-full text-xs text-slate-500 dark:text-[#a5adc7] file:mr-4 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 dark:file:bg-blue-950/60 file:text-[#2b78b8] dark:file:text-[#79c0ff] hover:file:bg-blue-100 dark:hover:file:bg-blue-900/80 cursor-pointer">
                 </div>
-                <div class="flex justify-end gap-2">
-                    <button type="button" @click="uploadModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="uploadModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-[#2b78b8] hover:bg-[#236499] text-white rounded text-xs font-bold shadow-xs transition">
                         Upload Files
                     </button>
@@ -1759,21 +1793,21 @@ function fileManagerApp() {
     </div>
 
     <!-- 4. New File Modal -->
-    <div x-show="newFileModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="newFileModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <i class="ti ti-plus font-bold text-slate-900"></i> Create New File
+    <div x-show="newFileModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="newFileModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
+            <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm flex items-center gap-1.5">
+                <i class="ti ti-plus font-bold text-slate-900 dark:text-[#e8eaf2]"></i> Create New File
             </h3>
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="create_file">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700">New File Name</label>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7]">New File Name</label>
                     <input type="text" name="filename" required placeholder="index.php, .htaccess, app.js"
-                           class="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-[#2b78b8]">
+                           class="mt-1 w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#101322] px-3 py-1.5 text-xs text-slate-800 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
                 </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="newFileModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="newFileModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-[#2b78b8] hover:bg-[#236499] text-white rounded text-xs font-bold shadow-xs transition">
                         Create New File
                     </button>
@@ -1783,21 +1817,21 @@ function fileManagerApp() {
     </div>
 
     <!-- 5. New Folder Modal -->
-    <div x-show="newFolderModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="newFolderModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <i class="ti ti-plus font-bold text-slate-900"></i> Create New Folder
+    <div x-show="newFolderModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="newFolderModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
+            <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm flex items-center gap-1.5">
+                <i class="ti ti-plus font-bold text-slate-900 dark:text-[#e8eaf2]"></i> Create New Folder
             </h3>
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="create_dir">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700">New Folder Name</label>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7]">New Folder Name</label>
                     <input type="text" name="dirname" required placeholder="assets, includes, images"
-                           class="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-[#2b78b8]">
+                           class="mt-1 w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#101322] px-3 py-1.5 text-xs text-slate-800 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
                 </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="newFolderModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="newFolderModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-[#2b78b8] hover:bg-[#236499] text-white rounded text-xs font-bold shadow-xs transition">
                         Create New Folder
                     </button>
@@ -1807,22 +1841,22 @@ function fileManagerApp() {
     </div>
 
     <!-- 6. Rename Modal -->
-    <div x-show="renameModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="renameModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <i class="ti ti-pencil text-slate-600"></i> Rename Item
+    <div x-show="renameModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="renameModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
+            <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm flex items-center gap-1.5">
+                <i class="ti ti-pencil text-slate-600 dark:text-[#a5adc7]"></i> Rename Item
             </h3>
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="rename">
                 <input type="hidden" name="old_name" :value="renameOld">
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700">New Name</label>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7]">New Name</label>
                     <input type="text" name="new_name" x-model="renameNew" required
-                           class="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-[#2b78b8]">
+                           class="mt-1 w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#101322] px-3 py-1.5 text-xs text-slate-800 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
                 </div>
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="renameModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="renameModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-[#2b78b8] hover:bg-[#236499] text-white rounded text-xs font-bold shadow-xs transition">
                         Rename File
                     </button>
@@ -1832,10 +1866,10 @@ function fileManagerApp() {
     </div>
 
     <!-- 7. Compress Modal (With Destination Path & Previews) -->
-    <div x-show="compressModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="compressModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <i class="ti ti-file-zip text-emerald-600"></i> Compress into Archive
+    <div x-show="compressModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="compressModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
+            <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm flex items-center gap-1.5">
+                <i class="ti ti-file-zip text-emerald-600 dark:text-emerald-400"></i> Compress into Archive
             </h3>
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
                 {% csrf_token %}
@@ -1845,15 +1879,15 @@ function fileManagerApp() {
                 </template>
 
                 <!-- Items Preview -->
-                <div class="bg-slate-50 border border-slate-200 rounded p-2.5 text-xs">
-                    <div class="font-bold text-slate-700 mb-1 flex items-center justify-between">
+                <div class="bg-slate-50 dark:bg-[#101322] border border-slate-200 dark:border-[#262b42] rounded p-2.5 text-xs">
+                    <div class="font-bold text-slate-700 dark:text-[#a5adc7] mb-1 flex items-center justify-between">
                         <span>Items to Compress:</span>
-                        <span class="text-slate-400 font-mono" x-text="compressItems.length + ' item(s)'"></span>
+                        <span class="text-slate-400 dark:text-[#70789a] font-mono" x-text="compressItems.length + ' item(s)'"></span>
                     </div>
-                    <div class="max-h-20 overflow-y-auto space-y-0.5 text-slate-600 font-mono text-[11px]">
+                    <div class="max-h-20 overflow-y-auto space-y-0.5 text-slate-600 dark:text-[#a5adc7] font-mono text-[11px]">
                         <template x-for="item in compressItems" :key="item">
                             <div class="truncate flex items-center gap-1">
-                                <i class="ti ti-file text-slate-400"></i>
+                                <i class="ti ti-file text-slate-400 dark:text-[#70789a]"></i>
                                 <span x-text="item"></span>
                             </div>
                         </template>
@@ -1862,28 +1896,28 @@ function fileManagerApp() {
 
                 <!-- Archive Name -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700">Archive Name</label>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7]">Archive Name</label>
                     <input type="text" name="archive_name" x-model="compressName" required placeholder="archive"
-                           class="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-[#2b78b8]">
+                           class="mt-1 w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#101322] px-3 py-1.5 text-xs text-slate-800 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
                 </div>
 
                 <!-- Destination Directory / Path -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700">Destination Directory (Path)</label>
-                    <div class="mt-1 flex items-center rounded border border-slate-300 overflow-hidden bg-white focus-within:border-[#2b78b8]">
-                        <span class="bg-slate-100 px-2.5 py-1 text-xs font-mono text-slate-500 border-r border-slate-200 shrink-0">/home/{{ panel_user.username }}/</span>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7]">Destination Directory (Path)</label>
+                    <div class="mt-1 flex items-center rounded border border-slate-300 dark:border-[#262b42] overflow-hidden bg-white dark:bg-[#101322] focus-within:border-[#2b78b8]">
+                        <span class="bg-slate-100 dark:bg-[#1c2031] px-2.5 py-1 text-xs font-mono text-slate-500 dark:text-[#a5adc7] border-r border-slate-200 dark:border-[#262b42] shrink-0">/home/{{ panel_user.username }}/</span>
                         <input type="text" name="dest_dir" x-model="compressDest" placeholder="e.g. public_html"
-                               class="w-full px-2.5 py-1 text-xs font-mono text-slate-800 outline-none">
+                               class="w-full px-2.5 py-1 text-xs font-mono text-slate-800 dark:text-[#e8eaf2] bg-transparent outline-none">
                     </div>
-                    <p class="text-[11px] text-slate-400 mt-1 truncate">
-                        Target Path: <span class="font-mono text-slate-700 font-semibold" x-text="'/home/{{ panel_user.username }}/' + (compressDest ? compressDest.replace(/^\/+|\/+$/g, '') + '/' : ('{{ current_path }}' ? '{{ current_path }}/' : '')) + (compressName || 'archive') + '.' + (compressFmt === 'zip' ? 'zip' : 'tar.gz')"></span>
+                    <p class="text-[11px] text-slate-400 dark:text-[#70789a] mt-1 truncate">
+                        Target Path: <span class="font-mono text-slate-700 dark:text-[#e8eaf2] font-semibold" x-text="'/home/{{ panel_user.username }}/' + (compressDest ? compressDest.replace(/^\/+|\/+$/g, '') + '/' : ('{{ current_path }}' ? '{{ current_path }}/' : '')) + (compressName || 'archive') + '.' + (compressFmt === 'zip' ? 'zip' : 'tar.gz')"></span>
                     </p>
                 </div>
 
                 <!-- Compression Format -->
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700">Compression Type</label>
-                    <div class="mt-1 flex gap-4 text-xs font-semibold text-slate-800">
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7]">Compression Type</label>
+                    <div class="mt-1 flex gap-4 text-xs font-semibold text-slate-800 dark:text-[#e8eaf2]">
                         <label class="flex items-center gap-1.5 cursor-pointer">
                             <input type="radio" name="format" value="zip" x-model="compressFmt" class="text-[#2b78b8]">
                             <span>Zip Archive (.zip)</span>
@@ -1895,8 +1929,8 @@ function fileManagerApp() {
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" @click="compressModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="compressModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-[#2b78b8] hover:bg-[#236499] text-white rounded text-xs font-bold shadow-xs transition">
                         Compress File(s)
                     </button>
@@ -1906,10 +1940,10 @@ function fileManagerApp() {
     </div>
 
     <!-- 8. Extract Modal -->
-    <div x-show="extractModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="extractModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <i class="ti ti-archive text-[#2b78b8]"></i> Extract Archive
+    <div x-show="extractModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="extractModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
+            <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm flex items-center gap-1.5">
+                <i class="ti ti-archive text-[#2b78b8] dark:text-[#79c0ff]"></i> Extract Archive
             </h3>
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
                 {% csrf_token %}
@@ -1917,14 +1951,14 @@ function fileManagerApp() {
                 <input type="hidden" name="archive_path" :value="extractArchive">
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700">Extract Destination</label>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7]">Extract Destination</label>
                     <input type="text" name="dest_dir" x-model="extractDest" placeholder="Leave empty for current folder"
-                           class="mt-1 w-full rounded border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-[#2b78b8]">
-                    <p class="text-[11px] text-slate-400 mt-1">Files and directories will be automatically normalized to standard permissions (0755 / 0644).</p>
+                           class="mt-1 w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#101322] px-3 py-1.5 text-xs text-slate-800 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
+                    <p class="text-[11px] text-slate-400 dark:text-[#70789a] mt-1">Files and directories will be automatically normalized to standard permissions (0755 / 0644).</p>
                 </div>
 
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="extractModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="extractModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-[#2b78b8] hover:bg-[#236499] text-white rounded text-xs font-bold shadow-xs transition">
                         Extract File(s)
                     </button>
@@ -1934,10 +1968,10 @@ function fileManagerApp() {
     </div>
 
     <!-- 9. Copy / Move Modal -->
-    <div x-show="copyMoveModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="copyMoveModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
-            <h3 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                <i :class="copyMoveMode === 'copy' ? 'ti ti-copy text-[#2b78b8]' : 'ti ti-arrows-move text-amber-600'"></i>
+    <div x-show="copyMoveModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="copyMoveModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
+            <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm flex items-center gap-1.5">
+                <i :class="copyMoveMode === 'copy' ? 'ti ti-copy text-[#2b78b8] dark:text-[#79c0ff]' : 'ti ti-arrows-move text-amber-600 dark:text-amber-400'"></i>
                 <span x-text="copyMoveMode === 'copy' ? 'Copy Item(s)' : 'Move Item(s)'"></span>
             </h3>
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
@@ -1948,16 +1982,16 @@ function fileManagerApp() {
                 </template>
 
                 <div>
-                    <label class="block text-xs font-semibold text-slate-700">Enter the file path that you want to <span x-text="copyMoveMode"></span> this file to:</label>
-                    <div class="mt-1 flex items-center rounded border border-slate-300 overflow-hidden bg-white focus-within:border-[#2b78b8]">
-                        <span class="bg-slate-100 px-2.5 py-1 text-xs font-mono text-slate-500 border-r border-slate-200 shrink-0">/home/{{ panel_user.username }}/</span>
+                    <label class="block text-xs font-semibold text-slate-700 dark:text-[#a5adc7]">Enter the file path that you want to <span x-text="copyMoveMode"></span> this file to:</label>
+                    <div class="mt-1 flex items-center rounded border border-slate-300 dark:border-[#262b42] overflow-hidden bg-white dark:bg-[#101322] focus-within:border-[#2b78b8]">
+                        <span class="bg-slate-100 dark:bg-[#1c2031] px-2.5 py-1 text-xs font-mono text-slate-500 dark:text-[#a5adc7] border-r border-slate-200 dark:border-[#262b42] shrink-0">/home/{{ panel_user.username }}/</span>
                         <input type="text" name="dest_dir" x-model="copyMoveDest" placeholder="e.g. public_html/assets or domain.com"
-                               class="w-full px-2.5 py-1 text-xs font-mono text-slate-800 outline-none">
+                               class="w-full px-2.5 py-1 text-xs font-mono text-slate-800 dark:text-[#e8eaf2] bg-transparent outline-none">
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-2 pt-2">
-                    <button type="button" @click="copyMoveModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="copyMoveModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-[#2b78b8] hover:bg-[#236499] text-white rounded text-xs font-bold shadow-xs transition">
                         <span x-text="copyMoveMode === 'copy' ? 'Copy File(s)' : 'Move File(s)'"></span>
                     </button>
@@ -1967,20 +2001,20 @@ function fileManagerApp() {
     </div>
 
     <!-- 10. Delete Confirmation Modal -->
-    <div x-show="deleteModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="deleteModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
+    <div x-show="deleteModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="deleteModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
             <div class="flex items-center gap-3">
-                <div class="size-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-xl shrink-0">
+                <div class="size-9 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xl shrink-0">
                     <i class="ti ti-trash"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-900 text-sm">Delete Item(s)?</h3>
-                    <p class="text-xs text-slate-500">Trash &amp; Deletion Options</p>
+                    <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm">Delete Item(s)?</h3>
+                    <p class="text-xs text-slate-500 dark:text-[#a5adc7]">Trash &amp; Deletion Options</p>
                 </div>
             </div>
 
-            <p class="text-xs text-slate-600">
-                Are you sure you want to remove <strong class="text-slate-900" x-text="deleteItems.length + ' item(s)'"></strong>?
+            <p class="text-xs text-slate-600 dark:text-[#a5adc7]">
+                Are you sure you want to remove <strong class="text-slate-900 dark:text-white" x-text="deleteItems.length + ' item(s)'"></strong>?
             </p>
 
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
@@ -1991,24 +2025,24 @@ function fileManagerApp() {
                 </template>
 
                 {% if current_path != '.trash' %}
-                <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-200">
-                    <label class="flex items-start gap-2 cursor-pointer text-xs text-slate-700 select-none">
-                        <input type="checkbox" name="skip_trash" value="1" class="mt-0.5 rounded text-[#2b78b8] focus:ring-[#2b78b8]">
+                <div class="p-2.5 bg-slate-50 dark:bg-[#101322] rounded-lg border border-slate-200 dark:border-[#262b42]">
+                    <label class="flex items-start gap-2 cursor-pointer text-xs text-slate-700 dark:text-[#e8eaf2] select-none">
+                        <input type="checkbox" name="skip_trash" value="1" class="mt-0.5 rounded border-slate-300 dark:border-slate-600 bg-white dark:bg-[#151726] text-[#2b78b8] focus:ring-[#2b78b8]">
                         <div>
-                            <span class="font-semibold text-slate-900">Skip the trash and permanently delete the files</span>
-                            <p class="text-[11px] text-slate-500 mt-0.5">By default, files are moved to the Trash and can be restored at any time.</p>
+                            <span class="font-semibold text-slate-900 dark:text-white">Skip the trash and permanently delete the files</span>
+                            <p class="text-[11px] text-slate-500 dark:text-[#70789a] mt-0.5">By default, files are moved to the Trash and can be restored at any time.</p>
                         </div>
                     </label>
                 </div>
                 {% else %}
-                <div class="p-2.5 bg-red-50 rounded-lg border border-red-200 text-xs text-red-700">
-                    <i class="ti ti-alert-triangle mr-1 text-red-600 font-bold"></i>
+                <div class="p-2.5 bg-red-50 dark:bg-red-950/40 rounded-lg border border-red-200 dark:border-red-800/60 text-xs text-red-700 dark:text-red-300">
+                    <i class="ti ti-alert-triangle mr-1 text-red-600 dark:text-red-400 font-bold"></i>
                     <strong>Warning:</strong> Deleting from inside the Trash is permanent and cannot be undone.
                 </div>
                 {% endif %}
 
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" @click="deleteModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="deleteModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold shadow-xs transition">
                         Confirm Delete
                     </button>
@@ -2018,20 +2052,20 @@ function fileManagerApp() {
     </div>
 
     <!-- 11. Restore Confirmation Modal -->
-    <div x-show="restoreModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="restoreModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
+    <div x-show="restoreModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="restoreModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
             <div class="flex items-center gap-3">
-                <div class="size-9 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl shrink-0">
+                <div class="size-9 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0">
                     <i class="ti ti-rotate-clockwise-2"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-900 text-sm">Restore File(s)?</h3>
-                    <p class="text-xs text-slate-500">Restore to original directory location</p>
+                    <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm">Restore File(s)?</h3>
+                    <p class="text-xs text-slate-500 dark:text-[#a5adc7]">Restore to original directory location</p>
                 </div>
             </div>
 
-            <p class="text-xs text-slate-600">
-                Are you sure you want to restore <strong class="text-slate-900" x-text="restoreItems.length + ' item(s)'"></strong> back to their original path(s)?
+            <p class="text-xs text-slate-600 dark:text-[#a5adc7]">
+                Are you sure you want to restore <strong class="text-slate-900 dark:text-white" x-text="restoreItems.length + ' item(s)'"></strong> back to their original path(s)?
             </p>
 
             <form method="post" action="/filemanager/?path={{ current_path }}" class="space-y-3">
@@ -2041,8 +2075,8 @@ function fileManagerApp() {
                     <input type="hidden" name="items" :value="item">
                 </template>
 
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" @click="restoreModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="restoreModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-bold shadow-xs transition">
                         Confirm Restore
                     </button>
@@ -2052,28 +2086,28 @@ function fileManagerApp() {
     </div>
 
     <!-- 12. Empty Trash Confirmation Modal -->
-    <div x-show="emptyTrashModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="emptyTrashModal = false" class="bg-white rounded-xl p-5 max-w-md w-full shadow-xl space-y-3">
+    <div x-show="emptyTrashModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="emptyTrashModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-md w-full shadow-xl space-y-3 text-slate-800 dark:text-[#e8eaf2]">
             <div class="flex items-center gap-3">
-                <div class="size-9 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-xl shrink-0">
+                <div class="size-9 rounded-lg bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 flex items-center justify-center text-xl shrink-0">
                     <i class="ti ti-trash-x"></i>
                 </div>
                 <div>
-                    <h3 class="font-bold text-slate-900 text-sm">Empty Entire Trash?</h3>
-                    <p class="text-xs text-slate-500">Permanently purge all trashed items</p>
+                    <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm">Empty Entire Trash?</h3>
+                    <p class="text-xs text-slate-500 dark:text-[#a5adc7]">Permanently purge all trashed items</p>
                 </div>
             </div>
 
-            <p class="text-xs text-slate-600">
-                Are you sure you want to permanently empty the trash? <strong class="text-red-600">All deleted files and directories in Trash will be purged forever and cannot be recovered.</strong>
+            <p class="text-xs text-slate-600 dark:text-[#a5adc7]">
+                Are you sure you want to permanently empty the trash? <strong class="text-red-600 dark:text-red-400">All deleted files and directories in Trash will be purged forever and cannot be recovered.</strong>
             </p>
 
             <form method="post" action="/filemanager/?path=.trash" class="space-y-3">
                 {% csrf_token %}
                 <input type="hidden" name="action" value="empty_trash">
 
-                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-                    <button type="button" @click="emptyTrashModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900">Cancel</button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-[#262b42]">
+                    <button type="button" @click="emptyTrashModal = false" class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white">Cancel</button>
                     <button type="submit" class="px-4 py-1.5 bg-red-600 hover:bg-red-500 text-white rounded text-xs font-bold shadow-xs transition">
                         Empty Trash Permanently
                     </button>
@@ -2082,20 +2116,20 @@ function fileManagerApp() {
         </div>
     </div>
 
-    <!-- 11. Advanced Search & Filter Options Modal -->
-    <div x-show="searchFilterModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4 backdrop-blur-xs">
-        <div @click.away="searchFilterModal = false" class="bg-white rounded-xl p-5 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between border-b border-slate-200 pb-3">
+    <!-- 13. Advanced Search & Filter Options Modal -->
+    <div x-show="searchFilterModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 dark:bg-black/70 p-4 backdrop-blur-xs">
+        <div @click.away="searchFilterModal = false" class="bg-white dark:bg-[#151726] border border-transparent dark:border-[#262b42] rounded-xl p-5 max-w-lg w-full shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto text-slate-800 dark:text-[#e8eaf2]">
+            <div class="flex items-center justify-between border-b border-slate-200 dark:border-[#262b42] pb-3">
                 <div class="flex items-center gap-2.5">
-                    <div class="size-8 rounded-lg bg-blue-50 text-[#2b78b8] flex items-center justify-center text-lg shrink-0">
+                    <div class="size-8 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-[#2b78b8] dark:text-[#79c0ff] flex items-center justify-center text-lg shrink-0">
                         <i class="ti ti-adjustments-horizontal"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-slate-900 text-sm">Advanced Search &amp; Filter Options</h3>
-                        <p class="text-xs text-slate-500">Filter files by modification time, hours, date, type, or size</p>
+                        <h3 class="font-bold text-slate-900 dark:text-[#e8eaf2] text-sm">Advanced Search &amp; Filter Options</h3>
+                        <p class="text-xs text-slate-500 dark:text-[#a5adc7]">Filter files by modification time, hours, date, type, or size</p>
                     </div>
                 </div>
-                <button type="button" @click="searchFilterModal = false" class="text-slate-400 hover:text-slate-700 p-1">
+                <button type="button" @click="searchFilterModal = false" class="text-slate-400 hover:text-slate-700 dark:hover:text-[#e8eaf2] p-1">
                     <i class="ti ti-x text-base"></i>
                 </button>
             </div>
@@ -2103,18 +2137,18 @@ function fileManagerApp() {
             <div class="space-y-4 text-xs">
                 <!-- 1. Search Query / Name -->
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">File or Directory Name (Optional)</label>
+                    <label class="block font-semibold text-slate-700 dark:text-[#a5adc7] mb-1">File or Directory Name (Optional)</label>
                     <div class="relative">
                         <input type="text" x-model="searchQuery" placeholder="e.g. index, .php, config, *.log"
-                               class="w-full rounded border border-slate-300 px-3 py-1.5 pl-8 text-xs font-mono outline-none focus:border-[#2b78b8]">
-                        <i class="ti ti-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                               class="w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#101322] px-3 py-1.5 pl-8 text-xs text-slate-800 dark:text-[#e8eaf2] font-mono outline-none focus:border-[#2b78b8]">
+                        <i class="ti ti-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#70789a] text-xs"></i>
                     </div>
                 </div>
 
                 <!-- 2. Search Scope -->
                 <div>
-                    <label class="block font-semibold text-slate-700 mb-1">Search Location (Scope)</label>
-                    <select x-model="searchScope" class="w-full rounded border border-slate-300 px-3 py-1.5 text-xs outline-none focus:border-[#2b78b8] bg-white">
+                    <label class="block font-semibold text-slate-700 dark:text-[#a5adc7] mb-1">Search Location (Scope)</label>
+                    <select x-model="searchScope" class="w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#101322] px-3 py-1.5 text-xs text-slate-800 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
                         <option value="all">All Files (/home/{{ panel_user.username }}) - Recursive</option>
                         <option value="public_html">public_html (Web Root) - Recursive</option>
                         <option value="current">Current Directory ({{ current_path|default:"Root" }}) - Recursive</option>
@@ -2123,102 +2157,102 @@ function fileManagerApp() {
                 </div>
 
                 <!-- 3. Time / Hours / Date Modified Filter -->
-                <div class="border border-slate-200 rounded-lg p-3 bg-slate-50/60 space-y-2.5">
+                <div class="border border-slate-200 dark:border-[#262b42] rounded-lg p-3 bg-slate-50/60 dark:bg-[#101322] space-y-2.5">
                     <div class="flex items-center justify-between">
-                        <label class="font-bold text-slate-800 flex items-center gap-1.5">
-                            <i class="ti ti-clock text-[#2b78b8]"></i> Last Modified / Date Filter
+                        <label class="font-bold text-slate-800 dark:text-[#e8eaf2] flex items-center gap-1.5">
+                            <i class="ti ti-clock text-[#2b78b8] dark:text-[#79c0ff]"></i> Last Modified / Date Filter
                         </label>
-                        <span class="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Date &amp; Time</span>
+                        <span class="text-[10px] text-slate-400 dark:text-[#70789a] uppercase font-bold tracking-wider">Date &amp; Time</span>
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
                         <button type="button" @click="timeFilter = 'all'"
-                                :class="timeFilter === 'all' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                :class="timeFilter === 'all' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white dark:bg-[#151726] text-slate-700 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031] border border-slate-200 dark:border-[#262b42]'"
                                 class="py-1 px-2 rounded text-xs text-center transition">
                             Any Time
                         </button>
                         <button type="button" @click="timeFilter = '1h'"
-                                :class="timeFilter === '1h' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                :class="timeFilter === '1h' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white dark:bg-[#151726] text-slate-700 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031] border border-slate-200 dark:border-[#262b42]'"
                                 class="py-1 px-2 rounded text-xs text-center transition" title="Modified within past 60 minutes">
                             Last 1 Hour
                         </button>
                         <button type="button" @click="timeFilter = '24h'"
-                                :class="timeFilter === '24h' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                :class="timeFilter === '24h' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white dark:bg-[#151726] text-slate-700 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031] border border-slate-200 dark:border-[#262b42]'"
                                 class="py-1 px-2 rounded text-xs text-center transition" title="Modified within past 24 hours">
                             Last 24 Hours
                         </button>
                         <button type="button" @click="timeFilter = '7d'"
-                                :class="timeFilter === '7d' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                :class="timeFilter === '7d' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white dark:bg-[#151726] text-slate-700 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031] border border-slate-200 dark:border-[#262b42]'"
                                 class="py-1 px-2 rounded text-xs text-center transition" title="Modified within past 7 days">
                             Last 7 Days
                         </button>
                         <button type="button" @click="timeFilter = '30d'"
-                                :class="timeFilter === '30d' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                :class="timeFilter === '30d' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white dark:bg-[#151726] text-slate-700 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031] border border-slate-200 dark:border-[#262b42]'"
                                 class="py-1 px-2 rounded text-xs text-center transition" title="Modified within past 30 days">
                             Last 30 Days
                         </button>
                         <button type="button" @click="timeFilter = '90d'"
-                                :class="timeFilter === '90d' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                :class="timeFilter === '90d' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white dark:bg-[#151726] text-slate-700 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031] border border-slate-200 dark:border-[#262b42]'"
                                 class="py-1 px-2 rounded text-xs text-center transition" title="Modified within past 90 days">
                             Last 90 Days
                         </button>
                         <button type="button" @click="timeFilter = '365d'"
-                                :class="timeFilter === '365d' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                :class="timeFilter === '365d' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white dark:bg-[#151726] text-slate-700 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031] border border-slate-200 dark:border-[#262b42]'"
                                 class="py-1 px-2 rounded text-xs text-center transition" title="Modified within past 1 year">
                             Last 1 Year
                         </button>
                         <button type="button" @click="timeFilter = 'custom'"
-                                :class="timeFilter === 'custom' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200'"
+                                :class="timeFilter === 'custom' ? 'bg-[#2b78b8] text-white font-semibold' : 'bg-white dark:bg-[#151726] text-slate-700 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031] border border-slate-200 dark:border-[#262b42]'"
                                 class="py-1 px-2 rounded text-xs text-center transition">
                             Custom Range…
                         </button>
                     </div>
 
                     <!-- Custom Date Range Inputs -->
-                    <div x-show="timeFilter === 'custom'" x-cloak class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 mt-2">
+                    <div x-show="timeFilter === 'custom'" x-cloak class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200 dark:border-[#262b42] mt-2">
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">From Date</label>
+                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-[#a5adc7] mb-0.5">From Date</label>
                             <input type="date" x-model="customDateFrom"
-                                   class="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-[#2b78b8] bg-white">
+                                   class="w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#151726] px-2 py-1 text-xs text-slate-800 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
                         </div>
                         <div>
-                            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">To Date</label>
+                            <label class="block text-[11px] font-semibold text-slate-600 dark:text-[#a5adc7] mb-0.5">To Date</label>
                             <input type="date" x-model="customDateTo"
-                                   class="w-full rounded border border-slate-300 px-2 py-1 text-xs outline-none focus:border-[#2b78b8] bg-white">
+                                   class="w-full rounded border border-slate-300 dark:border-[#262b42] bg-white dark:bg-[#151726] px-2 py-1 text-xs text-slate-800 dark:text-[#e8eaf2] outline-none focus:border-[#2b78b8]">
                         </div>
                     </div>
                 </div>
 
                 <!-- 4. File Type Filter -->
-                <div class="border border-slate-200 rounded-lg p-3 bg-slate-50/60 space-y-2.5">
+                <div class="border border-slate-200 dark:border-[#262b42] rounded-lg p-3 bg-slate-50/60 dark:bg-[#101322] space-y-2.5">
                     <div class="flex items-center justify-between">
-                        <label class="font-bold text-slate-800 flex items-center gap-1.5">
-                            <i class="ti ti-category text-[#2b78b8]"></i> File / Item Type
+                        <label class="font-bold text-slate-800 dark:text-[#e8eaf2] flex items-center gap-1.5">
+                            <i class="ti ti-category text-[#2b78b8] dark:text-[#79c0ff]"></i> File / Item Type
                         </label>
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_type_filter" value="all" x-model="typeFilter" class="text-[#2b78b8]">
                             <span>All Items</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_type_filter" value="files" x-model="typeFilter" class="text-[#2b78b8]">
                             <span>Files Only</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_type_filter" value="dirs" x-model="typeFilter" class="text-[#2b78b8]">
                             <span>Folders Only</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_type_filter" value="code" x-model="typeFilter" class="text-[#2b78b8]">
                             <span>Code &amp; Scripts</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_type_filter" value="images" x-model="typeFilter" class="text-[#2b78b8]">
                             <span>Images</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_type_filter" value="archives" x-model="typeFilter" class="text-[#2b78b8]">
                             <span>Archives (.zip)</span>
                         </label>
@@ -2226,35 +2260,35 @@ function fileManagerApp() {
                 </div>
 
                 <!-- 5. File Size Filter -->
-                <div class="border border-slate-200 rounded-lg p-3 bg-slate-50/60 space-y-2.5">
+                <div class="border border-slate-200 dark:border-[#262b42] rounded-lg p-3 bg-slate-50/60 dark:bg-[#101322] space-y-2.5">
                     <div class="flex items-center justify-between">
-                        <label class="font-bold text-slate-800 flex items-center gap-1.5">
-                            <i class="ti ti-database text-[#2b78b8]"></i> File Size Filter
+                        <label class="font-bold text-slate-800 dark:text-[#e8eaf2] flex items-center gap-1.5">
+                            <i class="ti ti-database text-[#2b78b8] dark:text-[#79c0ff]"></i> File Size Filter
                         </label>
                     </div>
 
                     <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_size_filter" value="all" x-model="sizeFilter" class="text-[#2b78b8]">
                             <span>Any Size</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_size_filter" value="empty" x-model="sizeFilter" class="text-[#2b78b8]">
                             <span>Empty (0 B)</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_size_filter" value="small" x-model="sizeFilter" class="text-[#2b78b8]">
                             <span>Small (&lt; 100 KB)</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_size_filter" value="medium" x-model="sizeFilter" class="text-[#2b78b8]">
                             <span>Medium (&gt; 1 MB)</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_size_filter" value="large" x-model="sizeFilter" class="text-[#2b78b8]">
                             <span>Large (&gt; 10 MB)</span>
                         </label>
-                        <label class="flex items-center gap-2 p-1.5 rounded bg-white border border-slate-200 cursor-pointer hover:bg-slate-50 text-xs">
+                        <label class="flex items-center gap-2 p-1.5 rounded bg-white dark:bg-[#151726] border border-slate-200 dark:border-[#262b42] cursor-pointer hover:bg-slate-50 dark:hover:bg-[#1c2031] text-xs text-slate-800 dark:text-[#e8eaf2]">
                             <input type="radio" name="modal_size_filter" value="huge" x-model="sizeFilter" class="text-[#2b78b8]">
                             <span>Huge (&gt; 100 MB)</span>
                         </label>
@@ -2262,14 +2296,14 @@ function fileManagerApp() {
                 </div>
             </div>
 
-            <div class="flex items-center justify-between pt-3 border-t border-slate-200">
+            <div class="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-[#262b42]">
                 <button type="button" @click="resetFilters()"
-                        class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+                        class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white transition">
                     Reset All Filters
                 </button>
                 <div class="flex items-center gap-2">
                     <button type="button" @click="searchFilterModal = false"
-                            class="px-3 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-900 transition">
+                            class="px-3 py-1.5 text-xs font-semibold text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-white transition">
                         Cancel
                     </button>
                     <button type="button" @click="searchFilterModal = false; executeRecursiveSearch()"

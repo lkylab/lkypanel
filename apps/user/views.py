@@ -1349,30 +1349,45 @@ def user_profile(request):
 
 
 def user_sso(request):
-    """Single Sign-On endpoint for 1-click admin impersonation."""
+    """Single Sign-On endpoint for 1-click admin impersonation (like WHM to cPanel)."""
     token_str = request.GET.get('token', '').strip()
     if not token_str:
         messages.error(request, 'Missing authentication token.')
         return redirect('user_login')
 
-    from packages.core.models import LoginToken
+    from packages.core.models import LoginToken, AuditLog
     from packages.core.auth import create_session
+    from packages.core.utils import get_client_ip
 
     token_obj = LoginToken.objects.filter(token=token_str).select_related('user', 'created_by').first()
     if not token_obj or not token_obj.is_valid():
         messages.error(request, 'This single sign-on link is invalid or has expired.')
         return redirect('user_login')
 
-    # Consume one-time token
+    # Consume one-time token immediately
     token_obj.is_used = True
     token_obj.save(update_fields=['is_used'])
 
-    # Authenticate user session (fresh client session)
+    # Establish fresh client session for target user
     user = token_obj.user
     request.session.flush()
     create_session(request, user)
+
     admin_name = token_obj.created_by.username if token_obj.created_by else 'Administrator'
     request.session['impersonated_by'] = admin_name
+
+    # Audit log entry for tracking
+    ip_addr = get_client_ip(request) if hasattr(request, 'META') else ''
+    try:
+        AuditLog.objects.create(
+            user=user,
+            action='sso_impersonation',
+            target=f'Auto-login by {admin_name}',
+            ip_address=ip_addr or None,
+        )
+    except Exception:
+        pass
+
     return redirect('user_dashboard')
 
 

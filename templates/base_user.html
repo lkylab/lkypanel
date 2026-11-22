@@ -4,6 +4,9 @@
 {% block title %}{% block page_title %}Dashboard{% endblock %} — W3Client Portal{% endblock %}
 
 {% block extra_css %}
+<script>
+tailwind.config = { darkMode: 'class' }
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
@@ -17,13 +20,13 @@
 {% endblock %}
 
 {% block body %}
-<div x-data="{ sidebarOpen: true, toolSearch: '' }" class="flex min-h-screen bg-slate-100/70 text-slate-800 flex-col">
+<div x-data="{ sidebarOpen: true, toolSearch: '' }" class="flex min-h-screen bg-slate-100/70 dark:bg-[#0b0d14] text-slate-800 dark:text-[#e8eaf2] flex-col transition-colors duration-200">
 
     <div class="flex flex-1 min-h-0">
         <!-- W3Client Sidebar Navigation -->
-        <aside class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-slate-200 bg-white transition-all duration-200" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
-            <div class="flex h-14 items-center justify-between border-b border-slate-200 px-5">
-                <a href="/" class="flex items-center gap-2 font-black text-slate-900 tracking-tight text-base">
+        <aside class="fixed inset-y-0 left-0 z-40 flex w-60 flex-col border-r border-slate-200 dark:border-[#262b42] bg-white dark:bg-[#101322] transition-all duration-200" :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'">
+            <div class="flex h-14 items-center justify-between border-b border-slate-200 dark:border-[#262b42] px-5">
+                <a href="/" class="flex items-center gap-2 font-black text-slate-900 dark:text-[#e8eaf2] tracking-tight text-base">
                     <div class="size-7 rounded-lg bg-[#ff6c2c] flex items-center justify-center text-white font-black text-xs shadow-xs">
                         W3
                     </div>
@@ -37,30 +40,30 @@
                 <a href="{{ item.url }}"
                    class="relative flex items-center gap-3 rounded-lg px-3 py-2 text-xs font-semibold transition outline-none
                     {% if active_page == item.active %}
-                        text-[#ff6c2c] bg-orange-50/70 shadow-xs ring-1 ring-orange-500/10
+                        text-[#ff6c2c] bg-orange-50/70 dark:bg-[#1c2031] shadow-xs ring-1 ring-orange-500/10 dark:ring-[#fc6d26]/20
                     {% else %}
-                        text-slate-600 hover:text-slate-900 hover:bg-slate-100/80
+                        text-slate-600 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-[#e8eaf2] hover:bg-slate-100/80 dark:hover:bg-[#1c2031]
                     {% endif %}">
                     {% if active_page == item.active %}
                     <div class="absolute left-0 top-1/2 h-4 w-1 -translate-y-1/2 bg-[#ff6c2c] rounded-r"></div>
                     {% endif %}
-                    <i class="{{ item.icon }} text-base shrink-0 {% if active_page == item.active %}text-[#ff6c2c]{% else %}text-slate-400{% endif %}"></i>
+                    <i class="{{ item.icon }} text-base shrink-0 {% if active_page == item.active %}text-[#ff6c2c]{% else %}text-slate-400 dark:text-[#70789a]{% endif %}"></i>
                     <span>{{ item.label }}</span>
                 </a>
                 {% endfor %}
             </nav>
 
             <!-- Tenant Profile Footer -->
-            <div class="p-3 border-t border-slate-200">
-                <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-200/80 flex items-center gap-3">
+            <div class="p-3 border-t border-slate-200 dark:border-[#262b42]">
+                <div class="bg-slate-50 dark:bg-[#151726] p-2.5 rounded-xl border border-slate-200/80 dark:border-[#262b42] flex items-center gap-3">
                     <div class="size-8 rounded-lg bg-[#ff6c2c]/10 text-[#ff6c2c] flex items-center justify-center font-bold text-xs uppercase">
                         {{ panel_user.username|default:'U'|slice:':1' }}
                     </div>
                     <div class="flex-1 min-w-0">
-                        <div class="text-xs font-bold text-slate-900 truncate">{{ panel_user.username|default:'User' }}</div>
-                        <div class="text-[11px] text-slate-400 font-mono truncate">Port 2083</div>
+                        <div class="text-xs font-bold text-slate-900 dark:text-[#e8eaf2] truncate">{{ panel_user.username|default:'User' }}</div>
+                        <div class="text-[11px] text-slate-400 dark:text-[#a5adc7] font-mono truncate">Port 2083</div>
                     </div>
-                    <a href="/logout/" title="Sign Out" class="text-slate-400 hover:text-red-600 transition p-1">
+                    <a href="/logout/" title="Sign Out" class="text-slate-400 dark:text-[#a5adc7] hover:text-red-600 dark:hover:text-[#ff7b72] transition p-1">
                         <i class="ti ti-logout text-base"></i>
                     </a>
                 </div>
@@ -70,24 +73,29 @@
         <!-- Main Workspace -->
         <div class="flex-1 ml-60 flex flex-col min-w-0">
             <!-- cPanel Top Bar -->
-            <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 bg-white/95 backdrop-blur px-6">
+            <header class="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-slate-200 dark:border-[#262b42] bg-white/95 dark:bg-[#171a2b]/95 backdrop-blur px-6 transition-colors duration-200">
                 <div class="flex items-center gap-4 flex-1 max-w-lg">
-                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100">
+                    <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden p-1.5 rounded-lg border border-slate-200 dark:border-[#262b42] text-slate-500 dark:text-[#a5adc7] hover:bg-slate-100 dark:hover:bg-[#1c2031]">
                         <i class="ti ti-menu-2 text-base"></i>
                     </button>
                     <!-- Search Tools Bar -->
                     <div class="relative w-full">
-                        <input type="search" placeholder="Search tools (e.g. databases, domains, ssl)..." x-model="toolSearch" class="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 pl-8 text-xs text-slate-800 placeholder-slate-400 focus:border-[#ff6c2c] focus:ring-1 focus:ring-[#ff6c2c] focus:bg-white outline-none transition">
-                        <i class="ti ti-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                        <input type="search" placeholder="Search tools (e.g. databases, domains, ssl)..." x-model="toolSearch" class="w-full rounded-lg border border-slate-200 dark:border-[#262b42] bg-slate-50 dark:bg-[#101322] px-3 py-1.5 pl-8 text-xs text-slate-800 dark:text-[#e8eaf2] placeholder-slate-400 dark:placeholder-[#70789a] focus:border-[#ff6c2c] focus:ring-1 focus:ring-[#ff6c2c] focus:bg-white dark:focus:bg-[#101322] outline-none transition">
+                        <i class="ti ti-search absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 dark:text-[#a5adc7] text-xs"></i>
                     </div>
                 </div>
 
                 <div class="flex items-center gap-4 text-xs">
+                    <!-- Theme Toggle -->
+                    <button type="button" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle dark/light theme">
+                        <i class="ti ti-moon text-base"></i>
+                    </button>
+
                     <a href="/websites/create/" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#ff6c2c] hover:bg-orange-600 text-white rounded-lg font-bold transition shadow-xs">
                         <i class="ti ti-plus text-xs"></i> Add Domain
                     </a>
-                    <div class="h-4 w-px bg-slate-200"></div>
-                    <a href="/logout/" class="flex items-center gap-1 text-slate-500 hover:text-slate-900 font-medium">
+                    <div class="h-4 w-px bg-slate-200 dark:bg-[#262b42]"></div>
+                    <a href="/logout/" class="flex items-center gap-1 text-slate-500 dark:text-[#a5adc7] hover:text-slate-900 dark:hover:text-[#e8eaf2] font-medium">
                         <i class="ti ti-logout text-sm"></i> Logout
                     </a>
                 </div>
@@ -97,10 +105,10 @@
             <div class="px-6 pt-4">
                 {% if messages %}
                 {% for msg in messages %}
-                <div class="mb-4 rounded-xl p-3.5 border flex items-center justify-between gap-3 text-xs sm:text-sm font-medium
-                    {% if msg.tags == 'error' %}bg-red-50 border-red-200 text-red-700
-                    {% elif msg.tags == 'success' %}bg-emerald-50 border-emerald-200 text-emerald-700
-                    {% else %}bg-blue-50 border-blue-200 text-blue-700{% endif %}">
+                <div class="mb-4 rounded-xl p-3.5 border flex items-center justify-between gap-3 text-xs sm:text-sm font-medium transition
+                    {% if msg.tags == 'error' %}bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-700 dark:text-[#ff7b72]
+                    {% elif msg.tags == 'success' %}bg-emerald-50 dark:bg-emerald-500/10 border-emerald-200 dark:border-emerald-500/20 text-emerald-700 dark:text-[#7ee787]
+                    {% else %}bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-[#79c0ff]{% endif %}">
                     <div class="flex items-center gap-2">
                         <i class="ti {% if msg.tags == 'error' %}ti-alert-triangle{% elif msg.tags == 'success' %}ti-circle-check{% else %}ti-info-circle{% endif %} text-base"></i>
                         <span>{{ msg }}</span>

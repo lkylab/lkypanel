@@ -51,12 +51,24 @@
                             {% endif %}
                         </td>
                         <td class="px-5 py-3.5 text-right">
-                            <form method="post" action="{% url 'admin_user_delete' r.id %}" onsubmit="return confirm('Delete reseller {{ r.username }}?');" class="inline">
-                                {% csrf_token %}
-                                <button type="submit" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete">
-                                    <i class="ti ti-trash text-base"></i>
-                                </button>
-                            </form>
+                            <div class="flex items-center justify-end gap-1.5">
+                                <a href="{% url 'admin_user_autologin' r.id %}" target="_blank" rel="noopener noreferrer"
+                                   class="inline-flex items-center gap-1 px-2.5 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded-md text-xs font-bold transition shadow-xs group"
+                                   title="Log in to W3Client Portal for {{ r.username }} in a new tab">
+                                    <i class="ti ti-layout-grid"></i>
+                                    <span>W3Client</span>
+                                    <i class="ti ti-external-link text-[10px] opacity-80 group-hover:opacity-100 transition"></i>
+                                </a>
+                                <a href="{% url 'admin_user_edit' r.id %}" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-medium transition flex items-center gap-1" title="Edit Reseller">
+                                    <i class="ti ti-edit"></i> Edit
+                                </a>
+                                <form method="post" action="{% url 'admin_user_delete' r.id %}" onsubmit="return confirm('Delete reseller {{ r.username }}?');" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="p-1.5 text-gray-400 hover:text-red-600 rounded-lg hover:bg-red-50 transition" title="Delete">
+                                        <i class="ti ti-trash text-base"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
                     {% empty %}
